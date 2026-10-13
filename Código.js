@@ -3,7 +3,8 @@
  * MESA DE AYUDA - MANTENIMIENTO & TIC
  * DIALIMENTOS S.A.S.
  * ============================================================================
- * Archivo: Código.js
+ * Archivo: Código.js - v1.0.1
+ * Modificado: 2026-10-13
  * Conectado directamente a:
  * https://docs.google.com/spreadsheets/d/11jF6iWdJELrakflr0gl155Wm4ZIV-VaGWPbueSE_n4M/edit
  * ============================================================================

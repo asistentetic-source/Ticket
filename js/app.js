@@ -14,6 +14,9 @@ async function llamarApiBackend(action, data = {}) {
     const res = await fetch(CONFIG_APP.API_URL, {
       method: "POST",
       redirect: "follow",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
       body: JSON.stringify({ action: action, ...data })
     });
     return await res.json();
