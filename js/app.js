@@ -855,7 +855,7 @@ function abrirModalAsignar(nroTicket) {
   document.getElementById("asignacionTecnico").value = "";
   document.getElementById("asignacionFechaVisita").value = "";
   document.getElementById("asignacionObservaciones").value = "";
-  document.getElementById("asignacionTecnica").value = "Mantenimiento Correctivo";
+  document.getElementById("asignacionTecnica").value = "";
 
   abrirModal("modalAsignarTicket");
 }
