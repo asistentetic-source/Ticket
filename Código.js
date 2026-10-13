@@ -846,31 +846,40 @@ function obtenerTickets(filtros) {
       var nroTicket = String(getCol("nro. tickect", "nro. ticket", "nro ticket", "ticket") || row[0] || "").trim();
       if (!nroTicket) continue;
 
-      var ticketObj = {
-        _rowIndex: i + 1,
-        nroTicket: nroTicket,
-        fechaIngreso: formatFecha(getCol("fecha de ingreso", "fecha ingreso")),
-        tipoTicket: String(getCol("tipo de ticket", "tipo ticket") || ""),
-        cedulaSolicitante: String(getCol("cedula", "cédula") || ""),
-        nombreUsuario: String(getCol("nombre de usuario", "nombre solicitante", "solicitante") || ""),
-        emailSolicitante: String(getCol("dirección de correo electrónico", "direccion de correo electronico", "correo", "email") || ""),
-        puntoServicio: String(getCol("punto de servicio del cual requiere el soporte ", "punto de servicio del cual requiere el soporte", "punto de servicio", "punto") || ""),
-        tipoServicio: String(getCol("tipo de servicio", "tipo servicio") || ""),
-        descripcionSolicitud: String(getCol("haga una breve descripción del soporte solicitado ", "haga una breve descripción del soporte solicitado", "haga una breve descripcion del soporte solicitado ", "haga una breve descripcion del soporte solicitado", "descripcion", "descripción") || ""),
-        placa: String(getCol("placa") || ""),
-        descripcionEquipo: String(getCol("descripcion del equipo", "descripción del equipo", "equipo") || ""),
-        estado: String(getCol("estado del ticket", "estado") || "ABIERTO").toUpperCase().trim(),
-        fechaAsignacion: formatFecha(getCol("fecha asignacion", "fecha asignación")),
-        fechaVisita: formatFecha(getCol("fecha visita", "fecha programada")),
-        cedulaResponsable: String(getCol("cedula responsable", "cédula responsable") || ""),
-        responsable: String(getCol("responsable", "tecnico responsable", "técnico responsable") || ""),
-        celularResponsable: String(getCol("celular tecnico", "celular técnico", "celular") || ""),
-        observacionesAsignacion: String(getCol("observaciones asignacion", "observaciones asignación") || ""),
-        tecnicaMantenimiento: String(getCol("tecnica mantenimiento", "técnica mantenimiento") || ""),
-        fechaCierre: formatFecha(getCol("fecha de cierre", "fecha cierre")),
-        nivelServicio: String(getCol("nivel de servicio", "nivel servicio") || "MEDIO"),
-        repuesto: String(getCol("repuesto", "repuestos") || ""),
-        respuesta: String(getCol("respuesta", "diagnostico", "diagnóstico") || ""),
+        var estadoVal = String(getCol("estado del ticket", "estado") || "ABIERTO").toUpperCase().trim();
+        var obsAsigVal = String(getCol("observaciones asignacion", "observaciones asignación", "observaciones de asignacion", "observaciones coordinador") || "");
+        var respVal = String(getCol("respuesta", "diagnostico", "diagnóstico") || "");
+        // Si el ticket está en PROCESO y no hay obsAsigVal pero respVal existe, respVal era la indicación del coordinador al asignar
+        if (!obsAsigVal && estadoVal === "PROCESO" && respVal) {
+          obsAsigVal = respVal;
+          respVal = "";
+        }
+
+        var ticketObj = {
+          _rowIndex: i + 1,
+          nroTicket: nroTicket,
+          fechaIngreso: formatFecha(getCol("fecha de ingreso", "fecha ingreso")),
+          tipoTicket: String(getCol("tipo de ticket", "tipo ticket") || ""),
+          cedulaSolicitante: String(getCol("cedula", "cédula") || ""),
+          nombreUsuario: String(getCol("nombre de usuario", "nombre solicitante", "solicitante") || ""),
+          emailSolicitante: String(getCol("dirección de correo electrónico", "direccion de correo electronico", "correo", "email") || ""),
+          puntoServicio: String(getCol("punto de servicio del cual requiere el soporte ", "punto de servicio del cual requiere el soporte", "punto de servicio", "punto") || ""),
+          tipoServicio: String(getCol("tipo de servicio", "tipo servicio") || ""),
+          descripcionSolicitud: String(getCol("haga una breve descripción del soporte solicitado ", "haga una breve descripción del soporte solicitado", "haga una breve descripcion del soporte solicitado ", "haga una breve descripcion del soporte solicitado", "descripcion", "descripción") || ""),
+          placa: String(getCol("placa") || ""),
+          descripcionEquipo: String(getCol("descripcion del equipo", "descripción del equipo", "equipo") || ""),
+          estado: estadoVal,
+          fechaAsignacion: formatFecha(getCol("fecha asignacion", "fecha asignación")),
+          fechaVisita: formatFecha(getCol("fecha visita", "fecha programada")),
+          cedulaResponsable: String(getCol("cedula responsable", "cédula responsable") || ""),
+          responsable: String(getCol("responsable", "tecnico responsable", "técnico responsable") || ""),
+          celularResponsable: String(getCol("celular tecnico", "celular técnico", "celular") || ""),
+          observacionesAsignacion: obsAsigVal,
+          tecnicaMantenimiento: String(getCol("tecnica mantenimiento", "técnica mantenimiento", "asunto de soporte") || ""),
+          fechaCierre: formatFecha(getCol("fecha de cierre", "fecha cierre")),
+          nivelServicio: String(getCol("nivel de servicio", "nivel servicio") || "MEDIO"),
+          repuesto: String(getCol("repuesto", "repuestos") || ""),
+          respuesta: respVal,
         cedulaQuienRecibe: String(getCol("cedula de quien recibe", "cédula de quien recibe") || ""),
         nombreQuienRecibe: String(getCol("nombre de quien recibe") || ""),
         tipoFalla: String(getCol("tipo de falla", "tipo falla") || ""),
@@ -1078,9 +1087,10 @@ function asignarTicket(asignacionData) {
 
     if (asignacionData.observacionesTrabajo) {
       try {
-        sheet.getRange(filaEncontrada, 20).setValue(String(asignacionData.observacionesTrabajo));
+        var colObsAsig = obtenerOcrearColumna(sheet, "Observaciones Asignacion");
+        sheet.getRange(filaEncontrada, colObsAsig).setValue(String(asignacionData.observacionesTrabajo));
       } catch (eObs) {
-        Logger.log("Aviso: no se pudo escribir observaciones en columna 20: " + eObs.message);
+        Logger.log("Aviso: no se pudo escribir observaciones en columna Observaciones Asignacion: " + eObs.message);
       }
     }
 

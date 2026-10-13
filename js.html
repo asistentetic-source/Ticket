@@ -976,6 +976,14 @@ function abrirModalCierre(nroTicket) {
     }
   }
 
+  // Mostrar la indicación o instrucción que dejó el coordinador al asignar
+  const estadoTicketActual = (ticket.estado || "").toUpperCase();
+  const instruccionCoord = (ticket.observacionesAsignacion || (estadoTicketActual === "PROCESO" ? ticket.respuesta : "") || "").trim();
+  const elInstruccion = document.getElementById("cierreInstruccionCoordinador");
+  if (elInstruccion) {
+    elInstruccion.textContent = instruccionCoord ? instruccionCoord : "(Sin observaciones adicionales de la coordinación al asignar)";
+  }
+
   // Observación / Razón por la cual queda PENDIENTE
   if (ticket.razonNoFuncionamiento) {
     document.getElementById("cierreRazonNoOperativo").value = ticket.razonNoFuncionamiento;
@@ -986,15 +994,17 @@ function abrirModalCierre(nroTicket) {
     }
   }
 
-  // Observación del trabajo realizado (Respuesta)
-  if (ticket.respuesta) {
-    let obsTexto = ticket.respuesta;
-    // Si contiene prefijo [PENDIENTE: ...], limpiarlo para mostrar solo la observación limpia
-    if (obsTexto.indexOf("[PENDIENTE:") !== -1) {
-      obsTexto = obsTexto.replace(/\[PENDIENTE:\s*.*?\]\s*/, "");
+  // Observación del trabajo realizado (¿Qué se hizo? - Llenado por el Técnico):
+  // Si el ticket apenas está en PROCESO, dejar el campo en blanco para que el técnico escriba lo que hizo.
+  // Solo si ya fue guardado previamente en PENDIENTE o CERRADO con una respuesta técnica real, precargarla.
+  let obsTecnico = "";
+  if (estadoTicketActual !== "PROCESO" && ticket.respuesta && ticket.respuesta.trim() !== instruccionCoord) {
+    obsTecnico = ticket.respuesta;
+    if (obsTecnico.indexOf("[PENDIENTE:") !== -1) {
+      obsTecnico = obsTecnico.replace(/\[PENDIENTE:\s*.*?\]\s*/, "");
     }
-    document.getElementById("cierreObservacion").value = obsTexto.trim();
   }
+  document.getElementById("cierreObservacion").value = obsTecnico.trim();
 
   // Quién recibe y cédula: Se traen automáticamente de quien creó la incidencia/ticket
   const nombreSol = ticket.nombreUsuario || ticket.nombreQuienRecibe || "";
