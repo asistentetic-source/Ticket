@@ -1,0 +1,13 @@
+# Clasp config
+.clasp.json
+.clasprc.json
+
+# Node & dependencies
+node_modules/
+npm-debug.log*
+
+# Archivos temporales y de sistema
+*.tmp
+*.log
+.DS_Store
+Thumbs.db
