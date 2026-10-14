@@ -426,20 +426,29 @@ function obtenerCatalogos() {
 
 /**
  * Autentica un usuario general (Empleado o Técnico) por su cédula.
+ * Si la cédula pertenece a un Administrador, Coordinador o Reclutador,
+ * retorna la información del usuario indicando que requiere su contraseña de acceso.
  */
 function login(cedula) {
   try {
-    var cedulaLimpia = String(cedula).trim();
+    var cedulaLimpia = String(cedula || "").trim();
     if (!cedulaLimpia) {
       return { success: false, message: "Debe ingresar una cédula." };
     }
 
-    // Detección especial de perfil Administradora para guiar al portal con contraseña
+    // Detección especial de perfil Administradora
     if (cedulaLimpia === CONFIG.ADMINISTRADORA.USUARIO) {
       return {
         success: false,
         esAdmin: true,
-        message: "Perfil de Administradora detectado. Por favor ingrese mediante el Acceso de Coordinación (🚪) con su contraseña."
+        requierePassword: true,
+        user: {
+          cedula: CONFIG.ADMINISTRADORA.USUARIO,
+          nombres: CONFIG.ADMINISTRADORA.NOMBRES,
+          tipoUsuario: CONFIG.ADMINISTRADORA.TIPO_USUARIO,
+          area: CONFIG.ADMINISTRADORA.AREA
+        },
+        message: "Perfil de Administradora detectado."
       };
     }
 
@@ -453,13 +462,32 @@ function login(cedula) {
 
       if (cedulaEmp === cedulaBuscada && cedulaBuscada !== "") {
         var rol = String(emp["TIPO USUARIO"] || "Empleado").trim();
+        var rolLower = rol.toLowerCase();
+        var areaEmp = String(emp["AREA"] || "").toUpperCase().trim();
 
-        // Si es Administrador, avisar que debe ingresar por la puerta de administración
-        if (rol.toLowerCase().indexOf("administrador") !== -1) {
+        // Normalizar área registrada en la hoja de cálculo
+        var areaNormalizada = "MANTENIMIENTO";
+        if (areaEmp.indexOf("TIC") !== -1 || areaEmp.indexOf("SISTEMA") !== -1) {
+          areaNormalizada = "TIC";
+        } else if (areaEmp.indexOf("RECURSO") !== -1 || areaEmp.indexOf("RRHH") !== -1) {
+          areaNormalizada = "RRHH";
+        } else {
+          areaNormalizada = "MANTENIMIENTO";
+        }
+
+        // Si es Administrador, Coordinador o Reclutador, solicita contraseña
+        if (rolLower.indexOf("administrador") !== -1 || rolLower.indexOf("reclutador") !== -1 || rolLower.indexOf("coordinador") !== -1) {
           return {
             success: false,
             esAdmin: true,
-            message: "Usuario Administrador detectado. Por favor ingrese mediante el botón de Acceso Administrativo (🚪) con su contraseña."
+            requierePassword: true,
+            user: {
+              cedula: String(emp["CEDULA"]),
+              nombres: emp["NOMBRES APELLIDOS"],
+              tipoUsuario: rol,
+              area: areaNormalizada
+            },
+            message: "Perfil administrativo detectado."
           };
         }
 
@@ -469,7 +497,7 @@ function login(cedula) {
           email: emp["EMAIL"],
           celular: emp["CELULAR"],
           tipoUsuario: rol,
-          area: String(emp["AREA"] || "").toUpperCase().trim()
+          area: areaEmp
         };
         break;
       }
@@ -486,46 +514,39 @@ function login(cedula) {
 }
 
 /**
- * Autentica exclusivamente a Administradores (Coordinadores) mediante Cédula, Contraseña y Área.
- * También soporta el perfil especial "Administradora" (usuario: 1234, contraseña: 123).
+ * Autentica exclusivamente a Administradores / Coordinadores mediante Cédula y Contraseña.
+ * Determina el área y rol automáticamente a partir del registro del empleado en Google Sheets.
  */
 function loginAdmin(cedula, password, area) {
   try {
-    var cedulaLimpia = String(cedula).trim();
-    var passLimpio = String(password).trim();
-    var areaLimpia = String(area).trim().toUpperCase();
+    var cedulaLimpia = String(cedula || "").trim();
+    var passLimpio = String(password || "").trim();
+    var areaLimpia = String(area || "").trim().toUpperCase();
 
     if (!cedulaLimpia || !passLimpio) {
       return { success: false, message: "Debe ingresar usuario y contraseña." };
     }
 
     // ── Perfil especial: Administradora ──────────────────────────────────────
-    if (cedulaLimpia === CONFIG.ADMINISTRADORA.USUARIO && passLimpio === CONFIG.ADMINISTRADORA.PASSWORD) {
-      return {
-        success: true,
-        user: {
-          cedula: CONFIG.ADMINISTRADORA.USUARIO,
-          nombres: CONFIG.ADMINISTRADORA.NOMBRES,
-          email: "",
-          celular: "",
-          tipoUsuario: CONFIG.ADMINISTRADORA.TIPO_USUARIO,
-          area: CONFIG.ADMINISTRADORA.AREA
-        }
-      };
+    if (cedulaLimpia === CONFIG.ADMINISTRADORA.USUARIO) {
+      if (passLimpio === CONFIG.ADMINISTRADORA.PASSWORD) {
+        return {
+          success: true,
+          user: {
+            cedula: CONFIG.ADMINISTRADORA.USUARIO,
+            nombres: CONFIG.ADMINISTRADORA.NOMBRES,
+            email: "",
+            celular: "",
+            tipoUsuario: CONFIG.ADMINISTRADORA.TIPO_USUARIO,
+            area: CONFIG.ADMINISTRADORA.AREA
+          }
+        };
+      } else {
+        return { success: false, message: "Contraseña incorrecta para Administradora." };
+      }
     }
 
-    // ── Flujo estándar para Administradores y Reclutadores ───────────────────
-    if (!areaLimpia) {
-      return { success: false, message: "Debe seleccionar el área." };
-    }
-
-    // 1. Validar contraseña configurada para el área
-    var passEsperada = CONFIG.ADMIN_PASSWORDS[areaLimpia];
-    if (!passEsperada || passLimpio !== passEsperada) {
-      return { success: false, message: "Contraseña incorrecta para el área de " + areaLimpia + "." };
-    }
-
-    // 2. Validar que la cédula sea Administrador de esa área en la hoja EMPLEADOS
+    // ── Flujo estándar para Administradores, Coordinadores y Reclutadores ────
     var empleados = sheetToJson(CONFIG.SHEETS.EMPLEADOS);
     var usuarioEncontrado = null;
 
@@ -535,22 +556,25 @@ function loginAdmin(cedula, password, area) {
       var cedulaBuscada = cedulaLimpia.replace(/[^0-9]/g, "");
 
       if (cedulaEmp === cedulaBuscada && cedulaBuscada !== "") {
-        var rol = String(emp["TIPO USUARIO"] || "").toLowerCase();
+        var rol = String(emp["TIPO USUARIO"] || "").trim();
         var areaEmp = String(emp["AREA"] || "").toUpperCase().trim();
 
-        // Para área RRHH: el rol debe ser Reclutador
-        // Para otras áreas: el rol debe ser Administrador
-        var esAdminArea = areaLimpia === "RRHH"
-          ? (rol.indexOf("reclutador") !== -1)
-          : (rol.indexOf("administrador") !== -1);
-
-        if (!esAdminArea) {
-          var rolEsperado = areaLimpia === "RRHH" ? "Reclutador" : "Administrador";
-          return { success: false, message: "El usuario con cédula " + cedulaLimpia + " no tiene el perfil de " + rolEsperado + " requerido para esta área." };
+        // Determinar área normalizada automáticamente si no viene provista
+        var areaNormalizada = areaLimpia;
+        if (!areaNormalizada) {
+          if (areaEmp.indexOf("TIC") !== -1 || areaEmp.indexOf("SISTEMA") !== -1) {
+            areaNormalizada = "TIC";
+          } else if (areaEmp.indexOf("RECURSO") !== -1 || areaEmp.indexOf("RRHH") !== -1) {
+            areaNormalizada = "RRHH";
+          } else {
+            areaNormalizada = "MANTENIMIENTO";
+          }
         }
 
-        if (areaEmp !== areaLimpia && areaEmp !== "" && areaLimpia !== "RRHH") {
-          return { success: false, message: "Este usuario pertenece al área de " + areaEmp + ", no al área de " + areaLimpia + "." };
+        // Validar contraseña configurada para el área
+        var passEsperada = CONFIG.ADMIN_PASSWORDS[areaNormalizada];
+        if (!passEsperada || passLimpio !== passEsperada) {
+          return { success: false, message: "Contraseña incorrecta." };
         }
 
         usuarioEncontrado = {
@@ -558,8 +582,8 @@ function loginAdmin(cedula, password, area) {
           nombres: emp["NOMBRES APELLIDOS"],
           email: emp["EMAIL"],
           celular: emp["CELULAR"],
-          tipoUsuario: areaLimpia === "RRHH" ? "Reclutador" : "Administrador",
-          area: areaLimpia
+          tipoUsuario: areaNormalizada === "RRHH" ? "Reclutador" : (rol || "Administrador"),
+          area: areaNormalizada
         };
         break;
       }

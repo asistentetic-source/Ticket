@@ -20,17 +20,10 @@
   <!-- ==================================================================== -->
   <div id="loginView" style="display: flex; min-height: 100vh; align-items: center; justify-content: center; padding: 1.5rem;">
     <div style="background: var(--bg-card); backdrop-filter: blur(20px); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 2.5rem; width: 100%; max-width: 440px; box-shadow: var(--shadow-lg); text-align: center; position: relative;">
-      
-      <!-- Mini Botón Puerta para Administradores / Coordinadores -->
-      <div style="position: absolute; top: 18px; right: 18px;">
-        <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAdminLogin(true)" title="Acceso Exclusivo Coordinadores (Mantenimiento / TIC)" style="padding: 0.4rem 0.65rem; font-size: 1.15rem; border-radius: 8px;">
-          🚪
-        </button>
-      </div>
 
       <!-- Logo Oficial DIALI® -->
       <div style="margin: 0 auto 1.25rem; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-        <img src="assets/logo-diali.png" onerror="this.src='https://asistentetic-source.github.io/Ticket/assets/logo-diali.png'" alt="Diali - Dialimentos" style="width: 210px; max-width: 100%; height: auto; display: block; filter: drop-shadow(0 4px 14px rgba(0, 0, 88, 0.45));">
+        <img src="assets/logo-diali.png" onerror="this.src='https://asistentetic-source.github.io/Ticket/assets/logo-diali.png'" alt="Diali - Dialimentos" style="width: 210px; max-width: 100%; height: auto; display: block;">
         <span style="font-size: 0.72rem; color: #d8b4e2; letter-spacing: 0.04em; margin-top: 0.45rem; font-weight: 500;">
           Una marca operada por Dialimentos SAS
         </span>
@@ -38,7 +31,7 @@
       <h2 style="font-family: var(--font-heading); font-size: 1.55rem; font-weight: 800; margin-bottom: 0.25rem; color: #ffffff;">Mesa de Ayuda</h2>
       <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.75rem;">Gestión de Mantenimiento & TIC</p>
 
-      <!-- Panel 1: Ingreso de Empleados / Técnicos -->
+      <!-- Panel 1: Ingreso General por Cédula -->
       <div id="panelLoginEmpleado">
         <div style="text-align: left; margin-bottom: 1.5rem;">
           <label class="form-label" for="cedulaInput">Número de Cédula</label>
@@ -51,48 +44,38 @@
         <button id="btnLogin" class="btn btn-primary" style="width: 100%; padding: 0.85rem;" onclick="ejecutarLogin()">
           Iniciar Sesión
         </button>
-
-        <div style="margin-top: 1.5rem; border-top: 1px solid var(--border-subtle); padding-top: 1rem;">
-          <button type="button" onclick="toggleAdminLogin(true)" style="background: none; border: none; color: var(--text-dim); font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;">
-            <span>🚪</span> ¿Eres Coordinador? Ingreso Administrativo
-          </button>
-        </div>
       </div>
 
-      <!-- Panel 2: Ingreso Exclusivo para Coordinadores (Puerta) -->
+      <!-- Panel 2: Verificación de Contraseña para Coordinación / Administración -->
       <div id="panelLoginAdmin" style="display: none;">
-        <div style="background: rgba(131, 0, 101, 0.22); border: 1px solid rgba(206, 0, 88, 0.4); border-radius: var(--radius-sm); padding: 0.65rem 0.85rem; margin-bottom: 1.25rem; font-size: 0.82rem; color: #f472b6; text-align: left;">
-          🚪 <strong>Acceso de Coordinación / RRHH</strong><br>
-          <span style="font-size: 0.75rem; color: #f1f5f9;">Para Coordinación de Mantenimiento, TIC y Recursos Humanos.</span>
+        <!-- Tarjeta de identificación del usuario detectado automáticamente desde Sheets -->
+        <div style="background: linear-gradient(135deg, rgba(131, 0, 101, 0.28), rgba(206, 0, 88, 0.18)); border: 1px solid rgba(206, 0, 88, 0.45); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.5rem; text-align: left;">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span id="adminDetectedIcon" style="font-size: 1.6rem;">💼</span>
+            <div style="flex: 1; min-width: 0;">
+              <div id="adminDetectedName" style="font-weight: 700; color: #ffffff; font-size: 1rem; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Nombre Usuario</div>
+              <div id="adminDetectedRole" style="font-size: 0.8rem; color: #f472b6; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.15rem;">Rol / Área</div>
+            </div>
+          </div>
+          <div style="font-size: 0.75rem; color: #d8b4e2; padding-top: 0.5rem; margin-top: 0.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: space-between;">
+            <span>Cédula:</span>
+            <span id="adminDetectedCedula" style="color: #ffffff; font-weight: 700;">-</span>
+          </div>
         </div>
 
-        <div style="text-align: left; margin-bottom: 1rem;">
-          <label class="form-label" for="adminAreaSelect">Área de Coordinación</label>
-          <select id="adminAreaSelect" class="form-control">
-            <option value="MANTENIMIENTO">🔧 Coordinación de Mantenimiento</option>
-            <option value="TIC">💻 Coordinación de TIC / Sistemas</option>
-            <option value="RRHH">👥 Recursos Humanos (Reclutador)</option>
-            <option value="ADMINISTRADORA">💼 Administradora (Mantenimiento)</option>
-          </select>
-        </div>
-
-        <div style="text-align: left; margin-bottom: 1rem;">
-          <label class="form-label" for="adminCedulaInput">Usuario / Cédula del Coordinador</label>
-          <input type="text" id="adminCedulaInput" class="form-control" placeholder="Usuario o cédula registrada..." onkeypress="if(event.key === 'Enter') document.getElementById('adminPasswordInput').focus()">
-        </div>
-
+        <!-- Campo de Contraseña del Área / Usuario -->
         <div style="text-align: left; margin-bottom: 1.5rem;">
-          <label class="form-label" for="adminPasswordInput">Contraseña del Área</label>
-          <input type="password" id="adminPasswordInput" class="form-control" placeholder="Contraseña de coordinación..." onkeypress="if(event.key === 'Enter') ejecutarLoginAdmin()">
+          <label class="form-label" for="adminPasswordInput">Contraseña de Acceso</label>
+          <input type="password" id="adminPasswordInput" class="form-control" placeholder="Ingrese su contraseña..." onkeypress="if(event.key === 'Enter') ejecutarLoginAdmin()">
         </div>
 
         <button id="btnAdminLogin" class="btn btn-primary" style="width: 100%; padding: 0.85rem;" onclick="ejecutarLoginAdmin()">
-          Ingresar como Coordinador
+          Ingresar al Sistema
         </button>
 
         <div style="margin-top: 1.25rem;">
-          <button type="button" onclick="toggleAdminLogin(false)" style="background: none; border: none; color: var(--text-dim); font-size: 0.82rem; cursor: pointer; text-decoration: underline;">
-            ⬅️ Volver a ingreso de empleados
+          <button type="button" onclick="volverALoginCedula()" style="background: none; border: none; color: var(--text-dim); font-size: 0.82rem; cursor: pointer; text-decoration: underline;">
+            ⬅️ Ingresar con otra cédula
           </button>
         </div>
       </div>
@@ -110,7 +93,7 @@
       <header class="header-bar">
         <div class="brand-wrapper">
           <div class="brand-logo-container">
-            <img src="assets/logo-diali.png" onerror="this.src='https://asistentetic-source.github.io/Ticket/assets/logo-diali.png'" alt="Diali - Dialimentos" style="height: 48px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 10px rgba(206, 0, 88, 0.4));">
+            <img src="assets/logo-diali.png" onerror="this.src='https://asistentetic-source.github.io/Ticket/assets/logo-diali.png'" alt="Diali - Dialimentos" style="height: 48px; width: auto; object-fit: contain;">
           </div>
           <div class="brand-text">
             <h1>Mesa de Ayuda</h1>

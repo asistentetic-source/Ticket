@@ -355,19 +355,60 @@ function ejecutarLogin(cedulaManual) {
       AppState.currentUser = res.user;
       localStorage.setItem("DIALIMENTOS_USER", JSON.stringify(res.user));
       mostrarAppPrincipal();
-    } else if (res.esAdmin) {
-      mostrarAlerta(res.message, "info");
-      toggleAdminLogin(true);
-      const adminCedula = document.getElementById("adminCedulaInput");
-      const adminArea = document.getElementById("adminAreaSelect");
-      if (adminCedula) adminCedula.value = cedulaInput;
-      if (adminArea && cedulaInput === "1234") {
-        adminArea.value = "ADMINISTRADORA";
+    } else if (res.esAdmin || res.requierePassword) {
+      // Guardar usuario administrativo detectado desde el backend / base de datos
+      AppState.pendingAdminUser = res.user || {
+        cedula: cedulaInput,
+        nombres: "Usuario Administrativo",
+        tipoUsuario: "Administrador",
+        area: "MANTENIMIENTO"
+      };
+
+      // Configurar vista del panel de contraseña con los datos del usuario
+      const nameElem = document.getElementById("adminDetectedName");
+      const roleElem = document.getElementById("adminDetectedRole");
+      const cedulaElem = document.getElementById("adminDetectedCedula");
+      const iconElem = document.getElementById("adminDetectedIcon");
+
+      if (nameElem) nameElem.textContent = AppState.pendingAdminUser.nombres || "Usuario";
+      if (cedulaElem) cedulaElem.textContent = AppState.pendingAdminUser.cedula || cedulaInput;
+
+      // Asignar icono y texto formateado de rol y área automáticamente
+      const area = (AppState.pendingAdminUser.area || "").toUpperCase();
+      const tipo = (AppState.pendingAdminUser.tipoUsuario || "").toLowerCase();
+
+      let labelArea = "Coordinación";
+      let icono = "💼";
+
+      if (tipo.includes("administradora") || cedulaInput === "1234") {
+        labelArea = "Administradora (Mantenimiento)";
+        icono = "💼";
+      } else if (area.includes("TIC") || area.includes("SISTEMA")) {
+        labelArea = "Coordinación de TIC / Sistemas";
+        icono = "💻";
+      } else if (area.includes("MTO") || area.includes("MANTENIMIENTO")) {
+        labelArea = "Coordinación de Mantenimiento";
+        icono = "🔧";
+      } else if (area.includes("RRHH") || area.includes("RECURSO") || tipo.includes("reclutador")) {
+        labelArea = "Recursos Humanos (Reclutador)";
+        icono = "👥";
+      } else {
+        labelArea = AppState.pendingAdminUser.tipoUsuario || "Coordinación";
       }
+
+      if (roleElem) roleElem.textContent = labelArea;
+      if (iconElem) iconElem.textContent = icono;
+
+      // Mostrar panel de contraseña
+      document.getElementById("panelLoginEmpleado").style.display = "none";
+      document.getElementById("panelLoginAdmin").style.display = "block";
       const adminPass = document.getElementById("adminPasswordInput");
-      if (adminPass) adminPass.focus();
+      if (adminPass) {
+        adminPass.value = "";
+        adminPass.focus();
+      }
     } else {
-      mostrarAlerta(res.message || "Usuario no encontrado", "danger");
+      mostrarAlerta(res.message || "Cédula no encontrada en el registro de empleados", "danger");
     }
   };
 
@@ -384,9 +425,25 @@ function ejecutarLogin(cedulaManual) {
   }
 }
 
+function volverALoginCedula() {
+  AppState.pendingAdminUser = null;
+  const panelAdmin = document.getElementById("panelLoginAdmin");
+  const panelEmpleado = document.getElementById("panelLoginEmpleado");
+  if (panelAdmin) panelAdmin.style.display = "none";
+  if (panelEmpleado) panelEmpleado.style.display = "block";
+  const passInput = document.getElementById("adminPasswordInput");
+  if (passInput) passInput.value = "";
+  const cedulaInput = document.getElementById("cedulaInput");
+  if (cedulaInput) {
+    cedulaInput.focus();
+    cedulaInput.select();
+  }
+}
+
 function cerrarSesion() {
   localStorage.removeItem("DIALIMENTOS_USER");
   AppState.currentUser = null;
+  AppState.pendingAdminUser = null;
   AppState.filtros.area = "TODAS";
   AppState.filtros.estado = "TODOS";
   AppState.filtros.busqueda = "";
@@ -398,39 +455,38 @@ function cerrarSesion() {
     selArea.style.opacity = "1";
     selArea.removeAttribute("title");
   }
+  volverALoginCedula();
   document.getElementById("loginView").style.display = "flex";
   document.getElementById("mainAppView").style.display = "none";
 }
 
 function toggleAdminLogin(mostrarAdmin) {
-  const panelEmpleado = document.getElementById("panelLoginEmpleado");
-  const panelAdmin = document.getElementById("panelLoginAdmin");
-  if (!panelEmpleado || !panelAdmin) return;
   if (mostrarAdmin) {
-    panelEmpleado.style.display = "none";
-    panelAdmin.style.display = "block";
-    const adminCedula = document.getElementById("adminCedulaInput");
-    if (adminCedula) adminCedula.focus();
-  } else {
-    panelAdmin.style.display = "none";
-    panelEmpleado.style.display = "block";
+    // Si se invoca, no hacer nada o simplemente enfocar cédula
     const cedulaInput = document.getElementById("cedulaInput");
     if (cedulaInput) cedulaInput.focus();
+  } else {
+    volverALoginCedula();
   }
 }
 
 function ejecutarLoginAdmin() {
-  const cedula = document.getElementById("adminCedulaInput").value.trim();
-  const password = document.getElementById("adminPasswordInput").value.trim();
-  const area = document.getElementById("adminAreaSelect").value;
+  if (!AppState.pendingAdminUser) {
+    volverALoginCedula();
+    return;
+  }
 
-  if (!cedula || !password) {
-    mostrarAlerta("Ingrese su usuario y contraseña.", "warning");
+  const password = document.getElementById("adminPasswordInput").value.trim();
+  if (!password) {
+    mostrarAlerta("Ingrese su contraseña de acceso.", "warning");
     return;
   }
 
   const btnAdmin = document.getElementById("btnAdminLogin");
   if (btnAdmin) btnAdmin.disabled = true;
+
+  const cedula = AppState.pendingAdminUser.cedula;
+  const area = AppState.pendingAdminUser.area || "";
 
   const callback = function (res) {
     if (btnAdmin) btnAdmin.disabled = false;
@@ -439,7 +495,12 @@ function ejecutarLoginAdmin() {
       localStorage.setItem("DIALIMENTOS_USER", JSON.stringify(res.user));
       mostrarAppPrincipal();
     } else {
-      mostrarAlerta(res.message || "Credenciales incorrectas o sin permisos.", "danger");
+      mostrarAlerta(res.message || "Contraseña incorrecta.", "danger");
+      const passInput = document.getElementById("adminPasswordInput");
+      if (passInput) {
+        passInput.select();
+        passInput.focus();
+      }
     }
   };
 
