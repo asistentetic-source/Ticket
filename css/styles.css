@@ -1,47 +1,68 @@
 /* ==========================================================================
-   SISTEMA DE DISEÑO VISUAL - MESA DE AYUDA DIALIMENTOS
-   Alineado a estética premium, moderna y profesional
+   SISTEMA DE DISEÑO VISUAL - MESA DE AYUDA DIALIMENTOS (DIALI®)
+   Basado en el Manual de Imagen Corporativa Oficial DIALI®
+   Paleta: Morado Pantone 2425 C (#830065), Rosado Pantone Rubine Red C (#CE0058),
+           Blanco Puro, Escala de Negros Profundos y Acentos Complementarios.
+   Tipografía Oficial: Heebo (Google Fonts)
    ========================================================================== */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap');
 
 :root {
-  /* Paleta cromática corporativa */
-  --bg-main: #0b0f19;
-  --bg-surface: #111827;
-  --bg-card: rgba(17, 24, 39, 0.75);
-  --bg-card-hover: rgba(30, 41, 59, 0.85);
-  --bg-input: #1e293b;
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-focus: #3b82f6;
+  /* ── 1. Paleta Cromática Corporativa DIALI® ────────────────────────── */
+  --diali-purple: #830065;          /* Pantone 2425 C (Morado Institucional) */
+  --diali-purple-light: #9f1285;    /* Morado Luminoso */
+  --diali-purple-glow: rgba(131, 0, 101, 0.45);
+  
+  --diali-pink: #CE0058;            /* Pantone Rubine Red C (Rosado / Magenta Vibrante) */
+  --diali-pink-hover: #b3004b;      /* Rosado Intenso */
+  --diali-pink-light: #ff3388;      /* Rosado Brillante */
+  --diali-pink-soft: #f472b6;       /* Rosado Pastel Acento */
+  --diali-pink-glow: rgba(206, 0, 88, 0.4);
 
-  /* Colores de acento */
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --primary-glow: rgba(37, 99, 235, 0.35);
-  --secondary: #6366f1;
-  --accent-orange: #f97316;
+  /* ── 2. Fondos y Superficies Dark Mode de Alta Gama (Negros & Ciruelas) ─ */
+  --bg-main: #0a030d;               /* Negro Obsidiana con matiz ciruela sutil */
+  --bg-surface: #130718;            /* Superficie base */
+  --bg-card: rgba(21, 9, 27, 0.82); /* Glassmorphism oscuro */
+  --bg-card-hover: rgba(36, 15, 46, 0.9);
+  --bg-input: #1a0b22;              /* Fondo de inputs */
+  --bg-modal: #120617;              /* Fondo de modales */
 
-  /* Estados de Tickets */
-  --status-abierto: #38bdf8;
-  --status-abierto-bg: rgba(56, 189, 248, 0.15);
-  --status-proceso: #fbbf24;
-  --status-proceso-bg: rgba(251, 191, 36, 0.15);
-  --status-pendiente: #f87171;
-  --status-pendiente-bg: rgba(248, 113, 113, 0.15);
-  --status-cerrado: #34d399;
-  --status-cerrado-bg: rgba(52, 211, 153, 0.15);
+  /* ── 3. Bordes y Delimitadores ────────────────────────────────────────── */
+  --border-subtle: rgba(206, 0, 88, 0.16);
+  --border-card: rgba(255, 255, 255, 0.08);
+  --border-focus: #CE0058;
+  --border-hover: rgba(206, 0, 88, 0.4);
 
-  /* Tipografía y textos */
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
-  --font-heading: 'Outfit', sans-serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  /* ── 4. Colores de Acento y Acciones ──────────────────────────────────── */
+  --primary: #CE0058;
+  --primary-hover: #b3004b;
+  --primary-glow: rgba(206, 0, 88, 0.35);
+  --secondary: #830065;
+  --accent-orange: #FFB549;         /* Pantone 1365 C */
 
-  /* Sombras y blur */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 20px var(--primary-glow);
+  /* ── 5. Estados de Tickets (Manual de Marca DIALI®) ───────────────────── */
+  --status-abierto: #2CD5C4;        /* Pantone 3255 C - Turquesa / Cian */
+  --status-abierto-bg: rgba(44, 213, 196, 0.14);
+  --status-proceso: #FFB549;        /* Pantone 1365 C - Naranja Cálido */
+  --status-proceso-bg: rgba(255, 181, 73, 0.15);
+  --status-pendiente: #f43f5e;      /* Rosado Rojizo */
+  --status-pendiente-bg: rgba(244, 63, 94, 0.16);
+  --status-cerrado: #78D64B;        /* Pantone 7488 C - Verde Lima */
+  --status-cerrado-bg: rgba(120, 214, 75, 0.16);
+
+  /* ── 6. Tipografía y Textos (Heebo Oficial) ──────────────────────────── */
+  --text-main: #ffffff;             /* Blanco Puro */
+  --text-secondary: #f1f5f9;        /* Blanco Hielo */
+  --text-muted: #d8b4e2;            /* Lavanda suave legible */
+  --text-dim: #94729e;              /* Púrpura agrisado tenue */
+  --font-heading: 'Heebo', sans-serif;
+  --font-body: 'Heebo', sans-serif;
+
+  /* ── 7. Sombras, Radios y Transiciones ────────────────────────────────── */
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 14px 35px -6px rgba(0, 0, 0, 0.65), 0 8px 12px -6px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 24px rgba(206, 0, 88, 0.35);
+  --shadow-glow-purple: 0 0 24px rgba(131, 0, 101, 0.4);
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
@@ -49,7 +70,9 @@
   --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Reset y base */
+/* ==========================================================================
+   RESET & ESTILOS BASE
+   ========================================================================== */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -64,26 +87,29 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   background-image: 
-    radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.12) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.10) 0px, transparent 50%);
+    radial-gradient(at 0% 0%, rgba(131, 0, 101, 0.28) 0px, transparent 55%),
+    radial-gradient(at 100% 100%, rgba(206, 0, 88, 0.20) 0px, transparent 50%),
+    radial-gradient(at 50% 20%, rgba(159, 18, 133, 0.10) 0px, transparent 40%);
   background-attachment: fixed;
 }
 
 /* Contenedor principal */
 .app-container {
-  max-width: 1380px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 1.5rem;
 }
 
-/* Barra superior (Header) */
+/* ==========================================================================
+   BARRA SUPERIOR (HEADER) CON LOGO OFICIAL DIALI®
+   ========================================================================== */
 .header-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.25rem 1.75rem;
+  padding: 1.15rem 1.75rem;
   background: var(--bg-card);
-  backdrop-filter: blur(16px);
+  backdrop-filter: blur(18px);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   margin-bottom: 2rem;
@@ -93,29 +119,20 @@ body {
 .brand-wrapper {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
-.brand-logo {
-  width: 44px;
-  height: 44px;
-  background: linear-gradient(135deg, #2563eb, #6366f1);
-  border-radius: var(--radius-md);
+.brand-logo-container {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 1.4rem;
-  font-weight: 800;
-  color: #fff;
-  box-shadow: var(--shadow-glow);
 }
 
 .brand-text h1 {
   font-family: var(--font-heading);
   font-size: 1.45rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: -0.02em;
-  background: linear-gradient(to right, #ffffff, #cbd5e1);
+  background: linear-gradient(to right, #ffffff, #fce7f3);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -125,27 +142,38 @@ body {
   color: var(--text-muted);
 }
 
+.brand-tagline-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  color: var(--diali-pink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  margin-top: 0.15rem;
+}
+
 .user-profile-badge {
   display: flex;
   align-items: center;
   gap: 1rem;
-  background: rgba(255, 255, 255, 0.04);
-  padding: 0.5rem 1rem;
+  background: rgba(131, 0, 101, 0.15);
+  padding: 0.5rem 1.15rem;
   border-radius: var(--radius-full);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid rgba(206, 0, 88, 0.28);
 }
 
 .user-avatar {
-  width: 34px;
-  height: 34px;
-  background: #334155;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, var(--diali-pink), var(--diali-purple));
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  font-size: 0.85rem;
-  color: #38bdf8;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(206, 0, 88, 0.4);
 }
 
 .user-info {
@@ -154,29 +182,33 @@ body {
 }
 
 .user-name {
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffffff;
 }
 
 .user-role {
   font-size: 0.72rem;
   color: var(--text-muted);
+  font-weight: 500;
 }
 
-/* Tarjetas de Métricas (KPIs) */
+/* ==========================================================================
+   TARJETAS DE MÉTRICAS (KPIS)
+   ========================================================================== */
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1.25rem;
   margin-bottom: 2rem;
 }
 
 .kpi-card {
   background: var(--bg-card);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(14px);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 1.25rem;
+  padding: 1.25rem 1.4rem;
   display: flex;
   align-items: center;
   gap: 1.15rem;
@@ -185,39 +217,53 @@ body {
   overflow: hidden;
 }
 
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--diali-pink), var(--diali-purple));
+  opacity: 0.7;
+}
+
 .kpi-card:hover {
   transform: translateY(-3px);
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: var(--shadow-lg);
+  border-color: rgba(206, 0, 88, 0.4);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(206, 0, 88, 0.2);
 }
 
 .kpi-icon-box {
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
+  font-size: 1.45rem;
 }
 
 .kpi-val {
   font-family: var(--font-heading);
-  font-size: 1.8rem;
-  font-weight: 700;
+  font-size: 1.9rem;
+  font-weight: 800;
   line-height: 1;
+  color: #ffffff;
 }
 
 .kpi-label {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
   margin-top: 0.25rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-weight: 600;
+  letter-spacing: 0.05em;
+  font-weight: 700;
 }
 
-/* Barra de Acciones y Filtros */
+/* ==========================================================================
+   BARRA DE ACCIONES Y FILTROS
+   ========================================================================== */
 .actions-bar {
   display: flex;
   flex-wrap: wrap;
@@ -236,12 +282,13 @@ body {
 
 .search-input {
   width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  padding: 0.75rem 1rem 0.75rem 2.6rem;
   background: var(--bg-input);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   color: var(--text-main);
   font-size: 0.9rem;
+  font-family: var(--font-body);
   transition: var(--transition);
 }
 
@@ -253,11 +300,11 @@ body {
 
 .search-icon {
   position: absolute;
-  left: 0.85rem;
+  left: 0.95rem;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--text-dim);
-  font-size: 0.95rem;
+  color: var(--diali-pink-soft);
+  font-size: 1rem;
 }
 
 .filters-wrapper {
@@ -273,7 +320,8 @@ body {
   border: 1px solid var(--border-subtle);
   padding: 0.7rem 1.25rem;
   border-radius: var(--radius-md);
-  font-size: 0.85rem;
+  font-size: 0.86rem;
+  font-family: var(--font-body);
   cursor: pointer;
   transition: var(--transition);
 }
@@ -281,43 +329,50 @@ body {
 .select-custom:focus {
   outline: none;
   border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
-/* Botones */
+/* ==========================================================================
+   BOTONES PREMIUM (CON IDENTIDAD DIALI®)
+   ========================================================================== */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.7rem 1.35rem;
+  padding: 0.72rem 1.4rem;
   border-radius: var(--radius-md);
-  font-weight: 600;
-  font-size: 0.875rem;
+  font-weight: 700;
+  font-size: 0.88rem;
   cursor: pointer;
   border: none;
   transition: var(--transition);
   font-family: var(--font-body);
+  letter-spacing: 0.01em;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  color: #fff;
-  box-shadow: 0 4px 12px var(--primary-glow);
+  background: linear-gradient(135deg, var(--diali-pink) 0%, var(--diali-purple) 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(206, 0, 88, 0.4);
 }
 
 .btn-primary:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, var(--diali-pink-light) 0%, var(--diali-purple-light) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(206, 0, 88, 0.55);
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-main);
-  border: 1px solid var(--border-subtle);
+  background: rgba(131, 0, 101, 0.2);
+  color: #ffffff;
+  border: 1px solid rgba(206, 0, 88, 0.35);
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(206, 0, 88, 0.25);
+  border-color: var(--diali-pink);
+  transform: translateY(-1px);
 }
 
 .btn-danger {
@@ -325,9 +380,17 @@ body {
   color: white;
 }
 
+.btn-danger:hover {
+  background: #ef4444;
+}
+
 .btn-success {
   background: #059669;
   color: white;
+}
+
+.btn-success:hover {
+  background: #10b981;
 }
 
 .btn-sm {
@@ -336,10 +399,12 @@ body {
   border-radius: var(--radius-sm);
 }
 
-/* Tabla de Tickets */
+/* ==========================================================================
+   TABLA DE TICKETS (DARK GLASSMORPHISM & DIALI BRAND)
+   ========================================================================== */
 .table-card {
   background: var(--bg-card);
-  backdrop-filter: blur(16px);
+  backdrop-filter: blur(18px);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -355,22 +420,22 @@ body {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 0.875rem;
+  font-size: 0.88rem;
 }
 
 .custom-table th {
-  background: rgba(15, 23, 42, 0.8);
-  padding: 1rem 1.15rem;
-  font-weight: 600;
+  background: rgba(19, 7, 24, 0.88);
+  padding: 1.05rem 1.15rem;
+  font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
-  font-size: 0.73rem;
-  letter-spacing: 0.05em;
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
   border-bottom: 1px solid var(--border-subtle);
 }
 
 .custom-table td {
-  padding: 1rem 1.15rem;
+  padding: 1.05rem 1.15rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   vertical-align: middle;
 }
@@ -381,8 +446,8 @@ body {
 
 .ticket-code {
   font-family: var(--font-heading);
-  font-weight: 700;
-  color: #38bdf8;
+  font-weight: 800;
+  color: #ff3388;
   letter-spacing: 0.02em;
 }
 
@@ -390,30 +455,32 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.25rem 0.65rem;
+  padding: 0.28rem 0.7rem;
   border-radius: var(--radius-full);
   font-size: 0.74rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.02em;
 }
 
-.badge-abierto { background: var(--status-abierto-bg); color: var(--status-abierto); border: 1px solid rgba(56, 189, 248, 0.3); }
-.badge-proceso { background: var(--status-proceso-bg); color: var(--status-proceso); border: 1px solid rgba(251, 191, 36, 0.3); }
-.badge-pendiente { background: var(--status-pendiente-bg); color: var(--status-pendiente); border: 1px solid rgba(248, 113, 113, 0.3); }
-.badge-cerrado { background: var(--status-cerrado-bg); color: var(--status-cerrado); border: 1px solid rgba(52, 211, 153, 0.3); }
+.badge-abierto { background: var(--status-abierto-bg); color: var(--status-abierto); border: 1px solid rgba(44, 213, 196, 0.35); }
+.badge-proceso { background: var(--status-proceso-bg); color: var(--status-proceso); border: 1px solid rgba(255, 181, 73, 0.35); }
+.badge-pendiente { background: var(--status-pendiente-bg); color: var(--status-pendiente); border: 1px solid rgba(244, 63, 94, 0.35); }
+.badge-cerrado { background: var(--status-cerrado-bg); color: var(--status-cerrado); border: 1px solid rgba(120, 214, 75, 0.35); }
 
-.badge-area-mto { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
-.badge-area-tic { background: rgba(168, 85, 247, 0.15); color: #c084fc; }
+.badge-area-mto { background: rgba(206, 0, 88, 0.16); color: #f472b6; border: 1px solid rgba(206, 0, 88, 0.35); }
+.badge-area-tic { background: rgba(131, 0, 101, 0.28); color: #e879f9; border: 1px solid rgba(131, 0, 101, 0.45); }
 
-/* Modales */
+/* ==========================================================================
+   MODALES (ESTÉTICA OBSIDIANA & DIALI® GLOW)
+   ========================================================================== */
 .modal-backdrop {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(3, 7, 18, 0.75);
-  backdrop-filter: blur(8px);
+  background: rgba(5, 1, 7, 0.82);
+  backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -430,14 +497,14 @@ body {
 }
 
 .modal-container {
-  background: #111827;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--bg-modal);
+  border: 1px solid rgba(206, 0, 88, 0.3);
   border-radius: var(--radius-lg);
   width: 100%;
   max-width: 780px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
+  box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.85), 0 0 30px rgba(131, 0, 101, 0.25);
   transform: translateY(20px);
   transition: var(--transition);
 }
@@ -452,7 +519,7 @@ body {
   align-items: center;
   padding: 1.25rem 1.75rem;
   border-bottom: 1px solid var(--border-subtle);
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(26, 11, 33, 0.7);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -461,24 +528,26 @@ body {
 .modal-title {
   font-family: var(--font-heading);
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: 800;
   display: flex;
   align-items: center;
   gap: 0.65rem;
+  color: #ffffff;
 }
 
 .btn-close {
   background: transparent;
   border: none;
   color: var(--text-dim);
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   cursor: pointer;
   line-height: 1;
   transition: var(--transition);
 }
 
 .btn-close:hover {
-  color: var(--text-main);
+  color: var(--diali-pink-light);
+  transform: scale(1.1);
 }
 
 .modal-body {
@@ -491,10 +560,12 @@ body {
   gap: 0.75rem;
   padding: 1.25rem 1.75rem;
   border-top: 1px solid var(--border-subtle);
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(26, 11, 33, 0.5);
 }
 
-/* Formularios */
+/* ==========================================================================
+   FORMULARIOS
+   ========================================================================== */
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -507,14 +578,14 @@ body {
 
 .form-label {
   display: block;
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: 0.83rem;
+  font-weight: 700;
   color: var(--text-muted);
   margin-bottom: 0.4rem;
 }
 
 .form-label .required {
-  color: #f87171;
+  color: var(--diali-pink-light);
 }
 
 .form-control {
@@ -524,7 +595,7 @@ body {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   color: var(--text-main);
-  font-size: 0.88rem;
+  font-size: 0.89rem;
   font-family: var(--font-body);
   transition: var(--transition);
 }
@@ -540,7 +611,9 @@ textarea.form-control {
   min-height: 90px;
 }
 
-/* Acordeón de Detalle del Ticket (3 Secciones del Jefe) */
+/* ==========================================================================
+   ACORDEÓN DE DETALLE DEL TICKET (FASES 1, 2, 3 Y ADMINISTRADORA)
+   ========================================================================== */
 .phase-accordion {
   display: flex;
   flex-direction: column;
@@ -552,7 +625,7 @@ textarea.form-control {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   overflow: hidden;
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(19, 7, 24, 0.55);
 }
 
 .phase-header {
@@ -563,19 +636,20 @@ textarea.form-control {
   align-items: center;
   cursor: pointer;
   user-select: none;
-  border-left: 4px solid var(--primary);
+  border-left: 4px solid var(--diali-pink);
 }
 
-.phase-header.phase-green { border-left-color: #10b981; }
-.phase-header.phase-orange { border-left-color: #f59e0b; }
+.phase-header.phase-green { border-left-color: #78D64B; }
+.phase-header.phase-orange { border-left-color: #FFB549; }
 
 .phase-title {
   font-family: var(--font-heading);
   font-size: 0.98rem;
-  font-weight: 700;
+  font-weight: 800;
   display: flex;
   align-items: center;
   gap: 0.65rem;
+  color: #ffffff;
 }
 
 .phase-content {
@@ -598,18 +672,18 @@ textarea.form-control {
 .detail-label {
   font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   color: var(--text-dim);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .detail-value {
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   color: var(--text-main);
   font-weight: 500;
 }
 
-/* Modificar Placa - Componente Rápido */
+/* Modificar Placa */
 .plate-editable-box {
   display: flex;
   align-items: center;
@@ -618,13 +692,335 @@ textarea.form-control {
 
 .badge-plate {
   font-family: monospace;
-  font-weight: 700;
-  font-size: 0.9rem;
-  background: #0284c7;
-  color: #fff;
+  font-weight: 800;
+  font-size: 0.92rem;
+  background: linear-gradient(135deg, var(--diali-pink), var(--diali-purple));
+  color: #ffffff;
   padding: 0.25rem 0.65rem;
   border-radius: var(--radius-sm);
   letter-spacing: 0.05em;
+}
+
+/* ==========================================================================
+   COMPONENTES DE EVIDENCIA VISUAL Y FOTOS
+   ========================================================================== */
+.file-preview-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(36, 15, 46, 0.7);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  animation: fadeIn 0.2s ease;
+}
+
+.file-preview-card img {
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid rgba(206, 0, 88, 0.3);
+}
+
+.file-preview-details {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  align-items: center;
+  min-width: 0;
+}
+
+.file-preview-name {
+  font-size: 0.8rem;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 170px;
+}
+
+.btn-remove-preview {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-remove-preview:hover {
+  background: #ef4444;
+  color: #fff;
+}
+
+.badge-evidence {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.55rem;
+  background: rgba(44, 213, 196, 0.14);
+  border: 1px solid rgba(44, 213, 196, 0.4);
+  color: #2CD5C4;
+  border-radius: 4px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 0.3rem;
+  transition: var(--transition);
+}
+
+.badge-evidence:hover {
+  background: rgba(44, 213, 196, 0.28);
+  transform: translateY(-1px);
+}
+
+.badge-evidence-cierre {
+  background: rgba(120, 214, 75, 0.16);
+  border-color: rgba(120, 214, 75, 0.4);
+  color: #78D64B;
+}
+
+.badge-evidence-cierre:hover {
+  background: rgba(120, 214, 75, 0.3);
+}
+
+.evidence-card {
+  display: inline-block;
+  background: rgba(21, 9, 27, 0.75);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  max-width: 320px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.evidence-card:hover {
+  border-color: var(--diali-pink);
+  box-shadow: var(--shadow-glow);
+}
+
+.evidence-thumb-wrapper {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  background: #0f0512;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.evidence-thumb-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.evidence-thumb-wrapper:hover img {
+  transform: scale(1.05);
+}
+
+.evidence-overlay-zoom {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 5, 18, 0.65);
+  opacity: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: opacity 0.2s ease;
+}
+
+.evidence-thumb-wrapper:hover .evidence-overlay-zoom {
+  opacity: 1;
+}
+
+.evidence-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.85rem;
+  background: rgba(36, 15, 46, 0.6);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.btn-drive-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #ff5c9d;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.btn-drive-link:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+/* Lightbox */
+.lightbox-wrapper {
+  background: var(--bg-modal);
+  border: 1px solid rgba(206, 0, 88, 0.3);
+  border-radius: var(--radius-lg);
+  max-width: 860px;
+  width: 95%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
+  overflow: hidden;
+}
+
+.lightbox-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: rgba(26, 11, 33, 0.85);
+}
+
+.lightbox-body {
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  background: #060208;
+  min-height: 300px;
+  max-height: calc(90vh - 75px);
+}
+
+.lightbox-body img {
+  max-width: 100%;
+  max-height: calc(90vh - 110px);
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+/* ==========================================================================
+   CARGA MASIVA Y PESTAÑAS RRHH
+   ========================================================================== */
+.tabs-nav {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.65rem 1.15rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: var(--transition);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  color: #fff;
+  background: rgba(206, 0, 88, 0.1);
+}
+
+.tab-btn.active {
+  color: var(--diali-pink-light);
+  border-bottom-color: var(--diali-pink);
+  background: rgba(206, 0, 88, 0.15);
+}
+
+.excel-dropzone {
+  border: 2px dashed rgba(206, 0, 88, 0.45);
+  background: rgba(26, 11, 33, 0.45);
+  border-radius: var(--radius-md);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.excel-dropzone:hover {
+  border-color: var(--diali-pink-light);
+  background: rgba(36, 15, 46, 0.7);
+  box-shadow: 0 0 20px rgba(206, 0, 88, 0.25);
+}
+
+.badge-reclutador {
+  background: rgba(131, 0, 101, 0.3);
+  color: #e879f9;
+  border: 1px solid rgba(131, 0, 101, 0.5);
+  padding: 0.2rem 0.55rem;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   ALERTAS FLOTANTES
+   ========================================================================== */
+.alert-floating {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  max-width: 420px;
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  animation: slideInRight 0.25s ease;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.alert-success {
+  background: #064e3b;
+  color: #6ee7b7;
+  border: 1px solid #059669;
+}
+
+.alert-danger {
+  background: #4c0519;
+  color: #fda4af;
+  border: 1px solid #be123c;
+}
+
+.alert-warning {
+  background: #451a03;
+  color: #fde68a;
+  border: 1px solid #b45309;
+}
+
+.alert-info {
+  background: rgba(131, 0, 101, 0.9);
+  color: #fdf2f8;
+  border: 1px solid #ce0058;
 }
 
 /* Responsive */
@@ -648,307 +1044,4 @@ textarea.form-control {
     flex-direction: column;
     align-items: stretch;
   }
-}
-
-/* ==========================================================================
-   COMPONENTES DE EVIDENCIA VISUAL Y FOTOS
-   ========================================================================== */
-
-/* 1. Vista previa inmediata al seleccionar archivo en el formulario */
-.file-preview-card {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  background: rgba(30, 41, 59, 0.7);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  animation: fadeIn 0.2s ease;
-}
-
-.file-preview-card img {
-  width: 52px;
-  height: 52px;
-  object-fit: cover;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.file-preview-details {
-  display: flex;
-  flex: 1;
-  justify-content: space-between;
-  align-items: center;
-  min-width: 0;
-}
-
-.file-preview-name {
-  font-size: 0.8rem;
-  color: #cbd5e1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 170px;
-}
-
-.btn-remove-preview {
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #f87171;
-  padding: 0.25rem 0.55rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.btn-remove-preview:hover {
-  background: #ef4444;
-  color: #fff;
-}
-
-/* 2. Badge de evidencia en la tabla de tickets */
-.badge-evidence {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.18rem 0.45rem;
-  background: rgba(56, 189, 248, 0.15);
-  border: 1px solid rgba(56, 189, 248, 0.35);
-  color: #38bdf8;
-  border-radius: 4px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 0.3rem;
-  transition: var(--transition);
-}
-
-.badge-evidence:hover {
-  background: rgba(56, 189, 248, 0.3);
-  transform: translateY(-1px);
-}
-
-.badge-evidence-cierre {
-  background: rgba(52, 211, 153, 0.15);
-  border-color: rgba(52, 211, 153, 0.35);
-  color: #34d399;
-}
-
-.badge-evidence-cierre:hover {
-  background: rgba(52, 211, 153, 0.3);
-}
-
-/* 3. Tarjeta de visualización de evidencia en modales de Detalle y Asignación */
-.evidence-card {
-  display: inline-block;
-  background: rgba(15, 23, 42, 0.65);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  max-width: 320px;
-  box-shadow: var(--shadow-sm);
-  transition: var(--transition);
-}
-
-.evidence-card:hover {
-  border-color: var(--primary);
-  box-shadow: var(--shadow-glow);
-}
-
-.evidence-thumb-wrapper {
-  position: relative;
-  width: 100%;
-  height: 180px;
-  background: #0f172a;
-  overflow: hidden;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.evidence-thumb-wrapper img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-.evidence-thumb-wrapper:hover img {
-  transform: scale(1.05);
-}
-
-.evidence-overlay-zoom {
-  position: absolute;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.55);
-  opacity: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  color: #fff;
-  font-weight: 600;
-  font-size: 0.85rem;
-  transition: opacity 0.2s ease;
-}
-
-.evidence-thumb-wrapper:hover .evidence-overlay-zoom {
-  opacity: 1;
-}
-
-.evidence-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.6rem 0.85rem;
-  background: rgba(30, 41, 59, 0.5);
-  border-top: 1px solid var(--border-subtle);
-}
-
-.btn-drive-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  color: #38bdf8;
-  font-size: 0.78rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition: var(--transition);
-}
-
-.btn-drive-link:hover {
-  color: #93c5fd;
-  text-decoration: underline;
-}
-
-/* 4. Modal Lightbox (Visor en Pantalla Completa) */
-.lightbox-wrapper {
-  background: var(--bg-card);
-  backdrop-filter: blur(24px);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  max-width: 860px;
-  width: 95%;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
-  overflow: hidden;
-  animation: modalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.lightbox-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--border-subtle);
-  background: rgba(15, 23, 42, 0.8);
-}
-
-.lightbox-body {
-  padding: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: auto;
-  background: #030712;
-  min-height: 300px;
-  max-height: calc(90vh - 75px);
-}
-
-.lightbox-body img {
-  max-width: 100%;
-  max-height: calc(90vh - 110px);
-  object-fit: contain;
-  border-radius: 8px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-}
-
-/* ==========================================================================
-   PESTAÑAS Y DROPZONE DE CARGA MASIVA DE EXCEL
-   ========================================================================== */
-.tabs-nav {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.tab-btn {
-  background: none;
-  border: none;
-  padding: 0.75rem 1.25rem;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: var(--transition);
-}
-
-.tab-btn:hover {
-  color: var(--text-main);
-}
-
-.tab-btn.active {
-  color: #38bdf8;
-  border-bottom-color: #38bdf8;
-}
-
-.excel-dropzone {
-  border: 2px dashed rgba(59, 130, 246, 0.4);
-  background: rgba(30, 41, 59, 0.4);
-  border-radius: var(--radius-md);
-  padding: 2rem 1.5rem;
-  text-align: center;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.excel-dropzone:hover {
-  border-color: #38bdf8;
-  background: rgba(30, 41, 59, 0.7);
-  box-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
-}
-
-/* =========================================================
-   PESTAÑAS DE MODAL RRHH (Individual / Masivo)
-   ========================================================= */
-.tab-btn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  font-weight: 600;
-  padding: 0.6rem 1rem;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: var(--transition);
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  white-space: nowrap;
-}
-
-.tab-btn:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.tab-btn.active {
-  color: #38bdf8;
-  border-bottom-color: #38bdf8;
-  background: rgba(56, 189, 248, 0.08);
-}
-
-/* Badge de puntos y roles */
-.badge-reclutador {
-  background: rgba(99, 102, 241, 0.15);
-  color: #818cf8;
-  padding: 0.2rem 0.55rem;
-  border-radius: 5px;
-  font-size: 0.75rem;
-  font-weight: 600;
 }
