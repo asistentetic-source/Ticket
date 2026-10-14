@@ -347,15 +347,26 @@ function ejecutarLogin(cedulaManual) {
   }
 
   const btnLogin = document.getElementById("btnLogin");
-  if (btnLogin) btnLogin.disabled = true;
+  if (btnLogin) {
+    btnLogin.disabled = true;
+    btnLogin.innerHTML = `<span class="spinner-btn"></span> Verificando...`;
+  }
+
+  const resetBtnLogin = function() {
+    if (btnLogin) {
+      btnLogin.disabled = false;
+      btnLogin.innerHTML = `Iniciar Sesión`;
+    }
+  };
 
   const callback = function (res) {
-    if (btnLogin) btnLogin.disabled = false;
     if (res.success) {
+      resetBtnLogin();
       AppState.currentUser = res.user;
       localStorage.setItem("DIALIMENTOS_USER", JSON.stringify(res.user));
       mostrarAppPrincipal();
     } else if (res.esAdmin || res.requierePassword) {
+      resetBtnLogin();
       // Guardar usuario administrativo detectado desde el backend / base de datos
       AppState.pendingAdminUser = res.user || {
         cedula: cedulaInput,
@@ -408,6 +419,7 @@ function ejecutarLogin(cedulaManual) {
         adminPass.focus();
       }
     } else {
+      resetBtnLogin();
       mostrarAlerta(res.message || "Cédula no encontrada en el registro de empleados", "danger");
     }
   };
@@ -416,12 +428,17 @@ function ejecutarLogin(cedulaManual) {
     google.script.run
       .withSuccessHandler(callback)
       .withFailureHandler(function (err) {
-        if (btnLogin) btnLogin.disabled = false;
+        resetBtnLogin();
         mostrarAlerta("Error de autenticación: " + err, "danger");
       })
       .login(cedulaInput);
   } else {
-    llamarApiBackend("login", { cedula: cedulaInput }).then(callback);
+    llamarApiBackend("login", { cedula: cedulaInput })
+      .then(callback)
+      .catch(function(err) {
+        resetBtnLogin();
+        mostrarAlerta("Error de conexión con el servidor", "danger");
+      });
   }
 }
 
@@ -433,6 +450,16 @@ function volverALoginCedula() {
   if (panelEmpleado) panelEmpleado.style.display = "block";
   const passInput = document.getElementById("adminPasswordInput");
   if (passInput) passInput.value = "";
+  const btnLogin = document.getElementById("btnLogin");
+  if (btnLogin) {
+    btnLogin.disabled = false;
+    btnLogin.innerHTML = `Iniciar Sesión`;
+  }
+  const btnAdmin = document.getElementById("btnAdminLogin");
+  if (btnAdmin) {
+    btnAdmin.disabled = false;
+    btnAdmin.innerHTML = `Ingresar al Sistema`;
+  }
   const cedulaInput = document.getElementById("cedulaInput");
   if (cedulaInput) {
     cedulaInput.focus();
@@ -462,7 +489,6 @@ function cerrarSesion() {
 
 function toggleAdminLogin(mostrarAdmin) {
   if (mostrarAdmin) {
-    // Si se invoca, no hacer nada o simplemente enfocar cédula
     const cedulaInput = document.getElementById("cedulaInput");
     if (cedulaInput) cedulaInput.focus();
   } else {
@@ -489,13 +515,23 @@ function ejecutarLoginAdmin() {
   }
 
   const btnAdmin = document.getElementById("btnAdminLogin");
-  if (btnAdmin) btnAdmin.disabled = true;
+  if (btnAdmin) {
+    btnAdmin.disabled = true;
+    btnAdmin.innerHTML = `<span class="spinner-btn"></span> Ingresando...`;
+  }
+
+  const resetBtnAdmin = function() {
+    if (btnAdmin) {
+      btnAdmin.disabled = false;
+      btnAdmin.innerHTML = `Ingresar al Sistema`;
+    }
+  };
 
   const cedula = AppState.pendingAdminUser.cedula;
   const area = AppState.pendingAdminUser.area || "";
 
   const callback = function (res) {
-    if (btnAdmin) btnAdmin.disabled = false;
+    resetBtnAdmin();
     if (res.success) {
       AppState.currentUser = res.user;
       localStorage.setItem("DIALIMENTOS_USER", JSON.stringify(res.user));
@@ -514,12 +550,17 @@ function ejecutarLoginAdmin() {
     google.script.run
       .withSuccessHandler(callback)
       .withFailureHandler(function (err) {
-        if (btnAdmin) btnAdmin.disabled = false;
+        resetBtnAdmin();
         mostrarAlerta("Error de autenticación: " + err, "danger");
       })
       .loginAdmin(cedula, password, area);
   } else {
-    llamarApiBackend("loginAdmin", { cedula: cedula, password: password, area: area }).then(callback);
+    llamarApiBackend("loginAdmin", { cedula: cedula, password: password, area: area })
+      .then(callback)
+      .catch(function(err) {
+        resetBtnAdmin();
+        mostrarAlerta("Error de conexión con el servidor", "danger");
+      });
   }
 }
 

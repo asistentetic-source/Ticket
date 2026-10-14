@@ -399,6 +399,24 @@ body {
   border-radius: var(--radius-sm);
 }
 
+/* ── Spinner animado para botones de acción ── */
+.spinner-btn {
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 2.5px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spinBtn 0.75s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+@keyframes spinBtn {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* ==========================================================================
    TABLA DE TICKETS (DARK GLASSMORPHISM & DIALI BRAND)
    ========================================================================== */

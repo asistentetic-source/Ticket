@@ -8,7 +8,24 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <!-- Estilos del Sistema de Diseño DIALI® -->
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/styles.css?v=20261014_01">
+  <style>
+    .spinner-btn {
+      width: 1.15rem;
+      height: 1.15rem;
+      border: 2.5px solid rgba(255, 255, 255, 0.35);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spinBtn 0.75s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+    @keyframes spinBtn {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
   <?!= typeof include !== 'undefined' ? include('css') : '' ?>
   <!-- Librería SheetJS para procesamiento ultrarrápido de archivos Excel en el cliente -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -903,6 +920,16 @@
         if (panelEmpleado) panelEmpleado.style.display = "block";
         var passInput = document.getElementById("adminPasswordInput");
         if (passInput) passInput.value = "";
+        var btnLogin = document.getElementById("btnLogin");
+        if (btnLogin) {
+          btnLogin.disabled = false;
+          btnLogin.innerHTML = "Iniciar Sesión";
+        }
+        var btnAdmin = document.getElementById("btnAdminLogin");
+        if (btnAdmin) {
+          btnAdmin.disabled = false;
+          btnAdmin.innerHTML = "Ingresar al Sistema";
+        }
         var cedulaInput = document.getElementById("cedulaInput");
         if (cedulaInput) {
           cedulaInput.focus();
@@ -916,7 +943,7 @@
   </script>
 
   <!-- Lógica JavaScript del Cliente con Cache Buster -->
-  <script src="js/app.js?v=20261014_02"></script>
+  <script src="js/app.js?v=20261014_03"></script>
   <?!= typeof include !== 'undefined' ? include('js') : '' ?>
 </body>
 </html>
