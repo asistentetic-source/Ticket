@@ -118,7 +118,7 @@
           </div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
           <div class="user-profile-badge">
             <div class="user-avatar" id="headerUserInitial">U</div>
             <div class="user-info">
@@ -126,6 +126,9 @@
               <span class="user-role" id="headerUserRole">Rol</span>
             </div>
           </div>
+          <button id="btnRecargarHeader" class="btn btn-secondary btn-sm" onclick="recargarTicketsManual()" title="Recargar lista de tickets y métricas">
+            🔄 Actualizar
+          </button>
           <button class="btn btn-secondary btn-sm" onclick="cerrarSesion()" title="Cerrar Sesión">
             Salir 🚪
           </button>
@@ -203,6 +206,12 @@
             </button>
           </div>
 
+          <button type="button" id="btnRecargarTabla" class="btn btn-secondary" onclick="recargarTicketsManual()" title="Actualizar lista de tickets" style="font-weight: 700;">
+            🔄 Actualizar
+          </button>
+          <span id="badgeAutoRefresh" style="display: none; font-size: 0.75rem; color: #d8b4e2; background: rgba(131, 0, 101, 0.25); border: 1px solid rgba(206, 0, 88, 0.3); border-radius: var(--radius-sm); padding: 0.5rem 0.75rem; align-items: center; gap: 0.35rem; font-weight: 600;" title="Actualización automática activa cada 5 minutos">
+            ⏱️ Auto: 5m
+          </span>
           <button class="btn btn-primary" onclick="abrirModalNuevoTicket()">
             <span>➕</span> Crear Solicitud
           </button>

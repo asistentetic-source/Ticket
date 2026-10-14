@@ -468,6 +468,7 @@ function volverALoginCedula() {
 }
 
 function cerrarSesion() {
+  detenerAutoRefresco();
   localStorage.removeItem("DIALIMENTOS_USER");
   AppState.currentUser = null;
   AppState.pendingAdminUser = null;
@@ -617,13 +618,79 @@ function mostrarAppPrincipal() {
     rrhhContainer.style.display = (esReclutador || (esAdmin && areaUser === "RRHH")) ? "flex" : "none";
   }
 
+  // Mostrar indicador de auto-refresco si es coordinador o técnico
+  const esCoordinadorOTecnico = esAdmin || esTecnico || esAdministradora || esReclutador;
+  const badgeAuto = document.getElementById("badgeAutoRefresh");
+  if (badgeAuto) {
+    badgeAuto.style.display = esCoordinadorOTecnico ? "inline-flex" : "none";
+  }
+
   cargarTickets();
+  iniciarAutoRefresco();
 }
 
 // ============================================================================
-// 3. GESTIÓN Y LISTADO DE TICKETS
+// 3. AUTO-REFRESCO Y GESTIÓN DE TICKETS
 // ============================================================================
-function cargarTickets() {
+let timerAutoRefresco = null;
+
+function iniciarAutoRefresco() {
+  detenerAutoRefresco();
+  if (!AppState.currentUser) return;
+
+  const rol = String(AppState.currentUser.tipoUsuario || "").toLowerCase();
+  const esCoordinadorOTecnico = rol.includes("administrador") || 
+                                rol.includes("tecnico") || 
+                                rol.includes("técnico") || 
+                                rol.includes("administradora") ||
+                                rol.includes("reclutador") ||
+                                rol.includes("coordinador");
+
+  if (esCoordinadorOTecnico) {
+    console.log("⏱️ Auto-refresco programado cada 5 minutos para", AppState.currentUser.tipoUsuario);
+    // Intervalo de 5 minutos = 300,000 ms
+    timerAutoRefresco = setInterval(function() {
+      if (AppState.currentUser) {
+        console.log("🔄 Ejecutando auto-refresco cada 5 minutos...");
+        cargarTickets(true);
+      }
+    }, 5 * 60 * 1000);
+  }
+}
+
+function detenerAutoRefresco() {
+  if (timerAutoRefresco) {
+    clearInterval(timerAutoRefresco);
+    timerAutoRefresco = null;
+  }
+}
+
+function recargarTicketsManual() {
+  const btns = [
+    document.getElementById("btnRecargarHeader"),
+    document.getElementById("btnRecargarTabla")
+  ].filter(Boolean);
+
+  btns.forEach(b => {
+    b.disabled = true;
+    b.innerHTML = `<span class="spinner-btn" style="width: 0.85rem; height: 0.85rem; border-width: 2px;"></span> Actualizando...`;
+  });
+
+  cargarTickets(false, function(res) {
+    btns.forEach(b => {
+      b.disabled = false;
+      b.innerHTML = `🔄 Actualizar`;
+    });
+    if (res && res.success) {
+      mostrarAlerta("Lista de tickets actualizada con éxito.", "success");
+    }
+  });
+}
+
+window.recargarTicketsManual = recargarTicketsManual;
+
+function cargarTickets(esSilencioso = false, onComplete = null) {
+  if (!AppState.currentUser) return;
   const filtros = { ...AppState.filtros };
 
   // Empleado y Reclutador: solo ven sus propios tickets
@@ -655,9 +722,14 @@ function cargarTickets() {
   }
 
   const callback = function (res) {
+    if (onComplete && typeof onComplete === "function") {
+      onComplete(res);
+    }
     // Protección: GAS puede retornar null si el servidor lanza una excepción no capturada
     if (!res) {
-      mostrarAlerta("Error del servidor al cargar tickets. Revisa los permisos o el script en GAS.", "danger");
+      if (!esSilencioso) {
+        mostrarAlerta("Error del servidor al cargar tickets. Revisa los permisos o el script en GAS.", "danger");
+      }
       console.error("obtenerTickets devolvió null — posible error interno en el servidor GAS.");
       return;
     }
@@ -682,7 +754,9 @@ function cargarTickets() {
       renderizarKPIs();
       renderizarTablaTickets();
     } else {
-      mostrarAlerta("Error cargando tickets: " + res.message, "danger");
+      if (!esSilencioso) {
+        mostrarAlerta("Error cargando tickets: " + res.message, "danger");
+      }
     }
   };
 
@@ -690,12 +764,22 @@ function cargarTickets() {
     google.script.run
       .withSuccessHandler(callback)
       .withFailureHandler(function (err) {
+        if (onComplete && typeof onComplete === "function") onComplete({ success: false, error: err });
         console.error("FailureHandler obtenerTickets:", err);
-        mostrarAlerta("Fallo al obtener tickets: " + (err.message || err), "danger");
+        if (!esSilencioso) {
+          mostrarAlerta("Fallo al obtener tickets: " + (err.message || err), "danger");
+        }
       })
       .obtenerTickets(filtros);
   } else {
-    llamarApiBackend("obtenerTickets", { filtros: filtros }).then(callback);
+    llamarApiBackend("obtenerTickets", { filtros: filtros })
+      .then(callback)
+      .catch(function(err) {
+        if (onComplete && typeof onComplete === "function") onComplete({ success: false, error: err });
+        if (!esSilencioso) {
+          mostrarAlerta("Error de conexión al cargar tickets", "danger");
+        }
+      });
   }
 }
 
