@@ -1250,6 +1250,12 @@ function verDetalleTicket(nroTicket) {
     }
   }
 
+  // Trabajo Realizado / Avance del Técnico
+  const elDetTrabajo = document.getElementById("detTrabajo");
+  if (elDetTrabajo) {
+    elDetTrabajo.textContent = t.respuesta || "-";
+  }
+
   const receptorNombre = t.nombreQuienRecibe || t.nombreUsuario || "";
   const receptorCedula = t.cedulaQuienRecibe || t.cedulaSolicitante || "";
   document.getElementById("detRecibe").textContent = receptorNombre ? `${receptorNombre}${receptorCedula ? ' (C.C. ' + receptorCedula + ')' : ''}` : "-";
