@@ -468,6 +468,12 @@ function toggleAdminLogin(mostrarAdmin) {
   }
 }
 
+// Exportar explícitamente al ámbito global para evitar problemas de contexto en eventos inline HTML
+window.volverALoginCedula = volverALoginCedula;
+window.ejecutarLogin = ejecutarLogin;
+window.ejecutarLoginAdmin = ejecutarLoginAdmin;
+window.cerrarSesion = cerrarSesion;
+
 function ejecutarLoginAdmin() {
   if (!AppState.pendingAdminUser) {
     volverALoginCedula();

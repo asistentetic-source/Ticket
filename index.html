@@ -890,8 +890,33 @@
     </div>
   </div>
 
-  <!-- Lógica JavaScript del Cliente -->
-  <script src="js/app.js"></script>
+  <!-- Script de navegación inmediata y cache fallback -->
+  <script>
+    function volverALoginCedula() {
+      try {
+        if (typeof AppState !== 'undefined') {
+          AppState.pendingAdminUser = null;
+        }
+        var panelAdmin = document.getElementById("panelLoginAdmin");
+        var panelEmpleado = document.getElementById("panelLoginEmpleado");
+        if (panelAdmin) panelAdmin.style.display = "none";
+        if (panelEmpleado) panelEmpleado.style.display = "block";
+        var passInput = document.getElementById("adminPasswordInput");
+        if (passInput) passInput.value = "";
+        var cedulaInput = document.getElementById("cedulaInput");
+        if (cedulaInput) {
+          cedulaInput.focus();
+          cedulaInput.select();
+        }
+      } catch (e) {
+        console.error("Error al volver a login:", e);
+      }
+    }
+    window.volverALoginCedula = volverALoginCedula;
+  </script>
+
+  <!-- Lógica JavaScript del Cliente con Cache Buster -->
+  <script src="js/app.js?v=20261014_02"></script>
   <?!= typeof include !== 'undefined' ? include('js') : '' ?>
 </body>
 </html>
