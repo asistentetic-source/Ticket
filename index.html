@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <!-- Estilos del Sistema de Diseño DIALI® -->
-  <link rel="stylesheet" href="css/styles.css?v=20261019_01">
+  <link rel="stylesheet" href="css/styles.css?v=20261019_02">
   <style>
     .spinner-btn {
       width: 1.15rem;
@@ -219,29 +219,13 @@
                   <button type="button" onclick="aplicarRapido('mes')" class="date-quick-btn active">Este mes</button>
                 </div>
               </div>
-              <div class="date-picker-calendars">
-                <!-- Calendario Inicio -->
-                <div class="cal-block">
-                  <div class="cal-label">Desde</div>
-                  <div class="cal-nav">
-                    <button type="button" onclick="navCal('inicio',-1)" class="cal-nav-btn">‹</button>
-                    <span id="calInicioTitle" class="cal-title"></span>
-                    <button type="button" onclick="navCal('inicio',1)" class="cal-nav-btn">›</button>
-                  </div>
-                  <div id="calInicioGrid" class="cal-grid"></div>
+              <div class="cal-single-wrapper">
+                <div class="cal-nav">
+                  <button type="button" onclick="navCal(-1)" class="cal-nav-btn" title="Mes anterior">‹</button>
+                  <span id="calTitle" class="cal-title"></span>
+                  <button type="button" onclick="navCal(1)" class="cal-nav-btn" title="Mes siguiente">›</button>
                 </div>
-                <!-- Separador -->
-                <div class="cal-separator"></div>
-                <!-- Calendario Fin -->
-                <div class="cal-block">
-                  <div class="cal-label">Hasta</div>
-                  <div class="cal-nav">
-                    <button type="button" onclick="navCal('fin',-1)" class="cal-nav-btn">‹</button>
-                    <span id="calFinTitle" class="cal-title"></span>
-                    <button type="button" onclick="navCal('fin',1)" class="cal-nav-btn">›</button>
-                  </div>
-                  <div id="calFinGrid" class="cal-grid"></div>
-                </div>
+                <div id="calGrid" class="cal-grid"></div>
               </div>
               <div class="date-picker-footer">
                 <div class="date-picker-inputs">
@@ -1018,7 +1002,7 @@
   </script>
 
   <!-- Lógica JavaScript del Cliente con Cache Buster -->
-  <script src="js/app.js?v=20261019_01"></script>
+  <script src="js/app.js?v=20261019_02"></script>
   <?!= typeof include !== 'undefined' ? include('js') : '' ?>
 </body>
 </html>

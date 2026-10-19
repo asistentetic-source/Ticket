@@ -981,13 +981,13 @@ function onFiltroChange() {
 }
 
 // ============================================================================
-// DATE RANGE PICKER PERSONALIZADO CON CALENDARIO VISUAL Y PRESETS (Ayer, Hoy, etc.)
+// DATE RANGE PICKER PERSONALIZADO CON UN SOLO CALENDARIO (Ayer, Hoy, etc.)
 // ============================================================================
 const DatePickerState = {
   fechaInicio: "",
   fechaFin: "",
-  mesInicio: new Date(),
-  mesFin: new Date(),
+  mesActual: new Date(),
+  seleccionandoFin: false,
   isOpen: false
 };
 
@@ -1023,11 +1023,10 @@ function initDatePicker(inicioStr, finStr) {
 
   DatePickerState.fechaInicio = inicioStr;
   DatePickerState.fechaFin = finStr;
+  DatePickerState.seleccionandoFin = false;
 
-  const [y1, m1] = inicioStr.split("-").map(Number);
-  const [y2, m2] = finStr.split("-").map(Number);
-  DatePickerState.mesInicio = new Date(y1, m1 - 1, 1);
-  DatePickerState.mesFin = new Date(y2, m2 - 1, 1);
+  const [y, m] = (finStr || inicioStr).split("-").map(Number);
+  DatePickerState.mesActual = new Date(y, m - 1, 1);
 
   const inpIni = document.getElementById("filtroFechaInicio");
   const inpFin = document.getElementById("filtroFechaFin");
@@ -1035,8 +1034,7 @@ function initDatePicker(inicioStr, finStr) {
   if (inpFin) inpFin.value = finStr;
 
   actualizarDisplaysYBotones();
-  renderCalendario("inicio");
-  renderCalendario("fin");
+  renderCalendario();
 }
 
 function toggleDatePicker(forceState) {
@@ -1050,8 +1048,7 @@ function toggleDatePicker(forceState) {
   if (newState) {
     panel.style.display = "block";
     btn.classList.add("open");
-    renderCalendario("inicio");
-    renderCalendario("fin");
+    renderCalendario();
   } else {
     panel.style.display = "none";
     btn.classList.remove("open");
@@ -1079,23 +1076,17 @@ function actualizarDisplaysYBotones() {
   }
 }
 
-function navCal(tipo, delta) {
-  if (tipo === "inicio") {
-    DatePickerState.mesInicio.setMonth(DatePickerState.mesInicio.getMonth() + delta);
-    renderCalendario("inicio");
-  } else {
-    DatePickerState.mesFin.setMonth(DatePickerState.mesFin.getMonth() + delta);
-    renderCalendario("fin");
-  }
+function navCal(delta) {
+  DatePickerState.mesActual.setMonth(DatePickerState.mesActual.getMonth() + delta);
+  renderCalendario();
 }
 
-function renderCalendario(tipo) {
-  const esInicio = tipo === "inicio";
-  const dateCursor = esInicio ? DatePickerState.mesInicio : DatePickerState.mesFin;
-  const grid = document.getElementById(esInicio ? "calInicioGrid" : "calFinGrid");
-  const title = document.getElementById(esInicio ? "calInicioTitle" : "calFinTitle");
+function renderCalendario() {
+  const grid = document.getElementById("calGrid");
+  const title = document.getElementById("calTitle");
   if (!grid || !title) return;
 
+  const dateCursor = DatePickerState.mesActual;
   const yyyy = dateCursor.getFullYear();
   const mm = dateCursor.getMonth();
   title.textContent = `${NOMBRES_MESES[mm]} ${yyyy}`;
@@ -1131,31 +1122,34 @@ function renderCalendario(tipo) {
     if (isEnd) clases.push("cal-day-selected", "cal-day-range-end");
     if (inRange) clases.push("cal-day-in-range");
 
-    html += `<div class="${clases.join(" ")}" onclick="seleccionarDia('${tipo}', '${ymd}')">${dia}</div>`;
+    html += `<div class="${clases.join(" ")}" onclick="seleccionarDia('${ymd}')">${dia}</div>`;
   }
 
   grid.innerHTML = html;
 }
 
-function seleccionarDia(tipo, ymd) {
-  if (tipo === "inicio") {
+function seleccionarDia(ymd) {
+  if (!DatePickerState.seleccionandoFin) {
+    // Primer clic: define fecha de inicio
     DatePickerState.fechaInicio = ymd;
-    if (DatePickerState.fechaFin && ymd > DatePickerState.fechaFin) {
+    DatePickerState.fechaFin = ymd;
+    DatePickerState.seleccionandoFin = true;
+  } else {
+    // Segundo clic: define fecha de fin
+    if (ymd < DatePickerState.fechaInicio) {
+      DatePickerState.fechaFin = DatePickerState.fechaInicio;
+      DatePickerState.fechaInicio = ymd;
+    } else {
       DatePickerState.fechaFin = ymd;
     }
-  } else {
-    DatePickerState.fechaFin = ymd;
-    if (DatePickerState.fechaInicio && ymd < DatePickerState.fechaInicio) {
-      DatePickerState.fechaInicio = ymd;
-    }
+    DatePickerState.seleccionandoFin = false;
   }
 
-  // Quitar estilo activo de botones rápidos
+  // Quitar estilo activo de botones rápidos al seleccionar manualmente
   document.querySelectorAll(".date-quick-btn").forEach(b => b.classList.remove("active"));
 
   actualizarDisplaysYBotones();
-  renderCalendario("inicio");
-  renderCalendario("fin");
+  renderCalendario();
 }
 
 function aplicarRapido(preset) {
@@ -1193,15 +1187,13 @@ function aplicarRapido(preset) {
 
   DatePickerState.fechaInicio = fIni;
   DatePickerState.fechaFin = fFin;
+  DatePickerState.seleccionandoFin = false;
 
-  const [y1, m1] = fIni.split("-").map(Number);
-  const [y2, m2] = fFin.split("-").map(Number);
-  DatePickerState.mesInicio = new Date(y1, m1 - 1, 1);
-  DatePickerState.mesFin = new Date(y2, m2 - 1, 1);
+  const [y, m] = fFin.split("-").map(Number);
+  DatePickerState.mesActual = new Date(y, m - 1, 1);
 
   actualizarDisplaysYBotones();
-  renderCalendario("inicio");
-  renderCalendario("fin");
+  renderCalendario();
 
   aplicarFiltroFecha();
 }
