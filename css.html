@@ -3,8 +3,7 @@
    SISTEMA DE DISEÑO VISUAL - MESA DE AYUDA DIALIMENTOS (DIALI®)
    Basado en el Manual de Imagen Corporativa Oficial DIALI®
    Tema: Modo Claro Ejecutivo / Fondo Blanco Premium con Acentos DIALI®
-   Paleta: Morado Pantone 2425 C (#830065), Rosado Pantone Rubine Red C (#CE0058),
-           Blanco Puro, Fondos Claros Pizarras y Acentos de Alta Legibilidad.
+   100% Optimizado para Pantallas Móviles, Tablets y Escritorio
    Tipografía Oficial: Heebo (Google Fonts)
    ========================================================================== */
 @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap');
@@ -73,11 +72,12 @@
   --transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Reset & base */
+/* Reset & base táctil */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -92,6 +92,11 @@ body {
     radial-gradient(at 100% 100%, rgba(206, 0, 88, 0.035) 0px, transparent 50%),
     radial-gradient(at 50% 10%, rgba(159, 18, 133, 0.02) 0px, transparent 50%);
   background-attachment: fixed;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+button, input, select, textarea, .btn, .date-range-btn, .cal-day, .tab-btn {
+  touch-action: manipulation;
 }
 
 .app-container {
@@ -100,6 +105,7 @@ body {
   padding: 1.5rem;
 }
 
+/* ── Encabezado Principal ── */
 .header-bar {
   display: flex;
   justify-content: space-between;
@@ -136,6 +142,12 @@ body {
 .brand-text p {
   font-size: 0.8rem;
   color: var(--text-muted);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .user-profile-badge {
@@ -180,6 +192,7 @@ body {
   font-weight: 600;
 }
 
+/* ── Tarjetas Métricas (KPIs) ── */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -244,6 +257,7 @@ body {
   font-weight: 700;
 }
 
+/* ── Barra de Acciones y Filtros ── */
 .actions-bar {
   display: flex;
   flex-wrap: wrap;
@@ -314,6 +328,7 @@ body {
   box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
+/* ── Botones ── */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -328,6 +343,10 @@ body {
   transition: var(--transition);
   font-family: var(--font-body);
   letter-spacing: 0.01em;
+}
+
+.btn:active {
+  transform: scale(0.97);
 }
 
 .btn-primary {
@@ -407,6 +426,7 @@ body {
   100% { transform: rotate(360deg); }
 }
 
+/* ── Tabla de Tickets (Escritorio) ── */
 .table-card {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
@@ -456,6 +476,16 @@ body {
   letter-spacing: 0.02em;
 }
 
+.resp-label {
+  display: none;
+}
+
+.actions-container {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
 .badge-tag {
   display: inline-flex;
   align-items: center;
@@ -475,6 +505,7 @@ body {
 .badge-area-mto { background: rgba(206, 0, 88, 0.08); color: var(--diali-pink); border: 1px solid rgba(206, 0, 88, 0.25); }
 .badge-area-tic { background: rgba(131, 0, 101, 0.08); color: var(--diali-purple); border: 1px solid rgba(131, 0, 101, 0.25); }
 
+/* ── Modales (Escritorio) ── */
 .modal-backdrop {
   position: fixed;
   top: 0;
@@ -545,6 +576,7 @@ body {
   cursor: pointer;
   line-height: 1;
   transition: var(--transition);
+  padding: 0.25rem;
 }
 
 .btn-close:hover {
@@ -1010,28 +1042,6 @@ textarea.form-control {
   border: 1px solid #f5d0fe;
 }
 
-@media (max-width: 768px) {
-  .app-container {
-    padding: 0.85rem;
-  }
-  .header-bar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-    padding: 1rem;
-  }
-  .form-grid, .phase-content {
-    grid-template-columns: 1fr;
-  }
-  .form-group-full, .detail-item-full {
-    grid-column: span 1;
-  }
-  .actions-bar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-}
-
 /* ── DATE RANGE PICKER PERSONALIZADO ─────────────────────────────────────── */
 .date-range-btn {
   display: inline-flex;
@@ -1246,11 +1256,559 @@ textarea.form-control {
   margin-top: 0.1rem;
 }
 
-@media (max-width: 640px) {
+/* ==========================================================================
+   OPTIMIZACIÓN PROFESIONAL PARA CELULARES (MOBILE-FIRST RESPONSIVE)
+   Convierte la mesa de ayuda en una experiencia tipo App Nativa
+   ========================================================================== */
+
+/* ── Pantallas Móviles (< 768px) ── */
+@media (max-width: 768px) {
+  .app-container {
+    padding: 0.75rem 0.85rem calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* ── Header móvil ── */
+  .header-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.85rem;
+    padding: 0.85rem 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .brand-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .brand-logo-container img {
+    height: 38px !important;
+    width: auto;
+  }
+
+  .brand-text h1 {
+    font-size: 1.18rem;
+    line-height: 1.2;
+  }
+
+  .brand-text p {
+    font-size: 0.7rem;
+    line-height: 1.2;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    border-top: 1px solid var(--border-subtle);
+    padding-top: 0.65rem;
+    width: 100%;
+  }
+
+  .user-profile-badge {
+    padding: 0.3rem 0.65rem;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  .user-name {
+    font-size: 0.78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .user-role {
+    font-size: 0.65rem;
+  }
+
+  #btnRecargarHeader {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  /* ── KPIs en Celular: Grilla compacta de 2 Columnas ── */
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+    margin-bottom: 1.15rem;
+  }
+
+  .kpi-card {
+    padding: 0.75rem 0.85rem;
+    gap: 0.65rem;
+    border-radius: var(--radius-md);
+  }
+
+  .kpi-card:first-child {
+    grid-column: span 2;
+  }
+
+  .kpi-icon-box {
+    width: 38px;
+    height: 38px;
+    font-size: 1.15rem;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+
+  .kpi-val {
+    font-size: 1.45rem;
+  }
+
+  .kpi-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.03em;
+  }
+
+  /* ── Barra de Búsqueda y Filtros en Celular ── */
+  .actions-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
+    margin-bottom: 1.15rem;
+  }
+
+  .search-box {
+    max-width: 100%;
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .search-input {
+    height: 44px;
+    font-size: 16px; /* Impide zoom automático en iOS Safari */
+    padding-left: 2.5rem;
+  }
+
+  .filters-wrapper {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.55rem;
+    width: 100%;
+  }
+
+  .select-custom {
+    width: 100%;
+    height: 44px;
+    font-size: 15px;
+    padding: 0.5rem 0.75rem;
+  }
+
+  #filtroPunto {
+    grid-column: span 2;
+  }
+
+  #dateRangeWrapper {
+    grid-column: span 2;
+    width: 100%;
+  }
+
+  .date-range-btn {
+    width: 100%;
+    height: 44px;
+    justify-content: space-between;
+  }
+
+  #btnRecargarTabla {
+    display: none; /* Ya está disponible en la cabecera */
+  }
+
+  .filters-wrapper > .btn-primary {
+    grid-column: span 2;
+    height: 46px;
+    font-size: 0.95rem;
+  }
+
+  #rrhhActionsContainer {
+    grid-column: span 2;
+    display: flex;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  #rrhhActionsContainer .btn {
+    flex: 1;
+    height: 44px;
+  }
+
+  /* ── TABLA DE TICKETS TRANSFORMADA EN TARJETAS MÓVILES NATIVAS ── */
+  .table-card {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  .table-responsive {
+    overflow-x: visible;
+  }
+
+  .custom-table {
+    display: block;
+    width: 100%;
+    border: none;
+  }
+
+  .custom-table thead {
+    display: none; /* Oculta títulos de columna en celular */
+  }
+
+  .custom-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    width: 100%;
+  }
+
+  .custom-table tr.ticket-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.55rem 0.5rem;
+    background: #ffffff;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.1rem;
+    box-shadow: 0 2px 10px rgba(131, 0, 101, 0.05);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .custom-table tr.ticket-row:active {
+    transform: scale(0.99);
+  }
+
+  .custom-table tr.ticket-row::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--diali-pink), var(--diali-purple));
+  }
+
+  .custom-table td {
+    display: block;
+    padding: 0;
+    border: none;
+  }
+
+  /* Fila 1: Nro Ticket + Fecha (izq) y Estado (der) */
+  .custom-table td.col-ticket {
+    grid-column: 1 / 2;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .custom-table td.col-estado {
+    grid-column: 2 / 3;
+    grid-row: 1;
+    justify-self: end;
+    align-self: start;
+    text-align: right;
+  }
+
+  /* Fila 2: Área del ticket */
+  .custom-table td.col-area {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  /* Fila 3: Servicio y Punto */
+  .custom-table td.col-servicio {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+
+  .custom-table td.col-servicio strong {
+    font-size: 0.95rem;
+    color: var(--text-main);
+  }
+
+  .custom-table td.col-servicio small {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 0.8rem;
+  }
+
+  /* Fila 4: Equipo y Placa */
+  .custom-table td.col-equipo {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    background: #fdfafd;
+    padding: 0.5rem 0.7rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-subtle);
+  }
+
+  /* Fila 5: Descripción de la Solicitud */
+  .custom-table td.col-desc {
+    grid-column: 1 / -1;
+    grid-row: 5;
+    font-size: 0.88rem;
+    line-height: 1.4;
+    color: var(--text-main);
+  }
+
+  /* Fila 6: Responsable */
+  .custom-table td.col-resp {
+    grid-column: 1 / -1;
+    grid-row: 6;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+  }
+
+  .resp-label {
+    display: inline-block !important;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+
+  /* Fila 7: Botones de Acción (Grandes, Táctiles y Distribuidos) */
+  .custom-table td.col-acciones {
+    grid-column: 1 / -1;
+    grid-row: 7;
+    margin-top: 0.35rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .actions-container {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .actions-container .btn {
+    flex: 1;
+    min-height: 42px;
+    font-size: 0.84rem;
+    padding: 0.5rem 0.75rem;
+    justify-content: center;
+    touch-action: manipulation;
+  }
+
+  /* Estado vacío en celular */
+  .custom-table tr:not(.ticket-row) {
+    display: block;
+    background: #ffffff;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .custom-table tr:not(.ticket-row) td {
+    display: block;
+    padding: 0;
+  }
+
+  /* Login en Móvil */
+  #loginView {
+    padding: 1rem 0.75rem !important;
+    align-items: center !important;
+  }
+
+  .login-card {
+    padding: 1.75rem 1.25rem !important;
+    border-radius: var(--radius-lg) !important;
+    box-shadow: 0 10px 30px rgba(131, 0, 101, 0.08) !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .login-card h2 {
+    font-size: 1.35rem !important;
+  }
+
+  .login-card img {
+    width: 175px !important;
+  }
+
+  /* Modales Bottom-Sheet en Celulares */
+  .modal-backdrop {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .modal-container {
+    max-height: 92vh;
+    max-width: 100%;
+    width: 100%;
+    border-radius: 20px 20px 0 0;
+    margin: 0;
+    border-bottom: none;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.22);
+    transform: translateY(100%);
+    transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .modal-backdrop.active .modal-container {
+    transform: translateY(0);
+  }
+
+  .modal-header {
+    padding: 1rem 1.15rem;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .modal-title {
+    font-size: 1.1rem;
+  }
+
+  .modal-body {
+    padding: 1.15rem;
+    max-height: calc(92vh - 130px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modal-footer {
+    padding: 0.85rem 1.15rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+    min-height: 46px;
+    font-size: 0.95rem;
+    touch-action: manipulation;
+  }
+
+  .form-grid, .phase-content {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .form-group-full, .detail-item-full {
+    grid-column: span 1;
+  }
+
+  .form-control {
+    font-size: 16px; /* Impide zoom automático molesto en iPhone */
+    min-height: 44px;
+  }
+
+  textarea.form-control {
+    min-height: 90px;
+  }
+
+  /* Date Picker Bottom-Sheet en Celular */
   .date-picker-panel {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
     right: 0;
-    left: auto;
-    width: min(330px, calc(100vw - 1.5rem));
+    width: 100vw;
+    max-width: 100vw;
+    border-radius: 20px 20px 0 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.25);
+    z-index: 10001;
+    padding: 1.15rem 1.15rem calc(1.15rem + env(safe-area-inset-bottom, 0px));
+    animation: slideUpMobileDP 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes slideUpMobileDP {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .date-picker-close-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    font-size: 1.4rem;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 50%;
+    touch-action: manipulation;
+  }
+
+  .date-quick-btns {
+    gap: 0.35rem;
+  }
+
+  .date-quick-btn {
+    min-height: 36px;
+    font-size: 0.74rem;
+    touch-action: manipulation;
+  }
+
+  .cal-nav-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 1.3rem;
+    touch-action: manipulation;
+  }
+
+  .cal-day {
+    min-height: 38px;
+    font-size: 0.88rem;
+    touch-action: manipulation;
+  }
+}
+
+/* ── Botón Flotante Móvil para Nueva Solicitud (FAB) ── */
+.mobile-fab-create {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-fab-create {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    position: fixed;
+    bottom: calc(1.15rem + env(safe-area-inset-bottom, 0px));
+    right: 1.15rem;
+    z-index: 800;
+    background: linear-gradient(135deg, var(--diali-pink) 0%, var(--diali-purple) 100%);
+    color: #ffffff;
+    padding: 0.82rem 1.3rem;
+    border-radius: var(--radius-full);
+    font-weight: 800;
+    font-size: 0.92rem;
+    box-shadow: 0 8px 25px rgba(206, 0, 88, 0.45);
+    border: none;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .mobile-fab-create:active {
+    transform: scale(0.94);
   }
 }
 </style>

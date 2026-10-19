@@ -2,13 +2,18 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Mesa de Ayuda - Dialimentos</title>
   <!-- Tipografía Oficial Heebo (Manual de Identidad DIALI®) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <!-- Estilos del Sistema de Diseño DIALI® -->
-  <link rel="stylesheet" href="css/styles.css?v=20261019_03">
+  <link rel="stylesheet" href="css/styles.css?v=20261019_04">
   <style>
     .spinner-btn {
       width: 1.15rem;
@@ -36,7 +41,7 @@
   <!-- VISTA 1: INICIO DE SESIÓN POR CÉDULA & ACCESO COORDINACIÓN -->
   <!-- ==================================================================== -->
   <div id="loginView" style="display: flex; min-height: 100vh; align-items: center; justify-content: center; padding: 1.5rem;">
-    <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 2.5rem; width: 100%; max-width: 440px; box-shadow: var(--shadow-lg); text-align: center; position: relative;">
+    <div class="login-card" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 2.5rem; width: 100%; max-width: 440px; box-shadow: var(--shadow-lg); text-align: center; position: relative;">
 
       <!-- Logo Oficial DIALI® -->
       <div style="margin: 0 auto 1.25rem; display: flex; flex-direction: column; align-items: center; justify-content: center;">
@@ -118,7 +123,7 @@
           </div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <div class="header-actions">
           <div class="user-profile-badge">
             <div class="user-avatar" id="headerUserInitial">U</div>
             <div class="user-info">
@@ -218,6 +223,7 @@
                   <button type="button" onclick="aplicarRapido('semana')" class="date-quick-btn">7 días</button>
                   <button type="button" onclick="aplicarRapido('mes')" class="date-quick-btn active">Este mes</button>
                 </div>
+                <button type="button" onclick="toggleDatePicker(false)" class="date-picker-close-btn" title="Cerrar calendario">&times;</button>
               </div>
               <div class="cal-single-wrapper">
                 <div class="cal-nav">
@@ -290,6 +296,11 @@
           </table>
         </div>
       </main>
+
+      <!-- Botón Flotante Móvil para Nueva Solicitud (FAB) -->
+      <button type="button" id="btnFabNuevoTicket" class="mobile-fab-create" onclick="abrirModalNuevoTicket()" title="Crear nueva solicitud de soporte">
+        <span>➕</span> Nueva Solicitud
+      </button>
 
     </div>
   </div>
@@ -733,7 +744,7 @@
       </div>
 
       <!-- Pestañas de navegación -->
-      <div class="tabs-nav" style="display: flex; gap: 0.5rem; padding: 0.75rem 1.5rem 0; border-bottom: 1px solid var(--border-subtle); background: rgba(15, 23, 42, 0.4);">
+      <div class="tabs-nav" style="display: flex; gap: 0.5rem; padding: 0.75rem 1.5rem 0; border-bottom: 1px solid var(--border-subtle); background: #fbf7fa;">
         <button type="button" id="tabBtnIndividual" class="tab-btn active" onclick="cambiarTabEmpleados('individual')">
           👤 Registro Individual
         </button>
@@ -1002,7 +1013,7 @@
   </script>
 
   <!-- Lógica JavaScript del Cliente con Cache Buster -->
-  <script src="js/app.js?v=20261019_03"></script>
+  <script src="js/app.js?v=20261019_04"></script>
   <?!= typeof include !== 'undefined' ? include('js') : '' ?>
 </body>
 </html>

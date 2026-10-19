@@ -914,33 +914,34 @@ function renderizarTablaTickets() {
     }
 
     return `
-      <tr>
-        <td>
-          <span class="ticket-code">${t.nroTicket}</span><br>
-          <small style="color: var(--text-dim); font-size: 0.78rem;">${formatearFechaHoraCO(t.fechaIngreso)}</small>
+      <tr class="ticket-row">
+        <td class="col-ticket">
+          <span class="ticket-code">${t.nroTicket}</span>
+          <small class="ticket-time" style="color: var(--text-dim); font-size: 0.78rem;">${formatearFechaHoraCO(t.fechaIngreso)}</small>
         </td>
-        <td><span class="badge-tag ${areaClass}">${t.area}</span></td>
-        <td><strong>${t.tipoServicio}</strong><br><small style="color: var(--text-dim);">${t.puntoServicio}</small></td>
-        <td>
-          <div style="font-weight: 500;">${t.descripcionEquipo || 'Sin equipo'}</div>
+        <td class="col-area"><span class="badge-tag ${areaClass}">${t.area}</span></td>
+        <td class="col-servicio"><strong>${t.tipoServicio}</strong><br><small style="color: var(--text-dim);">📍 ${t.puntoServicio}</small></td>
+        <td class="col-equipo">
+          <div style="font-weight: 600;">⚙️ ${t.descripcionEquipo || 'Sin equipo'}</div>
           <span class="badge-plate" style="font-size: 0.72rem; cursor: pointer;" title="Clic para modificar placa" onclick="abrirModalEditarPlaca('${t.nroTicket}', '${t.placa}')">${t.placa || 'Sin Placa'} ✏️</span>
         </td>
-        <td style="max-width: 220px; white-space: normal; line-height: 1.35;">
+        <td class="col-desc" style="max-width: 220px; white-space: normal; line-height: 1.35;">
           ${t.descripcionSolicitud}
           ${t.fotoSolicitudUrl ? `<br><span class="badge-evidence" onclick="verFotoTicket('${t.nroTicket}', '${t.fotoSolicitudUrl}', 'Solicitud')" title="Ver evidencia fotográfica adjunta">📷 Evidencia</span>` : ''}
           ${t.fotoCierreUrl ? ` <span class="badge-evidence badge-evidence-cierre" onclick="verFotoTicket('${t.nroTicket}', '${t.fotoCierreUrl}', 'Cierre')" title="Ver foto del trabajo finalizado">📸 Foto Cierre</span>` : ''}
         </td>
-        <td>
-          ${t.responsable || '<span style="color: var(--text-dim);">Sin Asignar</span>'}
+        <td class="col-resp">
+          <span class="resp-label" style="display: none;">👤 Responsable: </span>
+          ${t.responsable ? `<span>👤 ${t.responsable}</span>` : '<span style="color: var(--text-dim);">👤 Sin Asignar</span>'}
           ${esAdministradora && t.proveedor ? `<br><small style="color: var(--text-muted); font-size: 0.74rem;">🏭 ${t.proveedor}</small>` : ''}
         </td>
-        <td>
+        <td class="col-estado">
           <span class="badge-tag ${estadoClass}">${t.estado}</span>
           ${esAdministradora && t.aprobacion ? `<br><span style="display: inline-block; margin-top: 4px; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-weight: 500;">📋 ${t.aprobacion}</span>` : ''}
           ${esAdministradora && t.costo ? `<br><span style="display: inline-block; margin-top: 2px; font-size: 0.72rem; padding: 1px 5px; border-radius: 4px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-weight: 600;">💰 ${t.costo}</span>` : ''}
         </td>
-        <td>
-          <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+        <td class="col-acciones">
+          <div class="actions-container">
             ${botonesAccion}
           </div>
         </td>
