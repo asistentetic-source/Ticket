@@ -102,6 +102,8 @@ function poblarSelectsCatalogos() {
 
   // 1. Puntos de servicio
   const selPunto = document.getElementById("solicitudPunto");
+  const selFiltroPunto = document.getElementById("filtroPunto");
+  const puntosOpciones = [];
   if (selPunto) {
     selPunto.innerHTML = '<option value="">Seleccione Punto de Servicio...</option>';
     AppState.catalogos.puntos.forEach(p => {
@@ -110,7 +112,15 @@ function poblarSelectsCatalogos() {
       const label = codigo ? `${nombre} (${codigo})` : nombre;
       if (nombre && nombre !== "undefined") {
         selPunto.innerHTML += `<option value="${nombre}">${label}</option>`;
+        puntosOpciones.push({ nombre, label });
       }
+    });
+  }
+  // Poblar también el filtro de punto en la barra principal
+  if (selFiltroPunto) {
+    selFiltroPunto.innerHTML = '<option value="TODOS">Todos los Puntos</option>';
+    puntosOpciones.forEach(p => {
+      selFiltroPunto.innerHTML += `<option value="${p.nombre}">${p.label}</option>`;
     });
   }
 
@@ -473,6 +483,9 @@ function cerrarSesion() {
   AppState.filtros.area = "TODAS";
   AppState.filtros.estado = "TODOS";
   AppState.filtros.busqueda = "";
+  AppState.filtros.punto = "TODOS";
+  delete AppState.filtros.fechaInicio;
+  delete AppState.filtros.fechaFin;
   const selArea = document.getElementById("filtroArea");
   if (selArea) {
     selArea.disabled = false;
@@ -481,6 +494,12 @@ function cerrarSesion() {
     selArea.style.opacity = "1";
     selArea.removeAttribute("title");
   }
+  const elFiltroPuntoReset = document.getElementById("filtroPunto");
+  if (elFiltroPuntoReset) { elFiltroPuntoReset.value = "TODOS"; elFiltroPuntoReset.style.display = "none"; }
+  const elFechaInicioReset = document.getElementById("filtroFechaInicio");
+  if (elFechaInicioReset) { elFechaInicioReset.value = ""; elFechaInicioReset.style.display = "none"; }
+  const elFechaFinReset = document.getElementById("filtroFechaFin");
+  if (elFechaFinReset) { elFechaFinReset.value = ""; elFechaFinReset.style.display = "none"; }
   volverALoginCedula();
   document.getElementById("loginView").style.display = "flex";
   document.getElementById("mainAppView").style.display = "none";
@@ -621,6 +640,30 @@ function mostrarAppPrincipal() {
   const badgeAuto = document.getElementById("badgeAutoRefresh");
   if (badgeAuto) {
     badgeAuto.style.display = esCoordinadorOTecnico ? "inline-flex" : "none";
+  }
+
+  // Mostrar filtros de Punto y Rango de Fechas solo para Administradores y Técnicos
+  const mostrarFiltrosExtra = esAdmin || esTecnico || esAdministradora;
+  const elFiltroPunto = document.getElementById("filtroPunto");
+  const elFechaInicio = document.getElementById("filtroFechaInicio");
+  const elFechaFin = document.getElementById("filtroFechaFin");
+  if (elFiltroPunto) elFiltroPunto.style.display = mostrarFiltrosExtra ? "" : "none";
+  if (elFechaInicio) elFechaInicio.style.display = mostrarFiltrosExtra ? "" : "none";
+  if (elFechaFin) elFechaFin.style.display = mostrarFiltrosExtra ? "" : "none";
+
+  // Inicializar rango de fechas: del día 1 del mes actual al día de hoy
+  if (mostrarFiltrosExtra) {
+    const hoy = new Date();
+    const yyyy = hoy.getFullYear();
+    const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dd = String(hoy.getDate()).padStart(2, '0');
+    const fechaHoy = `${yyyy}-${mm}-${dd}`;
+    const fechaInicio = `${yyyy}-${mm}-01`;
+    if (elFechaInicio && !elFechaInicio.value) elFechaInicio.value = fechaInicio;
+    if (elFechaFin && !elFechaFin.value) elFechaFin.value = fechaHoy;
+    AppState.filtros.fechaInicio = fechaInicio;
+    AppState.filtros.fechaFin = fechaHoy;
+    AppState.filtros.punto = "TODOS";
   }
 
   cargarTickets();
@@ -806,12 +849,38 @@ function renderizarTablaTickets() {
   const esReclutador = AppState.currentUser.tipoUsuario.toLowerCase().includes("reclutador");
   const areaUser = normalizarArea(AppState.currentUser.area);
 
+  const filtroPuntoVal = (AppState.filtros.punto || "TODOS");
+  const filtroFecIni = AppState.filtros.fechaInicio || "";
+  const filtroFecFin = AppState.filtros.fechaFin || "";
+  const filtroBusq = (AppState.filtros.busqueda || "").toLowerCase();
+
   const ticketsAMostrar = AppState.tickets.filter(t => {
+    // Filtro de área por rol
     if (esAdministradora) {
-      return normalizarArea(t.area) === "MANTENIMIENTO";
+      if (normalizarArea(t.area) !== "MANTENIMIENTO") return false;
+    } else if ((esAdmin || esTecnico) && (areaUser === "TIC" || areaUser === "MANTENIMIENTO")) {
+      if (normalizarArea(t.area) !== areaUser) return false;
     }
-    if ((esAdmin || esTecnico) && (areaUser === "TIC" || areaUser === "MANTENIMIENTO")) {
-      return normalizarArea(t.area) === areaUser;
+    // Filtro por estado
+    const estadoFiltro = AppState.filtros.estado || "TODOS";
+    if (estadoFiltro !== "TODOS" && (t.estado || "").toUpperCase() !== estadoFiltro) return false;
+    // Filtro por área selector
+    const areaFiltro = AppState.filtros.area || "TODAS";
+    if (areaFiltro !== "TODAS" && t.area !== areaFiltro) return false;
+    // Filtro por punto de servicio
+    if (filtroPuntoVal !== "TODOS" && (t.puntoServicio || "") !== filtroPuntoVal) return false;
+    // Filtro por rango de fechas
+    if (filtroFecIni || filtroFecFin) {
+      const fechaTkt = (t.fechaIngreso || "").substring(0, 10);
+      if (filtroFecIni && fechaTkt < filtroFecIni) return false;
+      if (filtroFecFin && fechaTkt > filtroFecFin) return false;
+    }
+    // Filtro de búsqueda por texto
+    if (filtroBusq) {
+      const haystack = [
+        t.nroTicket, t.placa, t.descripcionEquipo, t.puntoServicio, t.descripcionSolicitud
+      ].join(" ").toLowerCase();
+      if (!haystack.includes(filtroBusq)) return false;
     }
     return true;
   });
@@ -899,6 +968,15 @@ function onFiltroChange() {
   }
   AppState.filtros.estado = document.getElementById("filtroEstado").value;
   AppState.filtros.busqueda = document.getElementById("buscarInput").value;
+
+  // Filtros extra: Punto y Rango de Fechas (solo visibles para admins/técnicos)
+  const elPunto = document.getElementById("filtroPunto");
+  const elFecIni = document.getElementById("filtroFechaInicio");
+  const elFecFin = document.getElementById("filtroFechaFin");
+  if (elPunto) AppState.filtros.punto = elPunto.value || "TODOS";
+  if (elFecIni) AppState.filtros.fechaInicio = elFecIni.value || "";
+  if (elFecFin) AppState.filtros.fechaFin = elFecFin.value || "";
+
   cargarTickets();
 }
 

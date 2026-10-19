@@ -196,6 +196,14 @@
             <option value="CERRADO">Cerrado</option>
           </select>
 
+          <!-- Filtros exclusivos para Administradores y Técnicos -->
+          <select id="filtroPunto" class="select-custom" onchange="onFiltroChange()" style="display: none;" title="Filtrar por Punto de Servicio">
+            <option value="TODOS">Todos los Puntos</option>
+          </select>
+
+          <input type="date" id="filtroFechaInicio" class="select-custom" onchange="onFiltroChange()" style="display: none; padding: 0.45rem 0.75rem; min-width: 140px;" title="Fecha de inicio">
+          <input type="date" id="filtroFechaFin" class="select-custom" onchange="onFiltroChange()" style="display: none; padding: 0.45rem 0.75rem; min-width: 140px;" title="Fecha de fin">
+
           <!-- Botones exclusivos para Reclutador / Recursos Humanos -->
           <div id="rrhhActionsContainer" style="display: none; align-items: center; gap: 0.5rem;">
             <button type="button" class="btn btn-secondary" onclick="abrirModalGestionEmpleados()" title="Gestión de Empleados (Recursos Humanos)" style="background: rgba(131, 0, 101, 0.25); border-color: rgba(206, 0, 88, 0.4); color: #f472b6; font-weight: 700;">
@@ -275,8 +283,8 @@
             <div>
               <label class="form-label">Área de Atención <span class="required">*</span></label>
               <select id="solicitudArea" class="form-control" required onchange="onAreaSolicitudChange()">
-                <option value="Mantenimiento">🔧 Mantenimiento (Locativo, Eléctrico, etc.)</option>
-                <option value="TIC">💻 TIC (SAP, POS, Conectividad, Equipos)</option>
+                <option value="Mantenimiento">🔧 Mantenimiento</option>
+                <option value="TIC">💻 TIC</option>
               </select>
             </div>
             <div>
