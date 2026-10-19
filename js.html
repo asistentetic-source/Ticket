@@ -332,19 +332,19 @@ function onAreaSolicitudChange() {
 // 2. AUTENTICACIÓN Y SESIÓN
 // ============================================================================
 function verificarSesion() {
-  const sesionGuardada = localStorage.getItem("DIALIMENTOS_USER");
-  if (sesionGuardada) {
-    try {
-      AppState.currentUser = JSON.parse(sesionGuardada);
-      mostrarAppPrincipal();
-      return;
-    } catch (e) {
-      localStorage.removeItem("DIALIMENTOS_USER");
-    }
-  }
-  // Si no hay sesión, mostrar pantalla de login
+  // Limpiar cualquier sesión residual en el navegador para exigir siempre login
+  try {
+    localStorage.removeItem("DIALIMENTOS_USER");
+    sessionStorage.removeItem("DIALIMENTOS_USER");
+  } catch (e) {}
+
+  AppState.currentUser = null;
+  AppState.pendingAdminUser = null;
+
+  // Siempre mostrar la pantalla de login al iniciar o recargar
   document.getElementById("loginView").style.display = "flex";
   document.getElementById("mainAppView").style.display = "none";
+  volverALoginCedula();
 }
 
 function ejecutarLogin(cedulaManual) {
@@ -371,7 +371,6 @@ function ejecutarLogin(cedulaManual) {
     if (res.success) {
       resetBtnLogin();
       AppState.currentUser = res.user;
-      localStorage.setItem("DIALIMENTOS_USER", JSON.stringify(res.user));
       mostrarAppPrincipal();
     } else if (res.esAdmin || res.requierePassword) {
       resetBtnLogin();
@@ -555,7 +554,6 @@ function ejecutarLoginAdmin() {
     resetBtnAdmin();
     if (res.success) {
       AppState.currentUser = res.user;
-      localStorage.setItem("DIALIMENTOS_USER", JSON.stringify(res.user));
       mostrarAppPrincipal();
     } else {
       mostrarAlerta(res.message || "Contraseña incorrecta.", "danger");
