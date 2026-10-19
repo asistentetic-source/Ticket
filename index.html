@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <!-- Estilos del Sistema de Diseño DIALI® -->
-  <link rel="stylesheet" href="css/styles.css?v=20261014_01">
+  <link rel="stylesheet" href="css/styles.css?v=20261019_01">
   <style>
     .spinner-btn {
       width: 1.15rem;
@@ -201,8 +201,66 @@
             <option value="TODOS">Todos los Puntos</option>
           </select>
 
-          <input type="date" id="filtroFechaInicio" class="select-custom" onchange="onFiltroChange()" style="display: none; padding: 0.45rem 0.75rem; min-width: 140px;" title="Fecha de inicio">
-          <input type="date" id="filtroFechaFin" class="select-custom" onchange="onFiltroChange()" style="display: none; padding: 0.45rem 0.75rem; min-width: 140px;" title="Fecha de fin">
+          <!-- Date Range Picker personalizado (solo Admins/Técnicos) -->
+          <div id="dateRangeWrapper" style="display: none; position: relative;">
+            <button type="button" id="dateRangeBtn" class="date-range-btn" onclick="toggleDatePicker()">
+              <span>📅</span>
+              <span id="dateRangeLabel">Rango de fechas</span>
+              <span class="date-range-arrow">▾</span>
+            </button>
+            <!-- Panel del calendario -->
+            <div id="datePickerPanel" class="date-picker-panel" style="display:none;">
+              <div class="date-picker-header">
+                <span style="font-size:0.78rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.06em; font-weight:700;">Rango de Fechas</span>
+                <div class="date-quick-btns">
+                  <button type="button" onclick="aplicarRapido('hoy')" class="date-quick-btn">Hoy</button>
+                  <button type="button" onclick="aplicarRapido('ayer')" class="date-quick-btn">Ayer</button>
+                  <button type="button" onclick="aplicarRapido('semana')" class="date-quick-btn">7 días</button>
+                  <button type="button" onclick="aplicarRapido('mes')" class="date-quick-btn active">Este mes</button>
+                </div>
+              </div>
+              <div class="date-picker-calendars">
+                <!-- Calendario Inicio -->
+                <div class="cal-block">
+                  <div class="cal-label">Desde</div>
+                  <div class="cal-nav">
+                    <button type="button" onclick="navCal('inicio',-1)" class="cal-nav-btn">‹</button>
+                    <span id="calInicioTitle" class="cal-title"></span>
+                    <button type="button" onclick="navCal('inicio',1)" class="cal-nav-btn">›</button>
+                  </div>
+                  <div id="calInicioGrid" class="cal-grid"></div>
+                </div>
+                <!-- Separador -->
+                <div class="cal-separator"></div>
+                <!-- Calendario Fin -->
+                <div class="cal-block">
+                  <div class="cal-label">Hasta</div>
+                  <div class="cal-nav">
+                    <button type="button" onclick="navCal('fin',-1)" class="cal-nav-btn">‹</button>
+                    <span id="calFinTitle" class="cal-title"></span>
+                    <button type="button" onclick="navCal('fin',1)" class="cal-nav-btn">›</button>
+                  </div>
+                  <div id="calFinGrid" class="cal-grid"></div>
+                </div>
+              </div>
+              <div class="date-picker-footer">
+                <div class="date-picker-inputs">
+                  <input type="date" id="filtroFechaInicio" style="display:none;" onchange="onFiltroChange()">
+                  <input type="date" id="filtroFechaFin" style="display:none;" onchange="onFiltroChange()">
+                  <div class="date-input-display">
+                    <span class="date-input-label">Inicio</span>
+                    <span id="displayFechaInicio" class="date-input-value">—</span>
+                  </div>
+                  <span style="color:var(--text-dim); font-size:1.1rem;">→</span>
+                  <div class="date-input-display">
+                    <span class="date-input-label">Fin</span>
+                    <span id="displayFechaFin" class="date-input-value">—</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" onclick="aplicarFiltroFecha()">Aplicar</button>
+              </div>
+            </div>
+          </div>
 
           <!-- Botones exclusivos para Reclutador / Recursos Humanos -->
           <div id="rrhhActionsContainer" style="display: none; align-items: center; gap: 0.5rem;">
@@ -960,7 +1018,7 @@
   </script>
 
   <!-- Lógica JavaScript del Cliente con Cache Buster -->
-  <script src="js/app.js?v=20261014_03"></script>
+  <script src="js/app.js?v=20261019_01"></script>
   <?!= typeof include !== 'undefined' ? include('js') : '' ?>
 </body>
 </html>

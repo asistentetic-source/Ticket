@@ -496,10 +496,13 @@ function cerrarSesion() {
   }
   const elFiltroPuntoReset = document.getElementById("filtroPunto");
   if (elFiltroPuntoReset) { elFiltroPuntoReset.value = "TODOS"; elFiltroPuntoReset.style.display = "none"; }
+  const elDateRangeReset = document.getElementById("dateRangeWrapper");
+  if (elDateRangeReset) elDateRangeReset.style.display = "none";
+  if (typeof toggleDatePicker === 'function') toggleDatePicker(false);
   const elFechaInicioReset = document.getElementById("filtroFechaInicio");
-  if (elFechaInicioReset) { elFechaInicioReset.value = ""; elFechaInicioReset.style.display = "none"; }
+  if (elFechaInicioReset) { elFechaInicioReset.value = ""; }
   const elFechaFinReset = document.getElementById("filtroFechaFin");
-  if (elFechaFinReset) { elFechaFinReset.value = ""; elFechaFinReset.style.display = "none"; }
+  if (elFechaFinReset) { elFechaFinReset.value = ""; }
   volverALoginCedula();
   document.getElementById("loginView").style.display = "flex";
   document.getElementById("mainAppView").style.display = "none";
@@ -645,11 +648,9 @@ function mostrarAppPrincipal() {
   // Mostrar filtros de Punto y Rango de Fechas solo para Administradores y Técnicos
   const mostrarFiltrosExtra = esAdmin || esTecnico || esAdministradora;
   const elFiltroPunto = document.getElementById("filtroPunto");
-  const elFechaInicio = document.getElementById("filtroFechaInicio");
-  const elFechaFin = document.getElementById("filtroFechaFin");
+  const elDateRangeWrapper = document.getElementById("dateRangeWrapper");
   if (elFiltroPunto) elFiltroPunto.style.display = mostrarFiltrosExtra ? "" : "none";
-  if (elFechaInicio) elFechaInicio.style.display = mostrarFiltrosExtra ? "" : "none";
-  if (elFechaFin) elFechaFin.style.display = mostrarFiltrosExtra ? "" : "none";
+  if (elDateRangeWrapper) elDateRangeWrapper.style.display = mostrarFiltrosExtra ? "inline-block" : "none";
 
   // Inicializar rango de fechas: del día 1 del mes actual al día de hoy
   if (mostrarFiltrosExtra) {
@@ -659,11 +660,15 @@ function mostrarAppPrincipal() {
     const dd = String(hoy.getDate()).padStart(2, '0');
     const fechaHoy = `${yyyy}-${mm}-${dd}`;
     const fechaInicio = `${yyyy}-${mm}-01`;
-    if (elFechaInicio && !elFechaInicio.value) elFechaInicio.value = fechaInicio;
-    if (elFechaFin && !elFechaFin.value) elFechaFin.value = fechaHoy;
     AppState.filtros.fechaInicio = fechaInicio;
     AppState.filtros.fechaFin = fechaHoy;
     AppState.filtros.punto = "TODOS";
+    if (typeof initDatePicker === 'function') {
+      initDatePicker(fechaInicio, fechaHoy);
+    }
+  } else {
+    delete AppState.filtros.fechaInicio;
+    delete AppState.filtros.fechaFin;
   }
 
   cargarTickets();
@@ -979,6 +984,262 @@ function onFiltroChange() {
 
   cargarTickets();
 }
+
+// ============================================================================
+// DATE RANGE PICKER PERSONALIZADO CON CALENDARIO VISUAL Y PRESETS (Ayer, Hoy, etc.)
+// ============================================================================
+const DatePickerState = {
+  fechaInicio: "",
+  fechaFin: "",
+  mesInicio: new Date(),
+  mesFin: new Date(),
+  isOpen: false
+};
+
+const NOMBRES_MESES = [
+  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+];
+
+function formatearFechaVisual(fechaStr) {
+  if (!fechaStr) return "—";
+  const partes = fechaStr.split("-");
+  if (partes.length !== 3) return fechaStr;
+  return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+function formatearYMD(dateObj) {
+  const yyyy = dateObj.getFullYear();
+  const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const dd = String(dateObj.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function initDatePicker(inicioStr, finStr) {
+  const hoy = new Date();
+  if (!inicioStr) {
+    const yyyy = hoy.getFullYear();
+    const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+    inicioStr = `${yyyy}-${mm}-01`;
+  }
+  if (!finStr) {
+    finStr = formatearYMD(hoy);
+  }
+
+  DatePickerState.fechaInicio = inicioStr;
+  DatePickerState.fechaFin = finStr;
+
+  const [y1, m1] = inicioStr.split("-").map(Number);
+  const [y2, m2] = finStr.split("-").map(Number);
+  DatePickerState.mesInicio = new Date(y1, m1 - 1, 1);
+  DatePickerState.mesFin = new Date(y2, m2 - 1, 1);
+
+  const inpIni = document.getElementById("filtroFechaInicio");
+  const inpFin = document.getElementById("filtroFechaFin");
+  if (inpIni) inpIni.value = inicioStr;
+  if (inpFin) inpFin.value = finStr;
+
+  actualizarDisplaysYBotones();
+  renderCalendario("inicio");
+  renderCalendario("fin");
+}
+
+function toggleDatePicker(forceState) {
+  const panel = document.getElementById("datePickerPanel");
+  const btn = document.getElementById("dateRangeBtn");
+  if (!panel || !btn) return;
+
+  const newState = (typeof forceState === "boolean") ? forceState : !DatePickerState.isOpen;
+  DatePickerState.isOpen = newState;
+
+  if (newState) {
+    panel.style.display = "block";
+    btn.classList.add("open");
+    renderCalendario("inicio");
+    renderCalendario("fin");
+  } else {
+    panel.style.display = "none";
+    btn.classList.remove("open");
+  }
+}
+
+function actualizarDisplaysYBotones() {
+  const lbl = document.getElementById("dateRangeLabel");
+  const dIni = document.getElementById("displayFechaInicio");
+  const dFin = document.getElementById("displayFechaFin");
+  const btn = document.getElementById("dateRangeBtn");
+
+  const vIni = formatearFechaVisual(DatePickerState.fechaInicio);
+  const vFin = formatearFechaVisual(DatePickerState.fechaFin);
+
+  if (lbl) lbl.textContent = `${vIni} – ${vFin}`;
+  if (dIni) dIni.textContent = vIni;
+  if (dFin) dFin.textContent = vFin;
+  if (btn) {
+    if (DatePickerState.fechaInicio || DatePickerState.fechaFin) {
+      btn.classList.add("active-range");
+    } else {
+      btn.classList.remove("active-range");
+    }
+  }
+}
+
+function navCal(tipo, delta) {
+  if (tipo === "inicio") {
+    DatePickerState.mesInicio.setMonth(DatePickerState.mesInicio.getMonth() + delta);
+    renderCalendario("inicio");
+  } else {
+    DatePickerState.mesFin.setMonth(DatePickerState.mesFin.getMonth() + delta);
+    renderCalendario("fin");
+  }
+}
+
+function renderCalendario(tipo) {
+  const esInicio = tipo === "inicio";
+  const dateCursor = esInicio ? DatePickerState.mesInicio : DatePickerState.mesFin;
+  const grid = document.getElementById(esInicio ? "calInicioGrid" : "calFinGrid");
+  const title = document.getElementById(esInicio ? "calInicioTitle" : "calFinTitle");
+  if (!grid || !title) return;
+
+  const yyyy = dateCursor.getFullYear();
+  const mm = dateCursor.getMonth();
+  title.textContent = `${NOMBRES_MESES[mm]} ${yyyy}`;
+
+  // Encabezados de días: D, L, M, M, J, V, S
+  const diasSemana = ["D", "L", "M", "M", "J", "V", "S"];
+  let html = diasSemana.map(d => `<div class="cal-day-name">${d}</div>`).join("");
+
+  const primerDiaSemana = new Date(yyyy, mm, 1).getDay(); // 0 = Domingo
+  const diasEnMes = new Date(yyyy, mm + 1, 0).getDate();
+
+  // Días vacíos previos
+  for (let i = 0; i < primerDiaSemana; i++) {
+    html += `<div class="cal-day cal-day-empty"></div>`;
+  }
+
+  const hoyYMD = formatearYMD(new Date());
+
+  for (let dia = 1; dia <= diasEnMes; dia++) {
+    const diaStr = String(dia).padStart(2, "0");
+    const mesStr = String(mm + 1).padStart(2, "0");
+    const ymd = `${yyyy}-${mesStr}-${diaStr}`;
+
+    const isToday = ymd === hoyYMD;
+    const isStart = ymd === DatePickerState.fechaInicio;
+    const isEnd = ymd === DatePickerState.fechaFin;
+    const inRange = DatePickerState.fechaInicio && DatePickerState.fechaFin &&
+                    ymd > DatePickerState.fechaInicio && ymd < DatePickerState.fechaFin;
+
+    let clases = ["cal-day"];
+    if (isToday) clases.push("cal-day-today");
+    if (isStart) clases.push("cal-day-selected", "cal-day-range-start");
+    if (isEnd) clases.push("cal-day-selected", "cal-day-range-end");
+    if (inRange) clases.push("cal-day-in-range");
+
+    html += `<div class="${clases.join(" ")}" onclick="seleccionarDia('${tipo}', '${ymd}')">${dia}</div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+function seleccionarDia(tipo, ymd) {
+  if (tipo === "inicio") {
+    DatePickerState.fechaInicio = ymd;
+    if (DatePickerState.fechaFin && ymd > DatePickerState.fechaFin) {
+      DatePickerState.fechaFin = ymd;
+    }
+  } else {
+    DatePickerState.fechaFin = ymd;
+    if (DatePickerState.fechaInicio && ymd < DatePickerState.fechaInicio) {
+      DatePickerState.fechaInicio = ymd;
+    }
+  }
+
+  // Quitar estilo activo de botones rápidos
+  document.querySelectorAll(".date-quick-btn").forEach(b => b.classList.remove("active"));
+
+  actualizarDisplaysYBotones();
+  renderCalendario("inicio");
+  renderCalendario("fin");
+}
+
+function aplicarRapido(preset) {
+  const hoy = new Date();
+  let fIni = "";
+  let fFin = "";
+
+  if (preset === "hoy") {
+    fIni = formatearYMD(hoy);
+    fFin = fIni;
+  } else if (preset === "ayer") {
+    const ayer = new Date();
+    ayer.setDate(hoy.getDate() - 1);
+    fIni = formatearYMD(ayer);
+    fFin = fIni;
+  } else if (preset === "semana") {
+    const hace7 = new Date();
+    hace7.setDate(hoy.getDate() - 6);
+    fIni = formatearYMD(hace7);
+    fFin = formatearYMD(hoy);
+  } else if (preset === "mes") {
+    const yyyy = hoy.getFullYear();
+    const mm = String(hoy.getMonth() + 1).padStart(2, "0");
+    fIni = `${yyyy}-${mm}-01`;
+    fFin = formatearYMD(hoy);
+  }
+
+  // Marcar botón activo
+  document.querySelectorAll(".date-quick-btn").forEach(b => {
+    b.classList.remove("active");
+    if (b.getAttribute("onclick") && b.getAttribute("onclick").includes(`'${preset}'`)) {
+      b.classList.add("active");
+    }
+  });
+
+  DatePickerState.fechaInicio = fIni;
+  DatePickerState.fechaFin = fFin;
+
+  const [y1, m1] = fIni.split("-").map(Number);
+  const [y2, m2] = fFin.split("-").map(Number);
+  DatePickerState.mesInicio = new Date(y1, m1 - 1, 1);
+  DatePickerState.mesFin = new Date(y2, m2 - 1, 1);
+
+  actualizarDisplaysYBotones();
+  renderCalendario("inicio");
+  renderCalendario("fin");
+
+  aplicarFiltroFecha();
+}
+
+function aplicarFiltroFecha() {
+  const inpIni = document.getElementById("filtroFechaInicio");
+  const inpFin = document.getElementById("filtroFechaFin");
+  if (inpIni) inpIni.value = DatePickerState.fechaInicio;
+  if (inpFin) inpFin.value = DatePickerState.fechaFin;
+
+  AppState.filtros.fechaInicio = DatePickerState.fechaInicio;
+  AppState.filtros.fechaFin = DatePickerState.fechaFin;
+
+  actualizarDisplaysYBotones();
+  toggleDatePicker(false);
+  cargarTickets();
+}
+
+// Cerrar panel al hacer clic fuera del date range picker
+document.addEventListener("click", function (e) {
+  const wrapper = document.getElementById("dateRangeWrapper");
+  if (!wrapper) return;
+  if (DatePickerState.isOpen && !wrapper.contains(e.target)) {
+    toggleDatePicker(false);
+  }
+});
+
+// Exportar al ámbito global
+window.toggleDatePicker = toggleDatePicker;
+window.aplicarRapido = aplicarRapido;
+window.navCal = navCal;
+window.seleccionarDia = seleccionarDia;
+window.aplicarFiltroFecha = aplicarFiltroFecha;
 
 // ============================================================================
 // 4. CREAR TICKET (SOLICITUD)

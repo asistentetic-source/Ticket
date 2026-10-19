@@ -1063,3 +1063,239 @@ textarea.form-control {
     align-items: stretch;
   }
 }
+
+/* ── DATE RANGE PICKER PERSONALIZADO ─────────────────────────────────────── */
+.date-range-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  padding: 0.68rem 1.1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.86rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.date-range-btn:hover {
+  border-color: var(--border-hover);
+  background: rgba(206,0,88,0.08);
+}
+.date-range-btn.active-range {
+  border-color: var(--diali-pink);
+  color: var(--diali-pink-soft);
+  box-shadow: 0 0 0 2px var(--primary-glow);
+}
+.date-range-arrow {
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+.date-range-btn.open .date-range-arrow { transform: rotate(180deg); }
+
+.date-picker-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 9999;
+  background: #1a0b22;
+  border: 1px solid rgba(206, 0, 88, 0.3);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 30px rgba(206,0,88,0.15);
+  padding: 1rem 1.1rem;
+  min-width: 580px;
+  backdrop-filter: blur(20px);
+  animation: dpFadeIn 0.18s ease;
+}
+@keyframes dpFadeIn {
+  from { opacity:0; transform: translateY(-6px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+.date-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(206,0,88,0.15);
+}
+.date-quick-btns {
+  display: flex;
+  gap: 0.4rem;
+}
+.date-quick-btn {
+  background: rgba(131,0,101,0.2);
+  border: 1px solid rgba(206,0,88,0.2);
+  color: var(--text-muted);
+  padding: 0.3rem 0.7rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.date-quick-btn:hover {
+  background: rgba(206,0,88,0.25);
+  color: #fff;
+  border-color: var(--diali-pink);
+}
+.date-quick-btn.active {
+  background: linear-gradient(135deg, var(--diali-pink), var(--diali-purple));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(206,0,88,0.35);
+}
+
+.date-picker-calendars {
+  display: flex;
+  gap: 1.2rem;
+  align-items: flex-start;
+}
+.cal-separator {
+  width: 1px;
+  align-self: stretch;
+  background: rgba(206,0,88,0.15);
+  margin: 0 0.3rem;
+}
+.cal-block { flex: 1; }
+.cal-label {
+  text-align: center;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--diali-pink-soft);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+.cal-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.cal-nav-btn {
+  background: rgba(206,0,88,0.12);
+  border: 1px solid rgba(206,0,88,0.2);
+  color: var(--text-muted);
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  transition: var(--transition);
+}
+.cal-nav-btn:hover { background: rgba(206,0,88,0.3); color: #fff; }
+.cal-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.cal-day-name {
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  padding: 0.2rem 0 0.35rem;
+  text-transform: uppercase;
+}
+.cal-day {
+  aspect-ratio: 1;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  color: var(--text-secondary);
+  position: relative;
+}
+.cal-day:hover:not(.cal-day-empty):not(.cal-day-disabled) {
+  background: rgba(206,0,88,0.25);
+  color: #fff;
+}
+.cal-day.cal-day-empty { cursor: default; }
+.cal-day.cal-day-disabled { color: var(--text-dim); cursor: default; opacity: 0.45; }
+.cal-day.cal-day-selected {
+  background: linear-gradient(135deg, var(--diali-pink), var(--diali-purple));
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(206,0,88,0.5);
+}
+.cal-day.cal-day-today {
+  border: 1px solid var(--diali-pink-soft);
+  color: var(--diali-pink-soft);
+}
+.cal-day.cal-day-today.cal-day-selected {
+  border-color: transparent;
+  color: #fff;
+}
+.cal-day.cal-day-in-range {
+  background: rgba(206,0,88,0.12);
+  border-radius: 0;
+  color: #fff;
+}
+.cal-day.cal-day-range-start, .cal-day.cal-day-range-end {
+  background: linear-gradient(135deg, var(--diali-pink), var(--diali-purple));
+  color: #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(206,0,88,0.5);
+}
+
+.date-picker-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.9rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(206,0,88,0.15);
+  gap: 0.75rem;
+}
+.date-picker-inputs {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.date-input-display {
+  background: rgba(131,0,101,0.15);
+  border: 1px solid rgba(206,0,88,0.2);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+}
+.date-input-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  font-weight: 700;
+}
+.date-input-value {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--diali-pink-soft);
+  margin-top: 0.1rem;
+}
+
+@media (max-width: 640px) {
+  .date-picker-panel {
+    min-width: calc(100vw - 2rem);
+    right: auto;
+    left: 0;
+  }
+  .date-picker-calendars { flex-direction: column; }
+  .cal-separator { width: 100%; height: 1px; margin: 0.5rem 0; }
+}
