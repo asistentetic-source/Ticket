@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <!-- Estilos del Sistema de Diseño DIALI® -->
-  <link rel="stylesheet" href="css/styles.css?v=20261019_02">
+  <link rel="stylesheet" href="css/styles.css?v=20261019_03">
   <style>
     .spinner-btn {
       width: 1.15rem;
@@ -36,16 +36,16 @@
   <!-- VISTA 1: INICIO DE SESIÓN POR CÉDULA & ACCESO COORDINACIÓN -->
   <!-- ==================================================================== -->
   <div id="loginView" style="display: flex; min-height: 100vh; align-items: center; justify-content: center; padding: 1.5rem;">
-    <div style="background: var(--bg-card); backdrop-filter: blur(20px); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 2.5rem; width: 100%; max-width: 440px; box-shadow: var(--shadow-lg); text-align: center; position: relative;">
+    <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 2.5rem; width: 100%; max-width: 440px; box-shadow: var(--shadow-lg); text-align: center; position: relative;">
 
       <!-- Logo Oficial DIALI® -->
       <div style="margin: 0 auto 1.25rem; display: flex; flex-direction: column; align-items: center; justify-content: center;">
         <img src="assets/logo-diali.png" onerror="this.src='https://asistentetic-source.github.io/Ticket/assets/logo-diali.png'" alt="Diali - Dialimentos" style="width: 210px; max-width: 100%; height: auto; display: block;">
-        <span style="font-size: 0.72rem; color: #d8b4e2; letter-spacing: 0.04em; margin-top: 0.45rem; font-weight: 500;">
+        <span style="font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.04em; margin-top: 0.45rem; font-weight: 500;">
           Una marca operada por Dialimentos SAS
         </span>
       </div>
-      <h2 style="font-family: var(--font-heading); font-size: 1.55rem; font-weight: 800; margin-bottom: 0.25rem; color: #ffffff;">Mesa de Ayuda</h2>
+      <h2 style="font-family: var(--font-heading); font-size: 1.55rem; font-weight: 800; margin-bottom: 0.25rem; color: var(--text-main);">Mesa de Ayuda</h2>
       <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.75rem;">Gestión de Mantenimiento & TIC</p>
 
       <!-- Panel 1: Ingreso General por Cédula -->
@@ -66,17 +66,17 @@
       <!-- Panel 2: Verificación de Contraseña para Coordinación / Administración -->
       <div id="panelLoginAdmin" style="display: none;">
         <!-- Tarjeta de identificación del usuario detectado automáticamente desde Sheets -->
-        <div style="background: linear-gradient(135deg, rgba(131, 0, 101, 0.28), rgba(206, 0, 88, 0.18)); border: 1px solid rgba(206, 0, 88, 0.45); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.5rem; text-align: left;">
+        <div style="background: #fbf7fa; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.5rem; text-align: left;">
           <div style="display: flex; align-items: center; gap: 0.75rem;">
             <span id="adminDetectedIcon" style="font-size: 1.6rem;">💼</span>
             <div style="flex: 1; min-width: 0;">
-              <div id="adminDetectedName" style="font-weight: 700; color: #ffffff; font-size: 1rem; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Nombre Usuario</div>
-              <div id="adminDetectedRole" style="font-size: 0.8rem; color: #f472b6; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.15rem;">Rol / Área</div>
+              <div id="adminDetectedName" style="font-weight: 700; color: var(--text-main); font-size: 1rem; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Nombre Usuario</div>
+              <div id="adminDetectedRole" style="font-size: 0.8rem; color: var(--diali-pink); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.15rem;">Rol / Área</div>
             </div>
           </div>
-          <div style="font-size: 0.75rem; color: #d8b4e2; padding-top: 0.5rem; margin-top: 0.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: space-between;">
+          <div style="font-size: 0.75rem; color: var(--text-muted); padding-top: 0.5rem; margin-top: 0.5rem; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
             <span>Cédula:</span>
-            <span id="adminDetectedCedula" style="color: #ffffff; font-weight: 700;">-</span>
+            <span id="adminDetectedCedula" style="color: var(--text-main); font-weight: 700;">-</span>
           </div>
         </div>
 
@@ -138,7 +138,7 @@
       <!-- Tarjetas de Métricas (KPIs) -->
       <section class="kpi-grid">
         <div class="kpi-card">
-          <div class="kpi-icon-box" style="background: rgba(131, 0, 101, 0.28); color: #e879f9;">📑</div>
+          <div class="kpi-icon-box" style="background: rgba(131, 0, 101, 0.08); color: var(--diali-purple);">📑</div>
           <div>
             <div class="kpi-val" id="kpiTotal">0</div>
             <div class="kpi-label">Total Tickets</div>
@@ -248,10 +248,10 @@
 
           <!-- Botones exclusivos para Reclutador / Recursos Humanos -->
           <div id="rrhhActionsContainer" style="display: none; align-items: center; gap: 0.5rem;">
-            <button type="button" class="btn btn-secondary" onclick="abrirModalGestionEmpleados()" title="Gestión de Empleados (Recursos Humanos)" style="background: rgba(131, 0, 101, 0.25); border-color: rgba(206, 0, 88, 0.4); color: #f472b6; font-weight: 700;">
+            <button type="button" class="btn btn-secondary" onclick="abrirModalGestionEmpleados()" title="Gestión de Empleados (Recursos Humanos)" style="background: rgba(131, 0, 101, 0.08); border-color: rgba(131, 0, 101, 0.25); color: var(--diali-purple); font-weight: 700;">
               <span>👥</span> Empleados (RRHH)
             </button>
-            <button type="button" class="btn btn-secondary" onclick="abrirModalNuevoPunto()" title="Registrar nuevo punto de servicio" style="background: rgba(120, 214, 75, 0.18); border-color: rgba(120, 214, 75, 0.4); color: #78D64B; font-weight: 700;">
+            <button type="button" class="btn btn-secondary" onclick="abrirModalNuevoPunto()" title="Registrar nuevo punto de servicio" style="background: rgba(21, 128, 61, 0.08); border-color: rgba(21, 128, 61, 0.25); color: #15803d; font-weight: 700;">
               <span>📍</span> Añadir Punto
             </button>
           </div>
@@ -259,7 +259,7 @@
           <button type="button" id="btnRecargarTabla" class="btn btn-secondary" onclick="recargarTicketsManual()" title="Actualizar lista de tickets" style="font-weight: 700;">
             🔄 Actualizar
           </button>
-          <span id="badgeAutoRefresh" style="display: none; font-size: 0.75rem; color: #d8b4e2; background: rgba(131, 0, 101, 0.25); border: 1px solid rgba(206, 0, 88, 0.3); border-radius: var(--radius-sm); padding: 0.5rem 0.75rem; align-items: center; gap: 0.35rem; font-weight: 600;" title="Actualización automática activa cada 5 minutos">
+          <span id="badgeAutoRefresh" style="display: none; font-size: 0.75rem; color: var(--text-muted); background: #fbf7fa; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.5rem 0.75rem; align-items: center; gap: 0.35rem; font-weight: 600;" title="Actualización automática activa cada 5 minutos">
             ⏱️ Auto: 5m
           </span>
           <button class="btn btn-primary" onclick="abrirModalNuevoTicket()">
@@ -310,14 +310,14 @@
           <div class="form-grid">
             
             <!-- Fecha y Hora de Creación Automática -->
-            <div class="form-group-full" style="background: rgba(131, 0, 101, 0.16); border: 1px solid rgba(206, 0, 88, 0.3); border-radius: var(--radius-md); padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center;">
+            <div class="form-group-full" style="background: #fbf7fa; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center;">
               <div>
-                <span style="font-size: 0.73rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); font-weight: 700;">Fecha y Hora de Creación</span>
-                <div id="solicitudFechaHoraTexto" style="font-size: 0.95rem; font-weight: 700; color: #ff5c9d; font-family: var(--font-heading); margin-top: 0.15rem;">
+                <span style="font-size: 0.73rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); font-weight: 700;">Fecha y Hora de Creación</span>
+                <div id="solicitudFechaHoraTexto" style="font-size: 0.95rem; font-weight: 700; color: var(--diali-pink); font-family: var(--font-heading); margin-top: 0.15rem;">
                   🕒 Cargando fecha y hora...
                 </div>
               </div>
-              <span style="background: rgba(206, 0, 88, 0.2); color: #ffffff; padding: 0.3rem 0.65rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(206, 0, 88, 0.4);">
+              <span style="background: rgba(206, 0, 88, 0.08); color: var(--diali-pink); padding: 0.3rem 0.65rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(206, 0, 88, 0.25);">
                 Automática
               </span>
             </div>
@@ -402,19 +402,19 @@
     <div class="modal-container">
       <div class="modal-header">
         <div class="modal-title">
-          <span>👨‍💼</span> Asignación de Servicio Técnico - <span id="asigNroTicket" style="color: #38bdf8;"></span>
+          <span>👨‍💼</span> Asignación de Servicio Técnico - <span id="asigNroTicket" style="color: var(--diali-pink);"></span>
         </div>
         <button class="btn-close" onclick="cerrarModal('modalAsignarTicket')">&times;</button>
       </div>
       <form id="formAsignarTicket" onsubmit="guardarAsignacionTicket(event)">
         <div class="modal-body">
-          <div style="background: rgba(255, 255, 255, 0.04); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.25rem;">
+          <div style="background: #fbf7fa; border: 1px solid var(--border-subtle); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.25rem;">
             <p style="font-size: 0.85rem; color: var(--text-muted);"><strong>Punto:</strong> <span id="asigPunto"></span></p>
             <p style="font-size: 0.85rem; color: var(--text-muted);"><strong>Equipo:</strong> <span id="asigEquipo"></span></p>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.35rem;"><strong>Problema Reportado:</strong> <span id="asigDescripcion"></span></p>
-            <p id="asigCelularRow" style="font-size: 0.85rem; margin-top: 0.35rem; background: rgba(206, 0, 88, 0.12); border: 1px solid rgba(206, 0, 88, 0.3); border-radius: 6px; padding: 0.4rem 0.65rem;">
-              📞 <strong style="color: #f472b6;">Celular del Solicitante:</strong>
-              <span id="asigCelularSolicitante" style="color: #fff; font-weight: 700; margin-left: 0.3rem;"></span>
+            <p id="asigCelularRow" style="font-size: 0.85rem; margin-top: 0.35rem; background: rgba(206, 0, 88, 0.08); border: 1px solid rgba(206, 0, 88, 0.25); border-radius: 6px; padding: 0.4rem 0.65rem;">
+              📞 <strong style="color: var(--diali-purple);">Celular del Solicitante:</strong>
+              <span id="asigCelularSolicitante" style="color: var(--text-main); font-weight: 700; margin-left: 0.3rem;"></span>
             </p>
             <div id="asigFotoContainer" style="display: none; margin-top: 0.85rem; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle);">
               <span style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 0.4rem;">📷 Foto adjunta por el solicitante:</span>
@@ -466,22 +466,22 @@
     <div class="modal-container">
       <div class="modal-header">
         <div class="modal-title">
-          <span>🔧</span> Cierre y Entrega Técnica - <span id="cierreNroTicket" style="color: #34d399;"></span>
+          <span>🔧</span> Cierre y Entrega Técnica - <span id="cierreNroTicket" style="color: #15803d;"></span>
         </div>
         <button class="btn-close" onclick="cerrarModal('modalCierreTicket')">&times;</button>
       </div>
       <form id="formCierreTicket" onsubmit="guardarCierreTicket(event)">
         <div class="modal-body">
-          <div style="background: rgba(255, 255, 255, 0.04); padding: 0.85rem; border-radius: var(--radius-md); margin-bottom: 0.75rem;">
+          <div style="background: #fbf7fa; border: 1px solid var(--border-subtle); padding: 0.85rem; border-radius: var(--radius-md); margin-bottom: 0.75rem;">
             <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;" id="cierreEquipoInfo"></p>
           </div>
 
           <!-- Indicación / Observación de asignación del Coordinador -->
-          <div style="background: rgba(36, 15, 46, 0.75); border-left: 4px solid #CE0058; border-radius: 6px; padding: 0.85rem 1rem; margin-bottom: 1.25rem;">
-            <div style="display: flex; align-items: center; gap: 0.4rem; color: #f472b6; font-weight: 700; font-size: 0.82rem; margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.03em;">
+          <div style="background: #fdfafd; border: 1px solid var(--border-subtle); border-left: 4px solid var(--diali-pink); border-radius: 6px; padding: 0.85rem 1rem; margin-bottom: 1.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.4rem; color: var(--diali-purple); font-weight: 700; font-size: 0.82rem; margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.03em;">
               <span>📌 Indicaciones de la Coordinación al Asignar:</span>
             </div>
-            <p id="cierreInstruccionCoordinador" style="margin: 0; color: #f1f5f9; font-size: 0.92rem; line-height: 1.45; white-space: pre-wrap; font-style: italic;">
+            <p id="cierreInstruccionCoordinador" style="margin: 0; color: var(--text-main); font-size: 0.92rem; line-height: 1.45; white-space: pre-wrap; font-style: italic;">
               (Sin observaciones adicionales del coordinador)
             </p>
           </div>
@@ -516,11 +516,11 @@
               <div style="display: flex; gap: 2rem; margin-top: 0.4rem; flex-wrap: wrap;">
                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
                   <input type="radio" name="operativoRadio" id="operativoSi" value="SI" checked onchange="onOperativoToggle()">
-                  <span style="color: #34d399; font-weight: 600;">✅ Sí, queda en funcionamiento (Cerrar Ticket)</span>
+                  <span style="color: #15803d; font-weight: 600;">✅ Sí, queda en funcionamiento (Cerrar Ticket)</span>
                 </label>
                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
                   <input type="radio" name="operativoRadio" id="operativoNo" value="NO" onchange="onOperativoToggle()">
-                  <span style="color: #f87171; font-weight: 600;">❌ No queda en funcionamiento (Dejar en PENDIENTE)</span>
+                  <span style="color: #dc2626; font-weight: 600;">❌ No queda en funcionamiento (Dejar en PENDIENTE)</span>
                 </label>
               </div>
             </div>
@@ -620,11 +620,11 @@
               <div class="phase-title"><span>📥</span> 1. Solicitud Inicial</div>
             </div>
             <div class="phase-content">
-              <div class="detail-item"><span class="detail-label">Fecha y Hora de Solicitud:</span><span class="detail-value" id="detFechaIngreso" style="color: #38bdf8; font-weight: 600;"></span></div>
+              <div class="detail-item"><span class="detail-label">Fecha y Hora de Solicitud:</span><span class="detail-value" id="detFechaIngreso" style="color: var(--diali-purple); font-weight: 600;"></span></div>
               <div class="detail-item"><span class="detail-label">Punto de Servicio:</span><span class="detail-value" id="detPunto"></span></div>
               <div class="detail-item"><span class="detail-label">Área / Servicio:</span><span class="detail-value"><span id="detArea"></span> - <span id="detServicio"></span></span></div>
               <div class="detail-item"><span class="detail-label">Solicitante:</span><span class="detail-value" id="detSolicitante"></span></div>
-              <div class="detail-item"><span class="detail-label">📞 Celular Solicitante:</span><span class="detail-value" id="detCelularSolicitante" style="color: #2596be; font-weight: 700;"></span></div>
+              <div class="detail-item"><span class="detail-label">📞 Celular Solicitante:</span><span class="detail-value" id="detCelularSolicitante" style="color: var(--diali-pink); font-weight: 700;"></span></div>
               <div class="detail-item"><span class="detail-label">Correo:</span><span class="detail-value" id="detEmail"></span></div>
               <div class="detail-item"><span class="detail-label">Equipo Intervenido:</span><span class="detail-value" id="detEquipo"></span></div>
               <div class="detail-item"><span class="detail-label">Placa Activo Fijo:</span><span class="detail-value badge-plate" id="detPlaca"></span></div>
@@ -660,11 +660,11 @@
               <div class="detail-item"><span class="detail-label">Estado Final:</span><span class="detail-value" id="detEstadoFinal"></span></div>
               <div class="detail-item"><span class="detail-label">Tipo de Falla:</span><span class="detail-value" id="detFalla"></span></div>
               <div class="detail-item"><span class="detail-label">Repuestos Usados:</span><span class="detail-value" id="detRepuestos"></span></div>
-              <div class="detail-item detail-item-full" id="detRazonPendienteItem" style="display: none; background: rgba(217, 119, 6, 0.12); border: 1px solid rgba(217, 119, 6, 0.3); border-radius: 6px; padding: 0.5rem 0.75rem;">
-                <span class="detail-label" style="color: #f59e0b; font-weight: 700;">⚠️ Razón por la cual queda PENDIENTE:</span>
-                <span class="detail-value" id="detRazonPendiente" style="color: #fff; font-weight: 600; margin-top: 0.2rem; display: block;"></span>
+              <div class="detail-item detail-item-full" id="detRazonPendienteItem" style="display: none; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 0.5rem 0.75rem;">
+                <span class="detail-label" style="color: #b45309; font-weight: 700;">⚠️ Razón por la cual queda PENDIENTE:</span>
+                <span class="detail-value" id="detRazonPendiente" style="color: var(--text-main); font-weight: 600; margin-top: 0.2rem; display: block;"></span>
               </div>
-              <div class="detail-item detail-item-full"><span class="detail-label">Trabajo Realizado / Avance:</span><span class="detail-value" id="detTrabajo" style="color: #f8fafc; font-weight: 600; white-space: pre-wrap;"></span></div>
+              <div class="detail-item detail-item-full"><span class="detail-label">Trabajo Realizado / Avance:</span><span class="detail-value" id="detTrabajo" style="color: var(--text-main); font-weight: 500; white-space: pre-wrap;"></span></div>
               <div class="detail-item"><span class="detail-label">Recibido Por:</span><span class="detail-value" id="detRecibe"></span></div>
               <div class="detail-item detail-item-full" id="detFotoCierreItem" style="display: none;">
                 <span class="detail-label">📸 Evidencia Fotográfica del Cierre (Trabajo Realizado):</span>
@@ -675,11 +675,11 @@
 
           <!-- Fase 4: Gestión Administrativa (Administradora / Costos) -->
           <div class="phase-card" id="detFaseAdminCard" style="display: none;">
-            <div class="phase-header" style="background: rgba(245, 158, 11, 0.15); border-left: 4px solid #f59e0b;">
-              <div class="phase-title" style="color: #fbbf24;"><span>💼</span> 4. Gestión Administrativa (Costos y Aprobación)</div>
+            <div class="phase-header" style="background: #fffbeb; border-left: 4px solid #f59e0b;">
+              <div class="phase-title" style="color: #b45309;"><span>💼</span> 4. Gestión Administrativa (Costos y Aprobación)</div>
             </div>
             <div class="phase-content">
-              <div class="detail-item"><span class="detail-label">💰 Costo Registrado:</span><span class="detail-value" id="detCosto" style="font-weight: 700; color: #10b981;"></span></div>
+              <div class="detail-item"><span class="detail-label">💰 Costo Registrado:</span><span class="detail-value" id="detCosto" style="font-weight: 700; color: #15803d;"></span></div>
               <div class="detail-item"><span class="detail-label">✅ Estado Aprobación:</span><span class="detail-value" id="detAprobacion" style="font-weight: 700;"></span></div>
               <div class="detail-item"><span class="detail-label">🏭 Proveedor:</span><span class="detail-value" id="detProveedor"></span></div>
               <div class="detail-item"><span class="detail-label">📞 Consulta Realizada A:</span><span class="detail-value" id="detConsultaAdmin"></span></div>
@@ -691,7 +691,7 @@
       </div>
       <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
         <div id="detBtnAdminContainer" style="display: none;">
-          <button type="button" class="btn btn-sm" style="background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.5); color: #fbbf24; font-weight: 600;" onclick="cerrarModal('modalDetalleTicket'); if(AppState.activeTicket) abrirModalAdministradora(AppState.activeTicket.nroTicket);">
+          <button type="button" class="btn btn-sm" style="background: rgba(217, 119, 6, 0.12); border: 1px solid rgba(217, 119, 6, 0.35); color: #b45309; font-weight: 600;" onclick="cerrarModal('modalDetalleTicket'); if(AppState.activeTicket) abrirModalAdministradora(AppState.activeTicket.nroTicket);">
             💼 Gestionar Administrativamente
           </button>
         </div>
@@ -791,15 +791,15 @@
       <!-- Pestaña 2: Carga Masiva desde Excel -->
       <div id="tabContentMasivo" style="display: none;">
         <div class="modal-body">
-          <div style="background: rgba(37, 99, 235, 0.1); border: 1px solid rgba(37, 99, 235, 0.25); border-radius: var(--radius-md); padding: 0.85rem 1rem; margin-bottom: 1.25rem;">
+          <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-md); padding: 0.85rem 1rem; margin-bottom: 1.25rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
               <div>
-                <strong style="color: #93c5fd; font-size: 0.85rem;">📋 Columnas requeridas del archivo Excel:</strong>
-                <p style="font-size: 0.75rem; color: #cbd5e1; margin-top: 0.2rem; font-family: monospace;">
+                <strong style="color: #1d4ed8; font-size: 0.85rem;">📋 Columnas requeridas del archivo Excel:</strong>
+                <p style="font-size: 0.75rem; color: #475569; margin-top: 0.2rem; font-family: monospace;">
                   [A] CEDULA | [B] NOMBRES APELLIDOS | [C] EMAIL | [D] CELULAR | [E] TIPO USUARIO | [F] AREA
                 </p>
               </div>
-              <button type="button" class="btn btn-secondary btn-sm" onclick="descargarPlantillaExcel()" style="font-size: 0.78rem; display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(59, 130, 246, 0.2); border-color: rgba(59, 130, 246, 0.4); color: #93c5fd;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="descargarPlantillaExcel()" style="font-size: 0.78rem; display: inline-flex; align-items: center; gap: 0.35rem; background: #ffffff; border-color: #93c5fd; color: #1d4ed8;">
                 <span>📥</span> Descargar Plantilla Excel
               </button>
             </div>
@@ -809,11 +809,11 @@
           <div id="dropzoneExcel" class="excel-dropzone" onclick="document.getElementById('inputExcelEmpleados').click()">
             <input type="file" id="inputExcelEmpleados" accept=".xlsx, .xls, .csv" style="display: none;" onchange="procesarArchivoExcelEmpleados(this)">
             <span style="font-size: 2.2rem; display: block; margin-bottom: 0.4rem;">📊</span>
-            <strong style="font-size: 0.95rem; color: #fff;">Haz clic aquí para seleccionar tu archivo Excel (.xlsx o .csv)</strong>
+            <strong style="font-size: 0.95rem; color: var(--text-main);">Haz clic aquí para seleccionar tu archivo Excel (.xlsx o .csv)</strong>
             <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;">
               Soporta listas de 10, 50, 100 o más colaboradores simultáneamente
             </p>
-            <div id="excelNombreArchivo" style="display: none; margin-top: 0.65rem; font-weight: 600; color: #34d399; font-size: 0.85rem;"></div>
+            <div id="excelNombreArchivo" style="display: none; margin-top: 0.65rem; font-weight: 600; color: #15803d; font-size: 0.85rem;"></div>
           </div>
 
           <!-- Alternativa: Pegar directo de Excel -->
@@ -830,7 +830,7 @@
           <!-- Tabla de Vista Previa -->
           <div id="previewContainerMasivo" style="display: none; margin-top: 1.25rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-              <span id="previewCountBadge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-weight: 600; font-size: 0.82rem; padding: 0.3rem 0.65rem; border-radius: 6px;">
+              <span id="previewCountBadge" style="background: #eff6ff; color: #1d4ed8; font-weight: 600; font-size: 0.82rem; padding: 0.3rem 0.65rem; border-radius: 6px; border: 1px solid #bfdbfe;">
                 0 empleados detectados
               </span>
               <button type="button" class="btn btn-secondary btn-sm" onclick="limpiarCargaMasiva()" style="font-size: 0.75rem;">
@@ -906,9 +906,9 @@
   <!-- ==================================================================== -->
   <div id="modalAdministradora" class="modal-backdrop">
     <div class="modal-container" style="max-width: 680px;">
-      <div class="modal-header" style="background: linear-gradient(135deg, rgba(206, 0, 88, 0.25), rgba(131, 0, 101, 0.35)); border-bottom: 1px solid rgba(206, 0, 88, 0.4);">
-        <div class="modal-title" style="color: #ffffff;">
-          <span>💼</span> Gestión Administrativa — <span id="admNroTicket" style="color: #f472b6;"></span>
+      <div class="modal-header" style="background: #fbf7fa; border-bottom: 1px solid var(--border-subtle);">
+        <div class="modal-title" style="color: var(--text-main);">
+          <span>💼</span> Gestión Administrativa — <span id="admNroTicket" style="color: var(--diali-pink);"></span>
         </div>
         <button class="btn-close" onclick="cerrarModal('modalAdministradora')">&times;</button>
       </div>
@@ -916,15 +916,15 @@
         <div class="modal-body">
 
           <!-- Resumen del ticket -->
-          <div style="background: rgba(131, 0, 101, 0.15); border: 1px solid rgba(206, 0, 88, 0.25); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.25rem;">
+          <div style="background: #fbf7fa; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.25rem;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 1rem; font-size: 0.83rem; color: var(--text-muted);">
-              <p><strong style="color: #f472b6;">Estado:</strong> <span id="admEstado" style="font-weight: 700; color: #fff;"></span></p>
-              <p><strong style="color: #f472b6;">Punto:</strong> <span id="admPunto"></span></p>
-              <p><strong style="color: #f472b6;">Solicitante:</strong> <span id="admSolicitante"></span></p>
-              <p><strong style="color: #f472b6;">Técnico:</strong> <span id="admResponsable"></span></p>
-              <p class="form-group-full" style="grid-column: 1 / -1;"><strong style="color: #f472b6;">Equipo:</strong> <span id="admEquipo"></span></p>
-              <p class="form-group-full" style="grid-column: 1 / -1;"><strong style="color: #f472b6;">Descripción:</strong> <span id="admDescripcion"></span></p>
-              <p class="form-group-full" style="grid-column: 1 / -1;"><strong style="color: #f472b6;">Trabajo realizado:</strong> <span id="admTrabajo" style="color: #ffffff;"></span></p>
+              <p><strong style="color: var(--diali-purple);">Estado:</strong> <span id="admEstado" style="font-weight: 700; color: var(--text-main);"></span></p>
+              <p><strong style="color: var(--diali-purple);">Punto:</strong> <span id="admPunto"></span></p>
+              <p><strong style="color: var(--diali-purple);">Solicitante:</strong> <span id="admSolicitante"></span></p>
+              <p><strong style="color: var(--diali-purple);">Técnico:</strong> <span id="admResponsable"></span></p>
+              <p class="form-group-full" style="grid-column: 1 / -1;"><strong style="color: var(--diali-purple);">Equipo:</strong> <span id="admEquipo"></span></p>
+              <p class="form-group-full" style="grid-column: 1 / -1;"><strong style="color: var(--diali-purple);">Descripción:</strong> <span id="admDescripcion"></span></p>
+              <p class="form-group-full" style="grid-column: 1 / -1;"><strong style="color: var(--diali-purple);">Trabajo realizado:</strong> <span id="admTrabajo" style="color: var(--text-main);"></span></p>
             </div>
           </div>
 
