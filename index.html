@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <!-- Estilos del Sistema de Diseño DIALI® -->
-  <link rel="stylesheet" href="css/styles.css?v=20261019_04">
+  <link rel="stylesheet" href="css/styles.css?v=20261019_05">
   <style>
     .spinner-btn {
       width: 1.15rem;
@@ -132,22 +132,25 @@
             </div>
           </div>
           <button id="btnRecargarHeader" class="btn btn-secondary btn-sm" onclick="recargarTicketsManual()" title="Recargar lista de tickets y métricas">
-            🔄 Actualizar
+            <span>🔄</span><span class="btn-header-text"> Actualizar</span>
           </button>
-          <button class="btn btn-secondary btn-sm" onclick="cerrarSesion()" title="Cerrar Sesión">
-            Salir 🚪
+          <button class="btn btn-secondary btn-sm btn-logout" onclick="cerrarSesion()" title="Cerrar Sesión">
+            <span class="btn-header-text">Salir </span><span>🚪</span>
           </button>
         </div>
       </header>
 
       <!-- Tarjetas de Métricas (KPIs) -->
       <section class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-icon-box" style="background: rgba(131, 0, 101, 0.08); color: var(--diali-purple);">📑</div>
-          <div>
-            <div class="kpi-val" id="kpiTotal">0</div>
-            <div class="kpi-label">Total Tickets</div>
+        <div class="kpi-card kpi-card-total">
+          <div class="kpi-total-left">
+            <div class="kpi-icon-box" style="background: rgba(131, 0, 101, 0.08); color: var(--diali-purple);">📑</div>
+            <div>
+              <div class="kpi-label">Total Solicitudes</div>
+              <div class="kpi-sublabel">Registradas en plataforma</div>
+            </div>
           </div>
+          <div class="kpi-val" id="kpiTotal">0</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-icon-box" style="background: var(--status-abierto-bg); color: var(--status-abierto);">📬</div>
@@ -183,7 +186,7 @@
       <section class="actions-bar">
         <div class="search-box">
           <span class="search-icon">🔍</span>
-          <input type="text" id="buscarInput" class="search-input" placeholder="Buscar por ticket, placa, equipo o punto..." oninput="onFiltroChange()">
+          <input type="text" id="buscarInput" class="search-input" placeholder="Buscar ticket, placa, equipo o punto..." oninput="onFiltroChange()">
         </div>
 
         <div class="filters-wrapper">
@@ -1013,7 +1016,7 @@
   </script>
 
   <!-- Lógica JavaScript del Cliente con Cache Buster -->
-  <script src="js/app.js?v=20261019_04"></script>
+  <script src="js/app.js?v=20261019_05"></script>
   <?!= typeof include !== 'undefined' ? include('js') : '' ?>
 </body>
 </html>
