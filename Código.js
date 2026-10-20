@@ -99,6 +99,44 @@ function doPost(e) {
 }
 
 /**
+ * Disparador nativo de Google Sheets (Simple Trigger).
+ * Se ejecuta automáticamente en tiempo real cada vez que un usuario edita
+ * manualmente una celda dentro de la hoja de Google Sheets.
+ */
+function onEdit(e) {
+  try {
+    if (!e || !e.range) return;
+    var range = e.range;
+    var sheet = range.getSheet();
+    var sheetName = sheet.getName();
+
+    // Solo actuar si están editando la hoja EMPLEADOS
+    if (sheetName !== CONFIG.SHEETS.EMPLEADOS) return;
+
+    var row = range.getRow();
+    if (row <= 1) return; // Omitir fila de encabezados
+
+    var col = range.getColumn();
+
+    // Si editaron cualquier columna entre A y F (1 a 6)
+    if (col >= 1 && col <= 6) {
+      var celdaPermisos = sheet.getRange(row, 7);
+      var permActual = String(celdaPermisos.getValue() || "").trim();
+
+      // Si la columna G está vacía, o si acaban de modificar el TIPO USUARIO (columna 5)
+      if (!permActual || col === 5) {
+        var tipoUsuario = String(sheet.getRange(row, 5).getValue() || "Empleado").trim();
+        var area = String(sheet.getRange(row, 6).getValue() || "").trim();
+        var permCalculado = obtenerPermisosPorDefectoRol(tipoUsuario, area);
+        celdaPermisos.setValue(permCalculado);
+      }
+    }
+  } catch (err) {
+    Logger.log("Error en onEdit: " + err.message);
+  }
+}
+
+/**
  * Enrutador de acciones para la API de Google Apps Script (Base de Datos)
  */
 function responderApi(action, data) {
