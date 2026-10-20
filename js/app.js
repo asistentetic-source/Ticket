@@ -1004,6 +1004,12 @@ function renderizarTablaTickets() {
     // Botones de acción contextuales según permisos y estado
     let botonesAccion = `<button class="btn btn-secondary btn-sm" onclick="verDetalleTicket('${t.nroTicket}')">Ver</button>`;
 
+    // Botón con ojo para ver y descargar el Acta Técnica (disponible para todo usuario en tickets cerrados)
+    const esCerrado = String(t.estado || "").toUpperCase() === "CERRADO" || !!t.fechaCierre;
+    if (esCerrado) {
+      botonesAccion += ` <button class="btn btn-acta btn-sm" onclick="verActaTicket('${t.nroTicket}')" title="Ver Acta Oficial de Entrega Técnica en PDF">👁️ Acta</button>`;
+    }
+
     if (tienePermiso("ASIGNAR") && esMismaArea && t.estado.toUpperCase() === "ABIERTO") {
       botonesAccion += ` <button class="btn btn-primary btn-sm" onclick="abrirModalAsignar('${t.nroTicket}')">Asignar</button>`;
     }
@@ -1829,6 +1835,7 @@ function guardarModificacionPlaca(e) {
 function verDetalleTicket(nroTicket) {
   const t = AppState.tickets.find(ticket => ticket.nroTicket === nroTicket);
   if (!t) return;
+  AppState.activeTicket = t;
 
   document.getElementById("detalleTitulo").textContent = `Detalle del Ticket: ${t.nroTicket}`;
   
@@ -1935,6 +1942,17 @@ function verDetalleTicket(nroTicket) {
   const btnAdminContainer = document.getElementById("detBtnAdminContainer");
   if (btnAdminContainer) {
     btnAdminContainer.style.display = (tienePermiso("GESTIONAR_COSTOS") || rolUserActivo === "administradora") ? "block" : "none";
+  }
+
+  // Mostrar acceso al Acta de Entrega Técnica si el ticket está CERRADO
+  const esCerrado = String(t.estado || "").toUpperCase() === "CERRADO" || !!t.fechaCierre;
+  const bannerActa = document.getElementById("detActaBanner");
+  if (bannerActa) {
+    bannerActa.style.display = esCerrado ? "flex" : "none";
+  }
+  const btnVerActaFooter = document.getElementById("detBtnVerActaFooter");
+  if (btnVerActaFooter) {
+    btnVerActaFooter.style.display = esCerrado ? "inline-flex" : "none";
   }
 
   abrirModal("modalDetalleTicket");
@@ -2661,3 +2679,275 @@ function guardarCamposAdministradora(e) {
     llamarApiBackend("actualizarCamposAdministradora", datos).then(callback);
   }
 }
+
+// ============================================================================
+// 13. VISUALIZACIÓN Y DESCARGA DE ACTA DE ENTREGA TÉCNICA (PDF & PREVIEW)
+// ============================================================================
+function verActaTicket(nroTicket) {
+  var t = AppState.tickets.find(function(ticket) { return ticket.nroTicket === nroTicket; });
+  if (!t && AppState.activeTicket && AppState.activeTicket.nroTicket === nroTicket) {
+    t = AppState.activeTicket;
+  }
+  if (!t) {
+    mostrarToast("No se encontró información del ticket " + nroTicket, "warning");
+    return;
+  }
+
+  AppState.activeActaTicket = t;
+
+  // Actualizar títulos en el encabezado del modal
+  var tituloModal = document.getElementById("actaModalTituloTexto");
+  if (tituloModal) tituloModal.textContent = "Acta de Servicio Técnico — " + t.nroTicket;
+  var badgeFooter = document.getElementById("actaFooterTicketBadge");
+  if (badgeFooter) badgeFooter.textContent = "Ticket: " + t.nroTicket + " (" + (t.area || "Servicio") + ") — Dialimentos S.A.S.";
+
+  // Formatear fechas
+  var fechaEmision = t.fechaCierre || t.fechaIngreso || formatearFechaCO(new Date());
+  var fechaSol = t.fechaIngreso || "-";
+  var fechaAsig = t.fechaAsignacion || "-";
+  var fechaVis = t.fechaVisita || "Correctivo en sitio";
+  var fechaCie = t.fechaCierre || "-";
+
+  // Formatear estado operativo del equipo
+  var estadoOperativoHtml = "";
+  if (t.equipoEnFuncionamiento) {
+    estadoOperativoHtml = '<span class="acta-badge acta-badge-success">SÍ, OPERATIVO</span>';
+  } else {
+    var razon = t.razonNoFuncionamiento || "Por determinar";
+    estadoOperativoHtml = '<span class="acta-badge acta-badge-danger">NO OPERATIVO</span> &mdash; <span style="color: #b91c1c; font-weight: 600;">Motivo: ' + razon + '</span>';
+  }
+
+  // Generar evidencias fotográficas si existen
+  var evidenciasHtml = "";
+  if (t.fotoSolicitudUrl || t.fotoCierreUrl) {
+    evidenciasHtml += '<div class="acta-section-title">4. REGISTRO FOTOGRÁFICO DE EVIDENCIAS</div>' +
+      '<div class="acta-evidence-grid">';
+
+    if (t.fotoSolicitudUrl) {
+      var thumbSol = obtenerDriveThumbnailUrl(t.fotoSolicitudUrl, 400);
+      evidenciasHtml += '<div class="acta-evidence-card">' +
+        '<div class="acta-evidence-label">📷 Evidencia Solicitud Inicial</div>' +
+        '<img src="' + thumbSol + '" alt="Evidencia Solicitud" class="acta-evidence-img" onclick="abrirLightbox(\'' + t.fotoSolicitudUrl + '\', \'Evidencia Solicitud - ' + t.nroTicket + '\')" style="cursor: pointer;" onerror="this.parentElement.style.display=\'none\'">' +
+        '</div>';
+    }
+
+    if (t.fotoCierreUrl) {
+      var thumbCie = obtenerDriveThumbnailUrl(t.fotoCierreUrl, 400);
+      evidenciasHtml += '<div class="acta-evidence-card">' +
+        '<div class="acta-evidence-label">📸 Evidencia Trabajo Finalizado (Cierre)</div>' +
+        '<img src="' + thumbCie + '" alt="Evidencia Cierre" class="acta-evidence-img" onclick="abrirLightbox(\'' + t.fotoCierreUrl + '\', \'Evidencia Cierre - ' + t.nroTicket + '\')" style="cursor: pointer;" onerror="this.parentElement.style.display=\'none\'">' +
+        '</div>';
+    }
+
+    evidenciasHtml += '</div>';
+  }
+
+  var receptorNombre = t.nombreQuienRecibe || t.nombreUsuario || "SOLICITANTE / RESPONSABLE";
+  var receptorCedula = t.cedulaQuienRecibe || t.cedulaSolicitante || "N/A";
+  var tecnicoNombre = t.responsable || "TÉCNICO RESPONSABLE";
+  var tecnicoCedula = t.cedulaResponsable || "N/A";
+
+  // Generar HTML del documento oficial idéntico al enviado por correo
+  var actaHtml =
+    '<div class="acta-header">' +
+      '<div class="acta-brand-col">' +
+        '<div class="acta-company-title">DIALIMENTOS S.A.S.</div>' +
+        '<div class="acta-company-sub">UNA MARCA OPERADA POR DIALIMENTOS S.A.S. &bull; NIT 900.000.000-0</div>' +
+        '<div class="acta-doc-title">ACTA DE SERVICIO TÉCNICO & MANTENIMIENTO</div>' +
+      '</div>' +
+      '<div class="acta-ticket-badge-box">' +
+        '<div class="acta-ticket-badge">' + (t.nroTicket || "TICKET") + '</div>' +
+        '<div class="acta-ticket-date">Fecha Emisión: ' + fechaEmision + '</div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="acta-section-title">1. INFORMACIÓN DE LA SOLICITUD</div>' +
+    '<table class="acta-table">' +
+      '<tr>' +
+        '<th>Punto de Servicio:</th><td>' + (t.puntoServicio || "N/A") + '</td>' +
+        '<th>Tipo de Ticket:</th><td>' + (t.tipoTicket || t.area || "N/A") + '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Solicitante:</th><td>' + (t.nombreUsuario || "N/A") + '</td>' +
+        '<th>Cédula Solicitante:</th><td>' + (t.cedulaSolicitante || "N/A") + '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Correo Contacto:</th><td>' + (t.emailSolicitante || "N/A") + '</td>' +
+        '<th>Teléfono Solicitante:</th><td><strong>' + (t.celularSolicitante || "N/A") + '</strong></td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Tipo de Servicio:</th><td>' + (t.tipoServicio || "N/A") + '</td>' +
+        '<th>Fecha Solicitud:</th><td>' + fechaSol + '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Nivel de Servicio:</th><td>' + (t.nivelServicio || "MEDIO") + '</td>' +
+        '<th>Placa Activo Fijo:</th><td><strong>' + (t.placa || "N/A") + '</strong></td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Equipo Intervenido:</th><td colspan="3">' + (t.descripcionEquipo || "No especificado") + '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Descripción Solicitud:</th><td colspan="3">' + (t.descripcionSolicitud || "Sin descripción") + '</td>' +
+      '</tr>' +
+    '</table>' +
+
+    '<div class="acta-section-title">2. GESTIÓN Y ASIGNACIÓN</div>' +
+    '<table class="acta-table">' +
+      '<tr>' +
+        '<th>Técnico Responsable:</th><td>' + tecnicoNombre + '</td>' +
+        '<th>Cédula Técnico:</th><td>' + tecnicoCedula + '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Teléfono Técnico:</th><td>' + (t.celularResponsable || "N/A") + '</td>' +
+        '<th>Fecha Asignación:</th><td>' + fechaAsig + '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Fecha Programada / Visita:</th><td>' + fechaVis + '</td>' +
+        '<th>Asunto / Técnica:</th><td>' + (t.tecnicaMantenimiento || "Correctivo en sitio") + '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Observaciones Asignación:</th><td colspan="3">' + (t.observacionesAsignacion || "Sin observaciones") + '</td>' +
+      '</tr>' +
+    '</table>' +
+
+    '<div class="acta-section-title">3. CIERRE DEL SERVICIO Y RESULTADOS</div>' +
+    '<table class="acta-table">' +
+      '<tr>' +
+        '<th>Fecha de Terminación:</th><td>' + fechaCie + '</td>' +
+        '<th>Estado Final:</th><td><strong>' + (t.estado || "CERRADO") + '</strong></td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Tipo de Falla:</th><td>' + (t.tipoFalla || "No especificada") + '</td>' +
+        '<th>Repuestos / Insumos:</th><td>' + (t.repuesto || "Ninguno") + '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>¿Equipo en Funcionamiento?:</th><td colspan="3">' + estadoOperativoHtml + '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Trabajo Realizado / Avance:</th><td colspan="3" style="white-space: pre-wrap;">' + (t.respuesta || "Trabajo finalizado a conformidad y satisfacción del solicitante.") + '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Recibido Por (En Sitio):</th><td>' + receptorNombre + '</td>' +
+        '<th>Cédula Quien Recibe:</th><td>' + receptorCedula + '</td>' +
+      '</tr>' +
+    '</table>' +
+
+    evidenciasHtml +
+
+    '<table class="acta-signatures-table">' +
+      '<tr>' +
+        '<td>' +
+          '<div class="acta-sign-box">' +
+            '<strong>' + tecnicoNombre.toUpperCase() + '</strong><br>' +
+            'C.C. ' + tecnicoCedula + '<br>' +
+            '<span style="font-size: 0.76rem; color: #64748b;">Técnico Responsable Asignado</span>' +
+          '</div>' +
+        '</td>' +
+        '<td>' +
+          '<div class="acta-sign-box">' +
+            '<strong>' + receptorNombre.toUpperCase() + '</strong><br>' +
+            'C.C. ' + receptorCedula + '<br>' +
+            '<span style="font-size: 0.76rem; color: #64748b;">Solicitante / Responsable de Punto</span>' +
+          '</div>' +
+        '</td>' +
+      '</tr>' +
+    '</table>' +
+
+    '<div class="acta-footer-doc">' +
+      'Documento oficial generado automáticamente por el Sistema de Mesa de Ayuda de Dialimentos S.A.S. &bull; ' + fechaEmision +
+    '</div>';
+
+  var wrapper = document.getElementById("actaDocumentoWrapper");
+  if (wrapper) {
+    wrapper.innerHTML = actaHtml;
+  }
+
+  abrirModal("modalActaTicket");
+}
+
+/**
+ * Descarga el acta del ticket en formato PDF de alta fidelidad
+ * Compatible con escritorio, tablets y teléfonos móviles
+ */
+function descargarActaPdf() {
+  var sourceEl = document.getElementById("actaDocumentoWrapper");
+  if (!sourceEl) {
+    mostrarToast("No se encontró el contenido del acta para exportar.", "danger");
+    return;
+  }
+
+  var nroTicket = (AppState.activeActaTicket && AppState.activeActaTicket.nroTicket) || "Ticket";
+  var btn = document.getElementById("btnDescargarPdfActa");
+  var txtOriginal = btn ? btn.innerHTML : "";
+  if (btn) {
+    btn.innerHTML = '<span class="spinner-btn"></span> Generando PDF...';
+    btn.disabled = true;
+  }
+
+  // Clonar para garantizar proporciones perfectas A4 incluso en teléfonos móviles
+  var clone = sourceEl.cloneNode(true);
+  clone.id = "actaPdfExportClone";
+  clone.classList.add("acta-pdf-print-mode");
+  clone.style.width = "780px";
+  clone.style.maxWidth = "780px";
+  clone.style.margin = "0";
+  clone.style.padding = "24px 28px";
+  clone.style.background = "#ffffff";
+  clone.style.position = "fixed";
+  clone.style.left = "-9999px";
+  clone.style.top = "0";
+  clone.style.zIndex = "-1000";
+  document.body.appendChild(clone);
+
+  var opt = {
+    margin: [8, 8, 8, 8],
+    filename: "Acta_" + nroTicket + ".pdf",
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: 800
+    },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+  };
+
+  function limpiarBoton() {
+    if (btn) {
+      btn.innerHTML = txtOriginal;
+      btn.disabled = false;
+    }
+    if (document.getElementById("actaPdfExportClone")) {
+      document.body.removeChild(clone);
+    }
+  }
+
+  if (typeof html2pdf !== "undefined") {
+    html2pdf().set(opt).from(clone).save()
+      .then(function() {
+        limpiarBoton();
+        mostrarToast("Acta " + nroTicket + " descargada con éxito en PDF.", "success");
+      })
+      .catch(function(err) {
+        console.error("Error al exportar PDF con html2pdf:", err);
+        limpiarBoton();
+        imprimirActa();
+      });
+  } else {
+    limpiarBoton();
+    imprimirActa();
+  }
+}
+
+/**
+ * Abre el diálogo de impresión / Guardar como PDF nativo del navegador
+ */
+function imprimirActa() {
+  window.print();
+}
+
+window.verActaTicket = verActaTicket;
+window.descargarActaPdf = descargarActaPdf;
+window.imprimirActa = imprimirActa;

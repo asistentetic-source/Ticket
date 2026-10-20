@@ -1,14 +1,14 @@
-﻿<script>
+<script>
 // ============================================================================
-// CONEXIÃ“N API REST - GOOGLE SHEETS DATABASE (Modo GitHub / Desacoplado)
+// CONEXIÓN API REST - GOOGLE SHEETS DATABASE (Modo GitHub / Desacoplado)
 // ============================================================================
 const CONFIG_APP = {
   API_URL: "https://script.google.com/macros/s/AKfycbwDycsNdNOWSko40bSHZdXGNLDzekeBlXBgXQo6jTp3wSA9dmTV9gLY8JUk_Lk9Qig/exec"
 };
 
 /**
- * Realiza peticiones asÃ­ncronas de alta velocidad a la API de Google Apps Script
- * permitiendo que la aplicaciÃ³n funcione en GitHub / GitHub Pages conectada a Google Sheets
+ * Realiza peticiones asíncronas de alta velocidad a la API de Google Apps Script
+ * permitiendo que la aplicación funcione en GitHub / GitHub Pages conectada a Google Sheets
  */
 async function llamarApiBackend(action, data = {}) {
   try {
@@ -30,11 +30,11 @@ async function llamarApiBackend(action, data = {}) {
 /**
  * ============================================================================
  * CLIENT-SIDE LOGIC - MESA DE AYUDA DIALIMENTOS
- * Compatible con Google Apps Script (google.script.run) y ejecuciÃ³n local.
+ * Compatible con Google Apps Script (google.script.run) y ejecución local.
  * ============================================================================
  */
 
-// Estado global de la aplicaciÃ³n
+// Estado global de la aplicación
 const AppState = {
   currentUser: null,
   currentUserPermisosSet: null,
@@ -50,7 +50,7 @@ const AppState = {
 };
 
 // ============================================================================
-// 1. INICIALIZACIÃ“N
+// 1. INICIALIZACIÓN
 // ============================================================================
 document.addEventListener("DOMContentLoaded", function () {
   initApp();
@@ -61,14 +61,14 @@ function initApp() {
   cargarCatalogos();
 }
 
-// Cargar catÃ¡logos maestros desde el backend o mock local
+// Cargar catálogos maestros desde el backend o mock local
 function cargarCatalogos() {
   if (AppState.isGAS) {
     google.script.run
       .withSuccessHandler(function (res) {
         if (!res) {
-          mostrarAlerta("Error del servidor al cargar catÃ¡logos. AsegÃºrate de haber republished la Web App en GAS.", "danger");
-          console.error("obtenerCatalogos devolviÃ³ null");
+          mostrarAlerta("Error del servidor al cargar catálogos. Asegúrate de haber republished la Web App en GAS.", "danger");
+          console.error("obtenerCatalogos devolvió null");
           return;
         }
         if (res.success) {
@@ -76,12 +76,12 @@ function cargarCatalogos() {
           poblarSelectsCatalogos();
           verificarSesion();
         } else {
-          mostrarAlerta("Error al cargar catÃ¡logos: " + res.message, "danger");
+          mostrarAlerta("Error al cargar catálogos: " + res.message, "danger");
         }
       })
       .withFailureHandler(function (err) {
         console.error("FailureHandler obtenerCatalogos:", err);
-        mostrarAlerta("Fallo de conexiÃ³n con Google Apps Script: " + (err.message || err), "danger");
+        mostrarAlerta("Fallo de conexión con Google Apps Script: " + (err.message || err), "danger");
       })
       .obtenerCatalogos();
   } else {
@@ -100,7 +100,7 @@ function cargarCatalogos() {
   }
 }
 
-// Poblar los selects dinÃ¡micamente con los datos del Excel
+// Poblar los selects dinámicamente con los datos del Excel
 function poblarSelectsCatalogos() {
   if (!AppState.catalogos) return;
 
@@ -112,7 +112,7 @@ function poblarSelectsCatalogos() {
     selPunto.innerHTML = '<option value="">Seleccione Punto de Servicio...</option>';
     AppState.catalogos.puntos.forEach(p => {
       const nombre = p.nombre || p["NOMBRE"] || p["PUNTO DE SERVICIO"] || p["PUNTO"] || p["DESCRIPCION"] || "";
-      const codigo = p.codigo || p["CODIGO"] || p["CÃ“DIGO"] || p["COD"] || "";
+      const codigo = p.codigo || p["CODIGO"] || p["CÓDIGO"] || p["COD"] || "";
       const label = codigo ? `${nombre} (${codigo})` : nombre;
       if (nombre && nombre !== "undefined") {
         selPunto.innerHTML += `<option value="${nombre}">${label}</option>`;
@@ -120,7 +120,7 @@ function poblarSelectsCatalogos() {
       }
     });
   }
-  // Poblar tambiÃ©n el filtro de punto en la barra principal
+  // Poblar también el filtro de punto en la barra principal
   if (selFiltroPunto) {
     selFiltroPunto.innerHTML = '<option value="TODOS">Todos los Puntos</option>';
     puntosOpciones.forEach(p => {
@@ -128,7 +128,7 @@ function poblarSelectsCatalogos() {
     });
   }
 
-  // 2. Tipos de Falla (Modal de cierre - se inicializa limpio y se puebla segÃºn el Ã¡rea del ticket)
+  // 2. Tipos de Falla (Modal de cierre - se inicializa limpio y se puebla según el área del ticket)
   const selFalla = document.getElementById("cierreTipoFalla");
   if (selFalla) {
     selFalla.innerHTML = '<option value="">Seleccione tipo de falla...</option>';
@@ -137,20 +137,20 @@ function poblarSelectsCatalogos() {
   // 3. Tipos de Repuestos (Modal de cierre)
   const selRepuesto = document.getElementById("cierreRepuesto");
   if (selRepuesto) {
-    selRepuesto.innerHTML = '<option value="">Seleccione condiciÃ³n del repuesto...</option>';
+    selRepuesto.innerHTML = '<option value="">Seleccione condición del repuesto...</option>';
     AppState.catalogos.tiposRepuesto.forEach(r => {
       selRepuesto.innerHTML += `<option value="${r}">${r}</option>`;
     });
   }
 
-  // 4. TÃ©cnicos (Modal de asignaciÃ³n - se inicializa limpio y se puebla dinÃ¡micamente segÃºn el Ã¡rea del ticket)
+  // 4. Técnicos (Modal de asignación - se inicializa limpio y se puebla dinámicamente según el área del ticket)
   const selTecnico = document.getElementById("asignacionTecnico");
   if (selTecnico) {
-    selTecnico.innerHTML = '<option value="">Seleccione TÃ©cnico...</option>';
+    selTecnico.innerHTML = '<option value="">Seleccione Técnico...</option>';
   }
 }
 
-// FunciÃ³n auxiliar para normalizar nombres de Ã¡reas (TIC vs MANTENIMIENTO)
+// Función auxiliar para normalizar nombres de áreas (TIC vs MANTENIMIENTO)
 function normalizarArea(area) {
   if (!area) return "";
   const a = String(area).trim().toUpperCase();
@@ -160,15 +160,15 @@ function normalizarArea(area) {
   return a;
 }
 
-// Clasifica un Ã­tem de tipo de falla como TIC o MANTENIMIENTO segÃºn cÃ³digo, Ã¡rea o palabras clave
+// Clasifica un ítem de tipo de falla como TIC o MANTENIMIENTO según código, área o palabras clave
 function clasificarAreaFalla(f) {
   if (f && f.area) {
     const a = normalizarArea(f.area);
     if (a === "TIC" || a === "MANTENIMIENTO") return a;
   }
 
-  // Por cÃ³digo numÃ©rico de la hoja TIPO FALLA (1-16: Mantenimiento, 17-34: TIC)
-  const cod = parseInt(f.codigo || f.CÃ³digo || f.CODIGO || f.id || "", 10);
+  // Por código numérico de la hoja TIPO FALLA (1-16: Mantenimiento, 17-34: TIC)
+  const cod = parseInt(f.codigo || f.Código || f.CODIGO || f.id || "", 10);
   if (!isNaN(cod)) {
     if (cod >= 1 && cod <= 16) return "MANTENIMIENTO";
     if (cod >= 17) return "TIC";
@@ -186,16 +186,16 @@ function clasificarAreaFalla(f) {
   return "MANTENIMIENTO";
 }
 
-// Determina el Ã¡rea a mostrar en el selector de fallas segÃºn el perfil del tÃ©cnico o ticket
+// Determina el área a mostrar en el selector de fallas según el perfil del técnico o ticket
 function determinarAreaParaFalla(ticket) {
-  // 1. Si el usuario logueado es tÃ©cnico, manda el Ã¡rea de ese tÃ©cnico (TIC vs Mantenimiento)
+  // 1. Si el usuario logueado es técnico, manda el área de ese técnico (TIC vs Mantenimiento)
   if (AppState.currentUser) {
     const rol = String(AppState.currentUser.tipoUsuario || "").toLowerCase();
     const areaUser = normalizarArea(AppState.currentUser.area);
-    if ((rol.includes("tecnico") || rol.includes("tÃ©cnico")) && areaUser) {
+    if ((rol.includes("tecnico") || rol.includes("técnico")) && areaUser) {
       return areaUser;
     }
-    // Si es un coordinador/admin con Ã¡rea especÃ­fica
+    // Si es un coordinador/admin con área específica
     if (areaUser === "TIC" || areaUser === "MANTENIMIENTO") {
       if (ticket && ticket.area) {
         const areaTicket = normalizarArea(ticket.area);
@@ -205,7 +205,7 @@ function determinarAreaParaFalla(ticket) {
     }
   }
 
-  // 2. Si el ticket tiene un tÃ©cnico responsable asignado, usar el Ã¡rea de ese tÃ©cnico
+  // 2. Si el ticket tiene un técnico responsable asignado, usar el área de ese técnico
   if (ticket && ticket.cedulaResponsable && AppState.catalogos && AppState.catalogos.tecnicos) {
     const tec = AppState.catalogos.tecnicos.find(t => String(t.cedula).trim() === String(ticket.cedulaResponsable).trim());
     if (tec && tec.area) {
@@ -214,7 +214,7 @@ function determinarAreaParaFalla(ticket) {
     }
   }
 
-  // 3. Ãrea del ticket
+  // 3. Área del ticket
   if (ticket && ticket.area) {
     const a = normalizarArea(ticket.area);
     if (a === "TIC" || a === "MANTENIMIENTO") return a;
@@ -230,7 +230,7 @@ function determinarAreaParaFalla(ticket) {
   return "MANTENIMIENTO";
 }
 
-// Filtra y puebla el desplegable de Tipos de Falla segÃºn el Ã¡rea exacta (TIC vs MANTENIMIENTO)
+// Filtra y puebla el desplegable de Tipos de Falla según el área exacta (TIC vs MANTENIMIENTO)
 function poblarTiposFallaPorArea(areaTarget) {
   const selFalla = document.getElementById("cierreTipoFalla");
   if (!selFalla) return;
@@ -240,7 +240,7 @@ function poblarTiposFallaPorArea(areaTarget) {
 
   let fallas = (AppState.catalogos && AppState.catalogos.tiposFalla) ? AppState.catalogos.tiposFalla : [];
 
-  // Filtrar estrictamente: si es TIC sÃ³lo fallas de TIC, si es Mantenimiento sÃ³lo Mantenimiento
+  // Filtrar estrictamente: si es TIC sólo fallas de TIC, si es Mantenimiento sólo Mantenimiento
   let fallasFiltradas = fallas.filter(f => {
     const a = clasificarAreaFalla(f);
     return a === areaNorm;
@@ -253,55 +253,55 @@ function poblarTiposFallaPorArea(areaTarget) {
     if (typeof f === "string") {
       nombre = f;
     } else if (f && typeof f === "object") {
-      nombre = f.nombre || f["Nombre del tipo"] || f["DESCRIPCION CATEGORIA"] || f["DESCRIPCIÃ“N CATEGORIA"] || f.descripcion || "";
+      nombre = f.nombre || f["Nombre del tipo"] || f["DESCRIPCION CATEGORIA"] || f["DESCRIPCIÓN CATEGORIA"] || f.descripcion || "";
     }
     nombre = String(nombre || "").trim();
-    // Excluir si es puramente un nÃºmero (como '1', '2', '3') o vacÃ­o
+    // Excluir si es puramente un número (como '1', '2', '3') o vacío
     if (nombre && nombre !== "undefined" && isNaN(Number(nombre)) && !nombresAgregados.has(nombre)) {
       nombresAgregados.add(nombre);
       selFalla.innerHTML += `<option value="${nombre}">${nombre}</option>`;
     }
   });
 
-  // CatÃ¡logo completo de respaldo idÃ©ntico a la hoja TIPO FALLA de Google Sheets
+  // Catálogo completo de respaldo idéntico a la hoja TIPO FALLA de Google Sheets
   if (nombresAgregados.size === 0) {
     const catalogoTIC = [
       "HARDWARE",
       "SOFTWARE",
       "RED / CONECTIVIDAD",
       "INTERNET",
-      "TELEFONÃA",
+      "TELEFONÍA",
       "IMPRESORAS",
       "SISTEMAS / APLICACIONES",
-      "CORREO ELECTRÃ“NICO",
+      "CORREO ELECTRÓNICO",
       "CUENTAS Y ACCESOS",
-      "CONTRASEÃ‘AS",
+      "CONTRASEÑAS",
       "SERVIDORES",
       "ALMACENAMIENTO",
-      "SEGURIDAD INFORMÃTICA",
+      "SEGURIDAD INFORMÁTICA",
       "PUNTOS DE VENTA (POS)",
-      "PERIFÃ‰RICOS",
+      "PERIFÉRICOS",
       "CABLEADO / PUNTOS DE RED",
-      "EQUIPOS DE COMUNICACIÃ“N",
+      "EQUIPOS DE COMUNICACIÓN",
       "OTROS"
     ];
 
     const catalogoMTO = [
-      "HIDRÃULICO",
-      "ELÃ‰CTRICO",
-      "CARPINTERÃA",
-      "PLOMERÃA",
-      "CERRAJERÃA",
+      "HIDRÁULICO",
+      "ELÉCTRICO",
+      "CARPINTERÍA",
+      "PLOMERÍA",
+      "CERRAJERÍA",
       "PINTURA",
       "OBRA CIVIL",
-      "AIRE ACONDICIONADO / CLIMATIZACIÃ“N",
+      "AIRE ACONDICIONADO / CLIMATIZACIÓN",
       "MOBILIARIO",
-      "VIDRIERÃA",
-      "ILUMINACIÃ“N",
-      "EQUIPOS Y ELECTRODOMÃ‰STICOS",
+      "VIDRIERÍA",
+      "ILUMINACIÓN",
+      "EQUIPOS Y ELECTRODOMÉSTICOS",
       "PISOS Y PAREDES",
       "TECHOS / CUBIERTAS",
-      "SEÃ‘ALIZACIÃ“N",
+      "SEÑALIZACIÓN",
       "OTROS"
     ];
 
@@ -312,7 +312,7 @@ function poblarTiposFallaPorArea(areaTarget) {
   }
 }
 
-// Filtrar tipos de servicio segÃºn el Ã¡rea seleccionada (Mantenimiento vs TIC)
+// Filtrar tipos de servicio según el área seleccionada (Mantenimiento vs TIC)
 function onAreaSolicitudChange() {
   const areaSeleccionada = document.getElementById("solicitudArea").value;
   const selServicio = document.getElementById("solicitudTipoServicio");
@@ -338,7 +338,7 @@ function onAreaSolicitudChange() {
 /**
  * Resuelve el conjunto de permisos activos para un usuario.
  * Prioridad 1: Palabras clave en la columna G: PERMISOS del archivo Excel.
- * Prioridad 2 (Fallback): Permisos predeterminados segÃºn su TIPO USUARIO (Rol).
+ * Prioridad 2 (Fallback): Permisos predeterminados según su TIPO USUARIO (Rol).
  */
 function obtenerPermisosUsuario(user) {
   if (!user) return new Set();
@@ -346,12 +346,12 @@ function obtenerPermisosUsuario(user) {
   const tipo = String(user.tipoUsuario || "").toLowerCase();
   const area = normalizarArea(user.area);
 
-  // 1. Si el usuario tiene permisos definidos explÃ­citamente en la columna G:
+  // 1. Si el usuario tiene permisos definidos explícitamente en la columna G:
   if (raw) {
     const lista = raw.split(/[,;|]+/).map(p => p.trim()).filter(Boolean);
     const setPermisos = new Set(lista);
 
-    // ComodÃ­n de administraciÃ³n total
+    // Comodín de administración total
     if (setPermisos.has("TODO") || setPermisos.has("ADMIN") || setPermisos.has("ALL") || setPermisos.has("*")) {
       return new Set([
         "CREAR", "ASIGNAR", "CERRAR", "FILTRAR", "BUSCAR", 
@@ -359,7 +359,7 @@ function obtenerPermisosUsuario(user) {
       ]);
     }
 
-    // Compatibilidad de sinÃ³nimos habituales
+    // Compatibilidad de sinónimos habituales
     if (setPermisos.has("BUSCAR")) setPermisos.add("FILTRAR");
     if (setPermisos.has("FILTRAR")) setPermisos.add("BUSCAR");
     if (setPermisos.has("COSTOS") || setPermisos.has("GESTIONAR")) setPermisos.add("GESTIONAR_COSTOS");
@@ -373,8 +373,8 @@ function obtenerPermisosUsuario(user) {
     return setPermisos;
   }
 
-  // 2. FALLBACK RETROCOMPATIBLE: Si la columna G estÃ¡ vacÃ­a en Google Sheets,
-  // inferir los permisos por defecto segÃºn el TIPO USUARIO para no bloquear a nadie.
+  // 2. FALLBACK RETROCOMPATIBLE: Si la columna G está vacía en Google Sheets,
+  // inferir los permisos por defecto según el TIPO USUARIO para no bloquear a nadie.
   const fallback = new Set();
   fallback.add("CREAR"); // Todo usuario registrado puede crear solicitudes
 
@@ -393,7 +393,7 @@ function obtenerPermisosUsuario(user) {
     fallback.add("EDITAR_PLACA");
     fallback.add("PUNTOS");
     if (area === "RRHH" || area.includes("HUMAN")) fallback.add("RRHH");
-  } else if (tipo.includes("tecnico") || tipo.includes("tÃ©cnico")) {
+  } else if (tipo.includes("tecnico") || tipo.includes("técnico")) {
     fallback.add("CERRAR");
     fallback.add("FILTRAR");
     fallback.add("BUSCAR");
@@ -407,7 +407,7 @@ function obtenerPermisosUsuario(user) {
 }
 
 /**
- * Consulta si el usuario logueado actualmente posee un permiso especÃ­fico.
+ * Consulta si el usuario logueado actualmente posee un permiso específico.
  */
 function tienePermiso(permiso) {
   if (!AppState.currentUser) return false;
@@ -424,10 +424,10 @@ window.tienePermiso = tienePermiso;
 window.obtenerPermisosUsuario = obtenerPermisosUsuario;
 
 // ============================================================================
-// 2. AUTENTICACIÃ“N Y SESIÃ“N
+// 2. AUTENTICACIÓN Y SESIÓN
 // ============================================================================
 function verificarSesion() {
-  // Limpiar cualquier sesiÃ³n residual en el navegador para exigir siempre login
+  // Limpiar cualquier sesión residual en el navegador para exigir siempre login
   try {
     localStorage.removeItem("DIALIMENTOS_USER");
     sessionStorage.removeItem("DIALIMENTOS_USER");
@@ -446,7 +446,7 @@ function verificarSesion() {
 function ejecutarLogin(cedulaManual) {
   const cedulaInput = cedulaManual || document.getElementById("cedulaInput").value.trim();
   if (!cedulaInput) {
-    mostrarAlerta("Ingrese un nÃºmero de cÃ©dula vÃ¡lido", "warning");
+    mostrarAlerta("Ingrese un número de cédula válido", "warning");
     return;
   }
 
@@ -459,7 +459,7 @@ function ejecutarLogin(cedulaManual) {
   const resetBtnLogin = function() {
     if (btnLogin) {
       btnLogin.disabled = false;
-      btnLogin.innerHTML = `Iniciar SesiÃ³n`;
+      btnLogin.innerHTML = `Iniciar Sesión`;
     }
   };
 
@@ -478,7 +478,7 @@ function ejecutarLogin(cedulaManual) {
         area: "MANTENIMIENTO"
       };
 
-      // Configurar vista del panel de contraseÃ±a con los datos del usuario
+      // Configurar vista del panel de contraseña con los datos del usuario
       const nameElem = document.getElementById("adminDetectedName");
       const roleElem = document.getElementById("adminDetectedRole");
       const cedulaElem = document.getElementById("adminDetectedCedula");
@@ -487,33 +487,33 @@ function ejecutarLogin(cedulaManual) {
       if (nameElem) nameElem.textContent = AppState.pendingAdminUser.nombres || "Usuario";
       if (cedulaElem) cedulaElem.textContent = AppState.pendingAdminUser.cedula || cedulaInput;
 
-      // Asignar icono y texto formateado de rol y Ã¡rea automÃ¡ticamente
+      // Asignar icono y texto formateado de rol y área automáticamente
       const area = (AppState.pendingAdminUser.area || "").toUpperCase();
       const tipo = (AppState.pendingAdminUser.tipoUsuario || "").toLowerCase();
 
-      let labelArea = "CoordinaciÃ³n";
-      let icono = "ðŸ’¼";
+      let labelArea = "Coordinación";
+      let icono = "💼";
 
       if (tipo.includes("administradora") || cedulaInput === "1234") {
         labelArea = "Administradora (Mantenimiento)";
-        icono = "ðŸ’¼";
+        icono = "💼";
       } else if (area.includes("TIC") || area.includes("SISTEMA")) {
-        labelArea = "CoordinaciÃ³n de TIC / Sistemas";
-        icono = "ðŸ’»";
+        labelArea = "Coordinación de TIC / Sistemas";
+        icono = "💻";
       } else if (area.includes("MTO") || area.includes("MANTENIMIENTO")) {
-        labelArea = "CoordinaciÃ³n de Mantenimiento";
-        icono = "ðŸ”§";
+        labelArea = "Coordinación de Mantenimiento";
+        icono = "🔧";
       } else if (area.includes("RRHH") || area.includes("RECURSO") || tipo.includes("reclutador")) {
         labelArea = "Recursos Humanos (Reclutador)";
-        icono = "ðŸ‘¥";
+        icono = "👥";
       } else {
-        labelArea = AppState.pendingAdminUser.tipoUsuario || "CoordinaciÃ³n";
+        labelArea = AppState.pendingAdminUser.tipoUsuario || "Coordinación";
       }
 
       if (roleElem) roleElem.textContent = labelArea;
       if (iconElem) iconElem.textContent = icono;
 
-      // Mostrar panel de contraseÃ±a
+      // Mostrar panel de contraseña
       document.getElementById("panelLoginEmpleado").style.display = "none";
       document.getElementById("panelLoginAdmin").style.display = "block";
       const adminPass = document.getElementById("adminPasswordInput");
@@ -523,7 +523,7 @@ function ejecutarLogin(cedulaManual) {
       }
     } else {
       resetBtnLogin();
-      mostrarAlerta(res.message || "CÃ©dula no encontrada en el registro de empleados", "danger");
+      mostrarAlerta(res.message || "Cédula no encontrada en el registro de empleados", "danger");
     }
   };
 
@@ -532,7 +532,7 @@ function ejecutarLogin(cedulaManual) {
       .withSuccessHandler(callback)
       .withFailureHandler(function (err) {
         resetBtnLogin();
-        mostrarAlerta("Error de autenticaciÃ³n: " + err, "danger");
+        mostrarAlerta("Error de autenticación: " + err, "danger");
       })
       .login(cedulaInput);
   } else {
@@ -540,7 +540,7 @@ function ejecutarLogin(cedulaManual) {
       .then(callback)
       .catch(function(err) {
         resetBtnLogin();
-        mostrarAlerta("Error de conexiÃ³n con el servidor", "danger");
+        mostrarAlerta("Error de conexión con el servidor", "danger");
       });
   }
 }
@@ -556,7 +556,7 @@ function volverALoginCedula() {
   const btnLogin = document.getElementById("btnLogin");
   if (btnLogin) {
     btnLogin.disabled = false;
-    btnLogin.innerHTML = `Iniciar SesiÃ³n`;
+    btnLogin.innerHTML = `Iniciar Sesión`;
   }
   const btnAdmin = document.getElementById("btnAdminLogin");
   if (btnAdmin) {
@@ -613,7 +613,7 @@ function toggleAdminLogin(mostrarAdmin) {
   }
 }
 
-// Exportar explÃ­citamente al Ã¡mbito global para evitar problemas de contexto en eventos inline HTML
+// Exportar explícitamente al ámbito global para evitar problemas de contexto en eventos inline HTML
 window.volverALoginCedula = volverALoginCedula;
 window.ejecutarLogin = ejecutarLogin;
 window.ejecutarLoginAdmin = ejecutarLoginAdmin;
@@ -627,7 +627,7 @@ function ejecutarLoginAdmin() {
 
   const password = document.getElementById("adminPasswordInput").value.trim();
   if (!password) {
-    mostrarAlerta("Ingrese su contraseÃ±a de acceso.", "warning");
+    mostrarAlerta("Ingrese su contraseña de acceso.", "warning");
     return;
   }
 
@@ -653,7 +653,7 @@ function ejecutarLoginAdmin() {
       AppState.currentUser = res.user;
       mostrarAppPrincipal();
     } else {
-      mostrarAlerta(res.message || "ContraseÃ±a incorrecta.", "danger");
+      mostrarAlerta(res.message || "Contraseña incorrecta.", "danger");
       const passInput = document.getElementById("adminPasswordInput");
       if (passInput) {
         passInput.select();
@@ -667,7 +667,7 @@ function ejecutarLoginAdmin() {
       .withSuccessHandler(callback)
       .withFailureHandler(function (err) {
         resetBtnAdmin();
-        mostrarAlerta("Error de autenticaciÃ³n: " + err, "danger");
+        mostrarAlerta("Error de autenticación: " + err, "danger");
       })
       .loginAdmin(cedula, password, area);
   } else {
@@ -675,7 +675,7 @@ function ejecutarLoginAdmin() {
       .then(callback)
       .catch(function(err) {
         resetBtnAdmin();
-        mostrarAlerta("Error de conexiÃ³n con el servidor", "danger");
+        mostrarAlerta("Error de conexión con el servidor", "danger");
       });
   }
 }
@@ -697,12 +697,12 @@ function mostrarAppPrincipal() {
   }
   document.getElementById("headerUserInitial").textContent = AppState.currentUser.nombres.charAt(0);
 
-  // Ajustar permisos visuales segÃºn rol y Ã¡rea
+  // Ajustar permisos visuales según rol y área
   const esAdministradora = AppState.currentUser.tipoUsuario.toLowerCase() === "administradora";
   const areaUser = normalizarArea(AppState.currentUser.area);
   const puedeVerTodos = tienePermiso("VER_TODOS");
 
-  // Configurar filtro de Ã¡rea
+  // Configurar filtro de área
   const selArea = document.getElementById("filtroArea");
   if (esAdministradora) {
     // Administradora ve solo Mantenimiento pero puede filtrar estados
@@ -712,7 +712,7 @@ function mostrarAppPrincipal() {
       selArea.disabled = true;
       selArea.style.cursor = "not-allowed";
       selArea.style.opacity = "0.85";
-      selArea.title = "Fijado a Ã¡rea de Mantenimiento";
+      selArea.title = "Fijado a área de Mantenimiento";
     }
   } else if (puedeVerTodos && (areaUser === "TIC" || areaUser === "MANTENIMIENTO")) {
     const valorArea = areaUser === "TIC" ? "TIC" : "Mantenimiento";
@@ -722,7 +722,7 @@ function mostrarAppPrincipal() {
       selArea.disabled = true;
       selArea.style.cursor = "not-allowed";
       selArea.style.opacity = "0.85";
-      selArea.title = "Fijado a su Ã¡rea (" + valorArea + ")";
+      selArea.title = "Fijado a su área (" + valorArea + ")";
     }
   } else {
     if (selArea) {
@@ -739,27 +739,27 @@ function mostrarAppPrincipal() {
     rrhhContainer.style.display = tienePermiso("RRHH") ? "flex" : "none";
   }
 
-  // Mostrar botÃ³n AÃ±adir Punto si tiene permiso PUNTOS o ASIGNAR
+  // Mostrar botón Añadir Punto si tiene permiso PUNTOS o ASIGNAR
   const btnNuevoPunto = document.getElementById("btnNuevoPuntoHeader");
   if (btnNuevoPunto) {
     btnNuevoPunto.style.display = (tienePermiso("PUNTOS") || tienePermiso("ASIGNAR")) ? "" : "none";
   }
 
-  // Mostrar filtros de Punto y Rango de Fechas segÃºn permiso de filtrado / bÃºsqueda
+  // Mostrar filtros de Punto y Rango de Fechas según permiso de filtrado / búsqueda
   const mostrarFiltrosExtra = tienePermiso("FILTRAR") || tienePermiso("BUSCAR");
   const elFiltroPunto = document.getElementById("filtroPunto");
   const elDateRangeWrapper = document.getElementById("dateRangeWrapper");
   if (elFiltroPunto) elFiltroPunto.style.display = mostrarFiltrosExtra ? "" : "none";
   if (elDateRangeWrapper) elDateRangeWrapper.style.display = mostrarFiltrosExtra ? "inline-block" : "none";
 
-  // Mostrar botÃ³n de creaciÃ³n de tickets segÃºn permiso CREAR
+  // Mostrar botón de creación de tickets según permiso CREAR
   const puedeCrear = tienePermiso("CREAR");
   const btnFab = document.getElementById("btnFabNuevoTicket");
   if (btnFab) btnFab.style.display = puedeCrear ? "flex" : "none";
   const btnNuevoHdr = document.getElementById("btnCrearTicketPrincipal");
   if (btnNuevoHdr) btnNuevoHdr.style.display = puedeCrear ? "" : "none";
 
-  // Inicializar rango de fechas: del dÃ­a 1 del mes actual al dÃ­a de hoy
+  // Inicializar rango de fechas: del día 1 del mes actual al día de hoy
   if (mostrarFiltrosExtra) {
     const hoy = new Date();
     const yyyy = hoy.getFullYear();
@@ -783,7 +783,7 @@ function mostrarAppPrincipal() {
 }
 
 // ============================================================================
-// 3. AUTO-REFRESCO Y GESTIÃ“N DE TICKETS
+// 3. AUTO-REFRESCO Y GESTIÓN DE TICKETS
 // ============================================================================
 let timerAutoRefresco = null;
 
@@ -794,17 +794,17 @@ function iniciarAutoRefresco() {
   const rol = String(AppState.currentUser.tipoUsuario || "").toLowerCase();
   const esCoordinadorOTecnico = rol.includes("administrador") || 
                                 rol.includes("tecnico") || 
-                                rol.includes("tÃ©cnico") || 
+                                rol.includes("técnico") || 
                                 rol.includes("administradora") ||
                                 rol.includes("reclutador") ||
                                 rol.includes("coordinador");
 
   if (esCoordinadorOTecnico) {
-    console.log("â±ï¸ Auto-refresco programado cada 5 minutos para", AppState.currentUser.tipoUsuario);
+    console.log("⏱️ Auto-refresco programado cada 5 minutos para", AppState.currentUser.tipoUsuario);
     // Intervalo de 5 minutos = 300,000 ms
     timerAutoRefresco = setInterval(function() {
       if (AppState.currentUser) {
-        console.log("ðŸ”„ Ejecutando auto-refresco cada 5 minutos...");
+        console.log("🔄 Ejecutando auto-refresco cada 5 minutos...");
         cargarTickets(true);
       }
     }, 5 * 60 * 1000);
@@ -832,10 +832,10 @@ function recargarTicketsManual() {
   cargarTickets(false, function(res) {
     btns.forEach(b => {
       b.disabled = false;
-      b.innerHTML = `ðŸ”„ Actualizar`;
+      b.innerHTML = `🔄 Actualizar`;
     });
     if (res && res.success) {
-      mostrarAlerta("Lista de tickets actualizada con Ã©xito.", "success");
+      mostrarAlerta("Lista de tickets actualizada con éxito.", "success");
     }
   });
 }
@@ -864,7 +864,7 @@ function cargarTickets(esSilencioso = false, onComplete = null) {
     filtros.userRole = AppState.currentUser.tipoUsuario;
     filtros.userArea = AppState.currentUser.area;
   } else {
-    // Si tiene permiso de ver todos, filtrar por su Ã¡rea si pertenece a TIC o Mantenimiento
+    // Si tiene permiso de ver todos, filtrar por su área si pertenece a TIC o Mantenimiento
     if (areaUser === "TIC" || areaUser === "MANTENIMIENTO") {
       filtros.area = areaUser === "TIC" ? "TIC" : "Mantenimiento";
     }
@@ -878,12 +878,12 @@ function cargarTickets(esSilencioso = false, onComplete = null) {
     if (onComplete && typeof onComplete === "function") {
       onComplete(res);
     }
-    // ProtecciÃ³n: GAS puede retornar null si el servidor lanza una excepciÃ³n no capturada
+    // Protección: GAS puede retornar null si el servidor lanza una excepción no capturada
     if (!res) {
       if (!esSilencioso) {
         mostrarAlerta("Error del servidor al cargar tickets. Revisa los permisos o el script en GAS.", "danger");
       }
-      console.error("obtenerTickets devolviÃ³ null â€” posible error interno en el servidor GAS.");
+      console.error("obtenerTickets devolvió null — posible error interno en el servidor GAS.");
       return;
     }
     if (res.success) {
@@ -926,7 +926,7 @@ function cargarTickets(esSilencioso = false, onComplete = null) {
       .catch(function(err) {
         if (onComplete && typeof onComplete === "function") onComplete({ success: false, error: err });
         if (!esSilencioso) {
-          mostrarAlerta("Error de conexiÃ³n al cargar tickets", "danger");
+          mostrarAlerta("Error de conexión al cargar tickets", "danger");
         }
       });
   }
@@ -961,7 +961,7 @@ function renderizarTablaTickets() {
   const filtroBusq = (AppState.filtros.busqueda || "").toLowerCase();
 
   const ticketsAMostrar = AppState.tickets.filter(t => {
-    // Filtro de Ã¡rea por rol / alcance
+    // Filtro de área por rol / alcance
     if (esAdministradora) {
       if (normalizarArea(t.area) !== "MANTENIMIENTO") return false;
     } else if (puedeVerTodos && (areaUser === "TIC" || areaUser === "MANTENIMIENTO")) {
@@ -970,7 +970,7 @@ function renderizarTablaTickets() {
     // Filtro por estado
     const estadoFiltro = AppState.filtros.estado || "TODOS";
     if (estadoFiltro !== "TODOS" && (t.estado || "").toUpperCase() !== estadoFiltro) return false;
-    // Filtro por Ã¡rea selector
+    // Filtro por área selector
     const areaFiltro = AppState.filtros.area || "TODAS";
     if (areaFiltro !== "TODAS" && t.area !== areaFiltro) return false;
     // Filtro por punto de servicio
@@ -981,7 +981,7 @@ function renderizarTablaTickets() {
       if (filtroFecIni && fechaTkt < filtroFecIni) return false;
       if (filtroFecFin && fechaTkt > filtroFecFin) return false;
     }
-    // Filtro de bÃºsqueda por texto
+    // Filtro de búsqueda por texto
     if (filtroBusq) {
       const haystack = [
         t.nroTicket, t.placa, t.descripcionEquipo, t.puntoServicio, t.descripcionSolicitud
@@ -1002,8 +1002,14 @@ function renderizarTablaTickets() {
     const areaTicketNorm = normalizarArea(t.area);
     const esMismaArea = !areaUser || areaUser === areaTicketNorm;
     
-    // Botones de acciÃ³n contextuales segÃºn permisos y estado
+    // Botones de acción contextuales según permisos y estado
     let botonesAccion = `<button class="btn btn-secondary btn-sm" onclick="verDetalleTicket('${t.nroTicket}')">Ver</button>`;
+
+    // Botón con ojo para ver y descargar el Acta Técnica (disponible para todo usuario en tickets cerrados)
+    const esCerrado = String(t.estado || "").toUpperCase() === "CERRADO" || !!t.fechaCierre;
+    if (esCerrado) {
+      botonesAccion += ` <button class="btn btn-acta btn-sm" onclick="verActaTicket('${t.nroTicket}')" title="Ver Acta Oficial de Entrega Técnica en PDF">👁️ Acta</button>`;
+    }
 
     if (tienePermiso("ASIGNAR") && esMismaArea && t.estado.toUpperCase() === "ABIERTO") {
       botonesAccion += ` <button class="btn btn-primary btn-sm" onclick="abrirModalAsignar('${t.nroTicket}')">Asignar</button>`;
@@ -1016,9 +1022,9 @@ function renderizarTablaTickets() {
       botonesAccion += ` <button class="btn ${clsBtn} btn-sm" onclick="abrirModalCierre('${t.nroTicket}')">${txtBtn}</button>`;
     }
 
-    // BotÃ³n para Administradora o usuarios con permiso GESTIONAR_COSTOS
+    // Botón para Administradora o usuarios con permiso GESTIONAR_COSTOS
     if (tienePermiso("GESTIONAR_COSTOS") || esAdministradora) {
-      botonesAccion += ` <button class="btn btn-sm" style="background: rgba(217, 119, 6, 0.12); border: 1px solid rgba(217, 119, 6, 0.35); color: #b45309; font-weight: 600;" onclick="abrirModalAdministradora('${t.nroTicket}')">ðŸ’¼ Gestionar</button>`;
+      botonesAccion += ` <button class="btn btn-sm" style="background: rgba(217, 119, 6, 0.12); border: 1px solid rgba(217, 119, 6, 0.35); color: #b45309; font-weight: 600;" onclick="abrirModalAdministradora('${t.nroTicket}')">💼 Gestionar</button>`;
     }
 
     return `
@@ -1028,27 +1034,27 @@ function renderizarTablaTickets() {
           <small class="ticket-time" style="color: var(--text-dim); font-size: 0.78rem;">${formatearFechaHoraCO(t.fechaIngreso)}</small>
         </td>
         <td class="col-area"><span class="badge-tag ${areaClass}">${t.area}</span></td>
-        <td class="col-servicio"><strong>${t.tipoServicio}</strong><br><small style="color: var(--text-dim);">ðŸ“ ${t.puntoServicio}</small></td>
+        <td class="col-servicio"><strong>${t.tipoServicio}</strong><br><small style="color: var(--text-dim);">📍 ${t.puntoServicio}</small></td>
         <td class="col-equipo">
-          <div style="font-weight: 600;">âš™ï¸ ${t.descripcionEquipo || 'Sin equipo'}</div>
+          <div style="font-weight: 600;">⚙️ ${t.descripcionEquipo || 'Sin equipo'}</div>
           ${tienePermiso("EDITAR_PLACA")
-            ? `<span class="badge-plate" style="font-size: 0.72rem; cursor: pointer;" title="Clic para modificar placa" onclick="abrirModalEditarPlaca('${t.nroTicket}', '${t.placa}')">${t.placa || 'Sin Placa'} âœï¸</span>`
+            ? `<span class="badge-plate" style="font-size: 0.72rem; cursor: pointer;" title="Clic para modificar placa" onclick="abrirModalEditarPlaca('${t.nroTicket}', '${t.placa}')">${t.placa || 'Sin Placa'} ✏️</span>`
             : `<span class="badge-plate" style="font-size: 0.72rem;" title="Placa del equipo">${t.placa || 'Sin Placa'}</span>`}
         </td>
         <td class="col-desc" style="max-width: 220px; white-space: normal; line-height: 1.35;">
           ${t.descripcionSolicitud}
-          ${t.fotoSolicitudUrl ? `<br><span class="badge-evidence" onclick="verFotoTicket('${t.nroTicket}', '${t.fotoSolicitudUrl}', 'Solicitud')" title="Ver evidencia fotogrÃ¡fica adjunta">ðŸ“· Evidencia</span>` : ''}
-          ${t.fotoCierreUrl ? ` <span class="badge-evidence badge-evidence-cierre" onclick="verFotoTicket('${t.nroTicket}', '${t.fotoCierreUrl}', 'Cierre')" title="Ver foto del trabajo finalizado">ðŸ“¸ Foto Cierre</span>` : ''}
+          ${t.fotoSolicitudUrl ? `<br><span class="badge-evidence" onclick="verFotoTicket('${t.nroTicket}', '${t.fotoSolicitudUrl}', 'Solicitud')" title="Ver evidencia fotográfica adjunta">📷 Evidencia</span>` : ''}
+          ${t.fotoCierreUrl ? ` <span class="badge-evidence badge-evidence-cierre" onclick="verFotoTicket('${t.nroTicket}', '${t.fotoCierreUrl}', 'Cierre')" title="Ver foto del trabajo finalizado">📸 Foto Cierre</span>` : ''}
         </td>
         <td class="col-resp">
-          <span class="resp-label" style="display: none;">ðŸ‘¤ Responsable: </span>
-          ${t.responsable ? `<span>ðŸ‘¤ ${t.responsable}</span>` : '<span style="color: var(--text-dim);">ðŸ‘¤ Sin Asignar</span>'}
-          ${(esAdministradora || tienePermiso("GESTIONAR_COSTOS")) && t.proveedor ? `<br><small style="color: var(--text-muted); font-size: 0.74rem;">ðŸ­ ${t.proveedor}</small>` : ''}
+          <span class="resp-label" style="display: none;">👤 Responsable: </span>
+          ${t.responsable ? `<span>👤 ${t.responsable}</span>` : '<span style="color: var(--text-dim);">👤 Sin Asignar</span>'}
+          ${(esAdministradora || tienePermiso("GESTIONAR_COSTOS")) && t.proveedor ? `<br><small style="color: var(--text-muted); font-size: 0.74rem;">🏭 ${t.proveedor}</small>` : ''}
         </td>
         <td class="col-estado">
           <span class="badge-tag ${estadoClass}">${t.estado}</span>
-          ${(esAdministradora || tienePermiso("GESTIONAR_COSTOS")) && t.aprobacion ? `<br><span style="display: inline-block; margin-top: 4px; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-weight: 500;">ðŸ“‹ ${t.aprobacion}</span>` : ''}
-          ${(esAdministradora || tienePermiso("GESTIONAR_COSTOS")) && t.costo ? `<br><span style="display: inline-block; margin-top: 2px; font-size: 0.72rem; padding: 1px 5px; border-radius: 4px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-weight: 600;">ðŸ’° ${t.costo}</span>` : ''}
+          ${(esAdministradora || tienePermiso("GESTIONAR_COSTOS")) && t.aprobacion ? `<br><span style="display: inline-block; margin-top: 4px; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-weight: 500;">📋 ${t.aprobacion}</span>` : ''}
+          ${(esAdministradora || tienePermiso("GESTIONAR_COSTOS")) && t.costo ? `<br><span style="display: inline-block; margin-top: 2px; font-size: 0.72rem; padding: 1px 5px; border-radius: 4px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-weight: 600;">💰 ${t.costo}</span>` : ''}
         </td>
         <td class="col-acciones">
           <div class="actions-container">
@@ -1060,7 +1066,7 @@ function renderizarTablaTickets() {
   }).join("");
 }
 
-// Filtros de bÃºsqueda
+// Filtros de búsqueda
 function onFiltroChange() {
   const rol = String(AppState.currentUser && AppState.currentUser.tipoUsuario || "").toLowerCase();
   const esAdministradora = rol === "administradora";
@@ -1077,7 +1083,7 @@ function onFiltroChange() {
   AppState.filtros.estado = document.getElementById("filtroEstado").value;
   AppState.filtros.busqueda = document.getElementById("buscarInput").value;
 
-  // Filtros extra: Punto y Rango de Fechas (solo visibles para admins/tÃ©cnicos)
+  // Filtros extra: Punto y Rango de Fechas (solo visibles para admins/técnicos)
   const elPunto = document.getElementById("filtroPunto");
   const elFecIni = document.getElementById("filtroFechaInicio");
   const elFecFin = document.getElementById("filtroFechaFin");
@@ -1105,7 +1111,7 @@ const NOMBRES_MESES = [
 ];
 
 function formatearFechaVisual(fechaStr) {
-  if (!fechaStr) return "â€”";
+  if (!fechaStr) return "—";
   const partes = fechaStr.split("-");
   if (partes.length !== 3) return fechaStr;
   return `${partes[2]}/${partes[1]}/${partes[0]}`;
@@ -1172,7 +1178,7 @@ function actualizarDisplaysYBotones() {
   const vIni = formatearFechaVisual(DatePickerState.fechaInicio);
   const vFin = formatearFechaVisual(DatePickerState.fechaFin);
 
-  if (lbl) lbl.textContent = `${vIni} â€“ ${vFin}`;
+  if (lbl) lbl.textContent = `${vIni} – ${vFin}`;
   if (dIni) dIni.textContent = vIni;
   if (dFin) dFin.textContent = vFin;
   if (btn) {
@@ -1199,14 +1205,14 @@ function renderCalendario() {
   const mm = dateCursor.getMonth();
   title.textContent = `${NOMBRES_MESES[mm]} ${yyyy}`;
 
-  // Encabezados de dÃ­as: D, L, M, M, J, V, S
+  // Encabezados de días: D, L, M, M, J, V, S
   const diasSemana = ["D", "L", "M", "M", "J", "V", "S"];
   let html = diasSemana.map(d => `<div class="cal-day-name">${d}</div>`).join("");
 
   const primerDiaSemana = new Date(yyyy, mm, 1).getDay(); // 0 = Domingo
   const diasEnMes = new Date(yyyy, mm + 1, 0).getDate();
 
-  // DÃ­as vacÃ­os previos
+  // Días vacíos previos
   for (let i = 0; i < primerDiaSemana; i++) {
     html += `<div class="cal-day cal-day-empty"></div>`;
   }
@@ -1253,7 +1259,7 @@ function seleccionarDia(ymd) {
     DatePickerState.seleccionandoFin = false;
   }
 
-  // Quitar estilo activo de botones rÃ¡pidos al seleccionar manualmente
+  // Quitar estilo activo de botones rápidos al seleccionar manualmente
   document.querySelectorAll(".date-quick-btn").forEach(b => b.classList.remove("active"));
 
   actualizarDisplaysYBotones();
@@ -1285,7 +1291,7 @@ function aplicarRapido(preset) {
     fFin = formatearYMD(hoy);
   }
 
-  // Marcar botÃ³n activo
+  // Marcar botón activo
   document.querySelectorAll(".date-quick-btn").forEach(b => {
     b.classList.remove("active");
     if (b.getAttribute("onclick") && b.getAttribute("onclick").includes(`'${preset}'`)) {
@@ -1329,7 +1335,7 @@ document.addEventListener("click", function (e) {
   }
 });
 
-// Exportar al Ã¡mbito global
+// Exportar al ámbito global
 window.toggleDatePicker = toggleDatePicker;
 window.aplicarRapido = aplicarRapido;
 window.navCal = navCal;
@@ -1345,7 +1351,7 @@ function abrirModalNuevoTicket() {
   document.getElementById("solicitudNombre").value = AppState.currentUser.nombres;
   document.getElementById("solicitudCedula").value = AppState.currentUser.cedula;
   document.getElementById("solicitudEmail").value = AppState.currentUser.email;
-  // Halar automÃ¡ticamente el celular del empleado logueado
+  // Halar automáticamente el celular del empleado logueado
   const elSolCel = document.getElementById("solicitudCelular");
   if (elSolCel) {
     elSolCel.value = AppState.currentUser.celular || "";
@@ -1394,7 +1400,7 @@ function guardarNuevoTicket(e) {
     btn.disabled = false;
     btn.textContent = "Enviar Solicitud";
     if (!res) {
-      mostrarAlerta("No se recibiÃ³ respuesta del servidor al crear el ticket.", "danger");
+      mostrarAlerta("No se recibió respuesta del servidor al crear el ticket.", "danger");
       return;
     }
     if (res.success) {
@@ -1421,7 +1427,7 @@ function guardarNuevoTicket(e) {
 }
 
 // ============================================================================
-// 5. ASIGNACIÃ“N DE TICKET (COORDINADOR)
+// 5. ASIGNACIÓN DE TICKET (COORDINADOR)
 // ============================================================================
 function abrirModalAsignar(nroTicket) {
   const ticket = AppState.tickets.find(t => t.nroTicket === nroTicket);
@@ -1458,16 +1464,16 @@ function abrirModalAsignar(nroTicket) {
     }
   }
 
-  // Repoblar tÃ©cnicos filtrados estrictamente por el Ã¡rea del ticket
-  // No debe aparecer ningÃºn tÃ©cnico ni administrador de la otra Ã¡rea
+  // Repoblar técnicos filtrados estrictamente por el área del ticket
+  // No debe aparecer ningún técnico ni administrador de la otra área
   const selTecnico = document.getElementById("asignacionTecnico");
   if (selTecnico && AppState.catalogos && AppState.catalogos.tecnicos) {
     const areaTicketNorm = normalizarArea(ticket.area);
-    selTecnico.innerHTML = '<option value="">Seleccione TÃ©cnico...</option>';
+    selTecnico.innerHTML = '<option value="">Seleccione Técnico...</option>';
     AppState.catalogos.tecnicos
       .filter(t => {
         const areaTecNorm = normalizarArea(t.area);
-        // Debe pertenecer estrictamente a la misma Ã¡rea del ticket (TIC con TIC, Mantenimiento con Mantenimiento)
+        // Debe pertenecer estrictamente a la misma área del ticket (TIC con TIC, Mantenimiento con Mantenimiento)
         return areaTecNorm === areaTicketNorm;
       })
       .forEach(t => {
@@ -1490,7 +1496,7 @@ function guardarAsignacionTicket(e) {
   const selectedOpt = selTecnico.options[selTecnico.selectedIndex];
 
   if (!selTecnico.value) {
-    mostrarAlerta("Debe seleccionar un tÃ©cnico.", "warning");
+    mostrarAlerta("Debe seleccionar un técnico.", "warning");
     return;
   }
 
@@ -1521,10 +1527,10 @@ function guardarAsignacionTicket(e) {
 
   const callback = function (res) {
     btn.disabled = false;
-    btn.textContent = "Confirmar AsignaciÃ³n";
+    btn.textContent = "Confirmar Asignación";
     if (!res) {
-      mostrarAlerta("No se recibiÃ³ respuesta del servidor al asignar ticket. Verifica la conexiÃ³n o la versiÃ³n desplegada en GAS.", "danger");
-      console.error("asignarTicket devolviÃ³ null.");
+      mostrarAlerta("No se recibió respuesta del servidor al asignar ticket. Verifica la conexión o la versión desplegada en GAS.", "danger");
+      console.error("asignarTicket devolvió null.");
       return;
     }
     if (res.success) {
@@ -1541,7 +1547,7 @@ function guardarAsignacionTicket(e) {
       .withSuccessHandler(callback)
       .withFailureHandler(function (err) {
         btn.disabled = false;
-        btn.textContent = "Confirmar AsignaciÃ³n";
+        btn.textContent = "Confirmar Asignación";
         mostrarAlerta("Error: " + err, "danger");
       })
       .asignarTicket(asignacionData);
@@ -1551,7 +1557,7 @@ function guardarAsignacionTicket(e) {
 }
 
 // ============================================================================
-// 6. CIERRE / GESTIÃ“N DE TICKET (TÃ‰CNICO)
+// 6. CIERRE / GESTIÓN DE TICKET (TÉCNICO)
 // ============================================================================
 function abrirModalCierre(nroTicket) {
   const ticket = AppState.tickets.find(t => t.nroTicket === nroTicket);
@@ -1561,7 +1567,7 @@ function abrirModalCierre(nroTicket) {
   document.getElementById("cierreNroTicket").textContent = ticket.nroTicket;
   document.getElementById("cierreEquipoInfo").textContent = ticket.descripcionEquipo + " | Punto: " + ticket.puntoServicio;
   
-  // 1. Poblar tipos de falla segÃºn el tÃ©cnico / Ã¡rea (TIC vs Mantenimiento)
+  // 1. Poblar tipos de falla según el técnico / área (TIC vs Mantenimiento)
   const areaFalla = determinarAreaParaFalla(ticket);
   poblarTiposFallaPorArea(areaFalla);
 
@@ -1569,7 +1575,7 @@ function abrirModalCierre(nroTicket) {
   document.getElementById("formCierreTicket").reset();
   removerFoto('cierre');
 
-  // 3. Â¡PRECARGAR TODOS LOS DATOS PREVIAMENTE GUARDADOS!
+  // 3. ¡PRECARGAR TODOS LOS DATOS PREVIAMENTE GUARDADOS!
   document.getElementById("cierrePlacaModificada").value = ticket.placa || "";
 
   // Tipo de Falla
@@ -1577,7 +1583,7 @@ function abrirModalCierre(nroTicket) {
     const selFalla = document.getElementById("cierreTipoFalla");
     if (selFalla) {
       selFalla.value = ticket.tipoFalla;
-      // Si por alguna razÃ³n no coincidiÃ³ exactamente, buscar coincidencia parcial
+      // Si por alguna razón no coincidió exactamente, buscar coincidencia parcial
       if (!selFalla.value) {
         for (let i = 0; i < selFalla.options.length; i++) {
           if (selFalla.options[i].text.toLowerCase().includes(ticket.tipoFalla.toLowerCase())) {
@@ -1589,7 +1595,7 @@ function abrirModalCierre(nroTicket) {
     }
   }
 
-  // Repuestos guardados (formato "CondiciÃ³n - Detalle")
+  // Repuestos guardados (formato "Condición - Detalle")
   if (ticket.repuesto) {
     const repStr = String(ticket.repuesto).trim();
     if (repStr && repStr !== "Ninguno") {
@@ -1602,15 +1608,15 @@ function abrirModalCierre(nroTicket) {
     }
   }
 
-  // Mostrar la indicaciÃ³n o instrucciÃ³n que dejÃ³ el coordinador al asignar
+  // Mostrar la indicación o instrucción que dejó el coordinador al asignar
   const estadoTicketActual = (ticket.estado || "").toUpperCase();
   const instruccionCoord = (ticket.observacionesAsignacion || (estadoTicketActual === "PROCESO" ? ticket.respuesta : "") || "").trim();
   const elInstruccion = document.getElementById("cierreInstruccionCoordinador");
   if (elInstruccion) {
-    elInstruccion.textContent = instruccionCoord ? instruccionCoord : "(Sin observaciones adicionales de la coordinaciÃ³n al asignar)";
+    elInstruccion.textContent = instruccionCoord ? instruccionCoord : "(Sin observaciones adicionales de la coordinación al asignar)";
   }
 
-  // ObservaciÃ³n / RazÃ³n por la cual queda PENDIENTE
+  // Observación / Razón por la cual queda PENDIENTE
   if (ticket.razonNoFuncionamiento) {
     document.getElementById("cierreRazonNoOperativo").value = ticket.razonNoFuncionamiento;
   } else if (ticket.respuesta && ticket.respuesta.indexOf("[PENDIENTE:") !== -1) {
@@ -1620,9 +1626,9 @@ function abrirModalCierre(nroTicket) {
     }
   }
 
-  // ObservaciÃ³n del trabajo realizado (Â¿QuÃ© se hizo? - Llenado por el TÃ©cnico):
-  // Si el ticket apenas estÃ¡ en PROCESO, dejar el campo en blanco para que el tÃ©cnico escriba lo que hizo.
-  // Solo si ya fue guardado previamente en PENDIENTE o CERRADO con una respuesta tÃ©cnica real, precargarla.
+  // Observación del trabajo realizado (¿Qué se hizo? - Llenado por el Técnico):
+  // Si el ticket apenas está en PROCESO, dejar el campo en blanco para que el técnico escriba lo que hizo.
+  // Solo si ya fue guardado previamente en PENDIENTE o CERRADO con una respuesta técnica real, precargarla.
   let obsTecnico = "";
   if (estadoTicketActual !== "PROCESO" && ticket.respuesta && ticket.respuesta.trim() !== instruccionCoord) {
     obsTecnico = ticket.respuesta;
@@ -1632,20 +1638,20 @@ function abrirModalCierre(nroTicket) {
   }
   document.getElementById("cierreObservacion").value = obsTecnico.trim();
 
-  // QuiÃ©n recibe y cÃ©dula: Se traen automÃ¡ticamente de quien creÃ³ la incidencia/ticket
+  // Quién recibe y cédula: Se traen automáticamente de quien creó la incidencia/ticket
   const nombreSol = ticket.nombreUsuario || ticket.nombreQuienRecibe || "";
   const cedulaSol = ticket.cedulaSolicitante || ticket.cedulaQuienRecibe || "";
   document.getElementById("cierreQuienRecibe").value = nombreSol;
   document.getElementById("cierreCedulaRecibe").value = cedulaSol;
 
-  // Evidencia fotogrÃ¡fica previa si existe
+  // Evidencia fotográfica previa si existe
   if (ticket.fotoCierreUrl) {
     const box = document.getElementById("cierreFotoPreview");
     const img = document.getElementById("cierreFotoImg");
     const name = document.getElementById("cierreFotoNombre");
     if (box && img) {
       img.src = obtenerDriveThumbnailUrl(ticket.fotoCierreUrl, 400);
-      if (name) name.textContent = "Evidencia de cierre registrada â†—";
+      if (name) name.textContent = "Evidencia de cierre registrada ↗";
       box.style.display = "flex";
     }
   }
@@ -1718,7 +1724,7 @@ function guardarCierreTicket(e) {
   const razonNoOperativo = document.getElementById("cierreRazonNoOperativo").value.trim();
 
   if (esPendiente && !razonNoOperativo) {
-    mostrarAlerta("Debe especificar la razÃ³n por la cual el ticket queda PENDIENTE.", "warning");
+    mostrarAlerta("Debe especificar la razón por la cual el ticket queda PENDIENTE.", "warning");
     document.getElementById("cierreRazonNoOperativo").focus();
     return;
   }
@@ -1747,7 +1753,7 @@ function guardarCierreTicket(e) {
   };
 
   if (!cierreData.observacionTrabajo) {
-    mostrarAlerta("Ingrese la observaciÃ³n del trabajo realizado.", "warning");
+    mostrarAlerta("Ingrese la observación del trabajo realizado.", "warning");
     return;
   }
 
@@ -1759,7 +1765,7 @@ function guardarCierreTicket(e) {
     btn.disabled = false;
     btn.textContent = esPendiente ? "Guardar como Ticket PENDIENTE" : "Finalizar y Cerrar Ticket";
     if (!res) {
-      mostrarAlerta("No se recibiÃ³ respuesta del servidor al guardar el cierre del ticket.", "danger");
+      mostrarAlerta("No se recibió respuesta del servidor al guardar el cierre del ticket.", "danger");
       return;
     }
     if (res.success) {
@@ -1786,7 +1792,7 @@ function guardarCierreTicket(e) {
 }
 
 // ============================================================================
-// 7. MODIFICAR PLACA RÃPIDO
+// 7. MODIFICAR PLACA RÁPIDO
 // ============================================================================
 function abrirModalEditarPlaca(nroTicket, placaActual) {
   AppState.activeTicket = { nroTicket: nroTicket, placa: placaActual };
@@ -1802,7 +1808,7 @@ function guardarModificacionPlaca(e) {
 
   const callback = function (res) {
     if (!res) {
-      mostrarAlerta("No se recibiÃ³ respuesta al modificar la placa.", "danger");
+      mostrarAlerta("No se recibió respuesta al modificar la placa.", "danger");
       return;
     }
     if (res.success) {
@@ -1825,15 +1831,16 @@ function guardarModificacionPlaca(e) {
 }
 
 // ============================================================================
-// 8. DETALLE COMPLETO Y ACORDEÃ“N (3 SECCIONES)
+// 8. DETALLE COMPLETO Y ACORDEÓN (3 SECCIONES)
 // ============================================================================
 function verDetalleTicket(nroTicket) {
   const t = AppState.tickets.find(ticket => ticket.nroTicket === nroTicket);
   if (!t) return;
+  AppState.activeTicket = t;
 
   document.getElementById("detalleTitulo").textContent = `Detalle del Ticket: ${t.nroTicket}`;
   
-  // SecciÃ³n 1: Solicitud
+  // Sección 1: Solicitud
   const elFechaIngreso = document.getElementById("detFechaIngreso");
   if (elFechaIngreso) elFechaIngreso.textContent = t.fechaIngreso || "-";
   document.getElementById("detPunto").textContent = t.puntoServicio || "-";
@@ -1847,21 +1854,21 @@ function verDetalleTicket(nroTicket) {
   document.getElementById("detPlaca").textContent = t.placa || "-";
   document.getElementById("detDescripcion").textContent = t.descripcionSolicitud || "-";
 
-  // SecciÃ³n 2: AsignaciÃ³n
-  document.getElementById("detTecnico").textContent = t.responsable ? `${t.responsable} (C.C. ${t.cedulaResponsable})` : "Pendiente de AsignaciÃ³n";
+  // Sección 2: Asignación
+  document.getElementById("detTecnico").textContent = t.responsable ? `${t.responsable} (C.C. ${t.cedulaResponsable})` : "Pendiente de Asignación";
   const elFechaAsig = document.getElementById("detFechaAsignacion");
   if (elFechaAsig) elFechaAsig.textContent = t.fechaAsignacion || "-";
   document.getElementById("detFechaVisita").textContent = t.fechaVisita || "No programada";
   document.getElementById("detTecnica").textContent = t.tecnicaMantenimiento || "-";
   document.getElementById("detObsAsignacion").textContent = t.observacionesAsignacion || "-";
 
-  // SecciÃ³n 3: Cierre
+  // Sección 3: Cierre
   document.getElementById("detFechaCierre").textContent = t.fechaCierre || "En Proceso";
   document.getElementById("detEstadoFinal").textContent = t.estado || "-";
   document.getElementById("detFalla").textContent = t.tipoFalla || "-";
   document.getElementById("detRepuestos").textContent = t.repuesto || "-";
 
-  // Mostrar razÃ³n por la cual queda PENDIENTE si existe
+  // Mostrar razón por la cual queda PENDIENTE si existe
   const contRazon = document.getElementById("detRazonPendienteItem");
   const elRazon = document.getElementById("detRazonPendiente");
   if (contRazon && elRazon) {
@@ -1874,7 +1881,7 @@ function verDetalleTicket(nroTicket) {
     }
   }
 
-  // Trabajo Realizado / Avance del TÃ©cnico
+  // Trabajo Realizado / Avance del Técnico
   const elDetTrabajo = document.getElementById("detTrabajo");
   if (elDetTrabajo) {
     elDetTrabajo.textContent = t.respuesta || "-";
@@ -1884,7 +1891,7 @@ function verDetalleTicket(nroTicket) {
   const receptorCedula = t.cedulaQuienRecibe || t.cedulaSolicitante || "";
   document.getElementById("detRecibe").textContent = receptorNombre ? `${receptorNombre}${receptorCedula ? ' (C.C. ' + receptorCedula + ')' : ''}` : "-";
   
-  // Renderizar evidencias fotogrÃ¡ficas si existen
+  // Renderizar evidencias fotográficas si existen
   const contFotoSol = document.getElementById("detFotoSolicitudItem");
   const elFotoSol = document.getElementById("detFotoSolicitudContent");
   if (contFotoSol && elFotoSol) {
@@ -1909,7 +1916,7 @@ function verDetalleTicket(nroTicket) {
     }
   }
 
-  // SecciÃ³n 4: GestiÃ³n Administrativa (Administradora / Costos)
+  // Sección 4: Gestión Administrativa (Administradora / Costos)
   const cardAdmin = document.getElementById("detFaseAdminCard");
   const tieneDatosAdmin = !!(t.costo || t.aprobacion || t.obsAdmin || t.consultaAdmin || t.proveedor);
   const rolUserActivo = String(AppState.currentUser && AppState.currentUser.tipoUsuario || "").toLowerCase();
@@ -1938,11 +1945,22 @@ function verDetalleTicket(nroTicket) {
     btnAdminContainer.style.display = (tienePermiso("GESTIONAR_COSTOS") || rolUserActivo === "administradora") ? "block" : "none";
   }
 
+  // Mostrar acceso al Acta de Entrega Técnica si el ticket está CERRADO
+  const esCerrado = String(t.estado || "").toUpperCase() === "CERRADO" || !!t.fechaCierre;
+  const bannerActa = document.getElementById("detActaBanner");
+  if (bannerActa) {
+    bannerActa.style.display = esCerrado ? "flex" : "none";
+  }
+  const btnVerActaFooter = document.getElementById("detBtnVerActaFooter");
+  if (btnVerActaFooter) {
+    btnVerActaFooter.style.display = esCerrado ? "inline-flex" : "none";
+  }
+
   abrirModal("modalDetalleTicket");
 }
 
 // ============================================================================
-// 9. UTILIDADES Y MANEJO DE IMÃGENES & GOOGLE DRIVE
+// 9. UTILIDADES Y MANEJO DE IMÁGENES & GOOGLE DRIVE
 // ============================================================================
 function manejarSeleccionFoto(input, tipo) {
   if (input.files && input.files[0]) {
@@ -2014,7 +2032,7 @@ function extraerDriveId(url) {
   return "";
 }
 
-// Genera la URL de miniatura directa para visualizaciÃ³n web
+// Genera la URL de miniatura directa para visualización web
 function obtenerDriveThumbnailUrl(driveUrl, ancho) {
   if (!driveUrl) return "";
   ancho = ancho || 800;
@@ -2026,7 +2044,7 @@ function obtenerDriveThumbnailUrl(driveUrl, ancho) {
   return driveUrl;
 }
 
-// Genera la URL directa de Google Drive para abrir en una nueva pestaÃ±a
+// Genera la URL directa de Google Drive para abrir en una nueva pestaña
 function obtenerDriveViewUrl(driveUrl) {
   var folderUrl = "https://drive.google.com/drive/folders/1h6-vMUtci8YKuWISrpm9Fm7nUXkn0C1X";
   if (!driveUrl) return folderUrl;
@@ -2043,19 +2061,19 @@ function renderizarComponenteFoto(driveUrl, titulo) {
   if (!driveUrl) return "";
   var thumbUrl = obtenerDriveThumbnailUrl(driveUrl, 600);
   var viewUrl = obtenerDriveViewUrl(driveUrl);
-  var safeTitulo = (titulo || "Evidencia FotogrÃ¡fica").replace(/'/g, "\\'");
+  var safeTitulo = (titulo || "Evidencia Fotográfica").replace(/'/g, "\\'");
 
   return '<div class="evidence-card">' +
     '<div class="evidence-thumb-wrapper" onclick="abrirLightbox(\'' + driveUrl + '\', \'' + safeTitulo + '\')" title="Clic para ampliar imagen">' +
       '<img src="' + thumbUrl + '" alt="Evidencia" loading="lazy" onerror="onImageError(this, \'' + driveUrl + '\')">' +
       '<div class="evidence-overlay-zoom">' +
-        '<span>ðŸ” Clic para ampliar</span>' +
+        '<span>🔍 Clic para ampliar</span>' +
       '</div>' +
     '</div>' +
     '<div class="evidence-actions">' +
       '<span style="font-size: 0.75rem; color: var(--text-dim);">Google Drive</span>' +
       '<a href="' + viewUrl + '" target="_blank" rel="noopener noreferrer" class="btn-drive-link">' +
-        '<span>ðŸ“</span> Abrir en Drive â†—' +
+        '<span>📁</span> Abrir en Drive ↗' +
       '</a>' +
     '</div>' +
   '</div>';
@@ -2105,7 +2123,7 @@ function mostrarFallbackImg(imgEl, originalUrl) {
   if (parent) {
     parent.innerHTML = `
       <div style="padding: 1.5rem; text-align: center; color: var(--text-muted);">
-        <span style="font-size: 2rem; display: block; margin-bottom: 0.35rem;">ðŸ–¼ï¸</span>
+        <span style="font-size: 2rem; display: block; margin-bottom: 0.35rem;">🖼️</span>
         <span style="font-size: 0.82rem; display: block; color: #93c5fd; font-weight: 600;">Ver Evidencia Adjunta</span>
         <span style="font-size: 0.72rem; color: var(--text-dim);">Clic para ver en Google Drive</span>
       </div>
@@ -2126,7 +2144,7 @@ function abrirLightbox(driveUrl, titulo) {
   const elImg = document.getElementById("lightboxImg");
   const elBtn = document.getElementById("lightboxDriveBtn");
 
-  if (elTitulo) elTitulo.textContent = titulo || "Evidencia FotogrÃ¡fica";
+  if (elTitulo) elTitulo.textContent = titulo || "Evidencia Fotográfica";
   if (elImg) {
     elImg.src = thumbUrl;
     elImg.onerror = function() {
@@ -2166,10 +2184,10 @@ function cerrarModal(modalId) {
 // 10.5 FUNCIONES RECLUTADOR / RECURSOS HUMANOS
 // ============================================================================
 
-/** Datos de empleados cargados desde Excel, esperando confirmaciÃ³n */
+/** Datos de empleados cargados desde Excel, esperando confirmación */
 var _datosEmpleadosMasivoPendientes = [];
 
-/** Abre el modal de gestiÃ³n de empleados (RRHH) */
+/** Abre el modal de gestión de empleados (RRHH) */
 function abrirModalGestionEmpleados() {
   limpiarCargaMasiva();
   cambiarTabEmpleados('individual');
@@ -2184,7 +2202,7 @@ function abrirModalNuevoPunto() {
   abrirModal('modalNuevoPunto');
 }
 
-/** Cambia entre pestaÃ±a individual y masiva */
+/** Cambia entre pestaña individual y masiva */
 function cambiarTabEmpleados(tab) {
   const tabIndividual = document.getElementById('tabContentIndividual');
   const tabMasivo = document.getElementById('tabContentMasivo');
@@ -2245,7 +2263,7 @@ function guardarEmpleadoIndividual(e) {
       .withFailureHandler(function(err) {
         btn.disabled = false;
         btn.textContent = 'Registrar Empleado';
-        mostrarAlerta('Error de conexiÃ³n: ' + err, 'danger');
+        mostrarAlerta('Error de conexión: ' + err, 'danger');
       })
       .agregarEmpleadoIndividual(datos);
   } else {
@@ -2260,7 +2278,7 @@ function procesarArchivoExcelEmpleados(input) {
 
   // Mostrar nombre del archivo
   const nombreEl = document.getElementById('excelNombreArchivo');
-  if (nombreEl) { nombreEl.textContent = 'ðŸ“„ ' + file.name; nombreEl.style.display = 'block'; }
+  if (nombreEl) { nombreEl.textContent = '📄 ' + file.name; nombreEl.style.display = 'block'; }
 
   const reader = new FileReader();
   reader.onload = function(e) {
@@ -2272,7 +2290,7 @@ function procesarArchivoExcelEmpleados(input) {
       const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
 
       if (rows.length < 2) {
-        mostrarAlerta('El archivo estÃ¡ vacÃ­o o no tiene datos suficientes.', 'warning');
+        mostrarAlerta('El archivo está vacío o no tiene datos suficientes.', 'warning');
         return;
       }
 
@@ -2311,7 +2329,7 @@ function procesarArchivoExcelEmpleados(input) {
 function analizarTextoPegado() {
   const texto = document.getElementById('textareaPegarEmpleados').value.trim();
   if (!texto) {
-    mostrarAlerta('Pega el contenido copiado de Excel en el Ã¡rea de texto.', 'warning');
+    mostrarAlerta('Pega el contenido copiado de Excel en el área de texto.', 'warning');
     return;
   }
 
@@ -2383,7 +2401,7 @@ function limpiarCargaMasiva() {
   if (btnImportar) btnImportar.disabled = true;
 }
 
-/** Ejecuta la importaciÃ³n masiva enviando datos al backend */
+/** Ejecuta la importación masiva enviando datos al backend */
 function ejecutarImportacionMasiva() {
   if (!_datosEmpleadosMasivoPendientes.length) {
     mostrarAlerta('No hay empleados para importar. Carga un archivo Excel primero.', 'warning');
@@ -2392,12 +2410,12 @@ function ejecutarImportacionMasiva() {
 
   const btn = document.getElementById('btnImportarMasivo');
   btn.disabled = true;
-  btn.textContent = 'â³ Importando ' + _datosEmpleadosMasivoPendientes.length + ' empleados...';
+  btn.textContent = '⏳ Importando ' + _datosEmpleadosMasivoPendientes.length + ' empleados...';
 
   const callback = function(res) {
-    btn.textContent = 'ðŸš€ Importar Empleados a la Base de Datos';
+    btn.textContent = '🚀 Importar Empleados a la Base de Datos';
     if (res.success) {
-      mostrarAlerta('âœ… ' + res.message, 'success');
+      mostrarAlerta('✅ ' + res.message, 'success');
       limpiarCargaMasiva();
       cerrarModal('modalGestionEmpleados');
     } else {
@@ -2411,8 +2429,8 @@ function ejecutarImportacionMasiva() {
       .withSuccessHandler(callback)
       .withFailureHandler(function(err) {
         btn.disabled = false;
-        btn.textContent = 'ðŸš€ Importar Empleados a la Base de Datos';
-        mostrarAlerta('Error de conexiÃ³n: ' + err, 'danger');
+        btn.textContent = '🚀 Importar Empleados a la Base de Datos';
+        mostrarAlerta('Error de conexión: ' + err, 'danger');
       })
       .agregarEmpleadosMasivo(_datosEmpleadosMasivoPendientes);
   } else {
@@ -2439,11 +2457,11 @@ function descargarPlantillaExcel() {
   }
 }
 
-/** Auto-genera un cÃ³digo corto para el punto de servicio */
+/** Auto-genera un código corto para el punto de servicio */
 function autogenerarCodigoPunto(nombre) {
   const codigoEl = document.getElementById('puntoCodigoInput');
   if (!codigoEl) return;
-  // Tomar las primeras letras de cada palabra, mÃ¡ximo 8 caracteres
+  // Tomar las primeras letras de cada palabra, máximo 8 caracteres
   const codigo = nombre.trim().toUpperCase()
     .replace(/[^A-Z0-9 ]/g, '')
     .split(' ')
@@ -2461,7 +2479,7 @@ function guardarNuevoPunto(e) {
   const codigo = document.getElementById('puntoCodigoInput').value.trim().toUpperCase();
 
   if (!nombre || !codigo) {
-    mostrarAlerta('El nombre y cÃ³digo del punto son obligatorios.', 'warning');
+    mostrarAlerta('El nombre y código del punto son obligatorios.', 'warning');
     return;
   }
 
@@ -2473,7 +2491,7 @@ function guardarNuevoPunto(e) {
     btn.disabled = false;
     btn.textContent = 'Guardar Punto de Servicio';
     if (res.success) {
-      mostrarAlerta('âœ… ' + res.message, 'success');
+      mostrarAlerta('✅ ' + res.message, 'success');
       // Agregar al select de puntos en el formulario de ticket sin recargar
       const selPunto = document.getElementById('solicitudPunto');
       if (selPunto && res.punto) {
@@ -2492,7 +2510,7 @@ function guardarNuevoPunto(e) {
       .withFailureHandler(function(err) {
         btn.disabled = false;
         btn.textContent = 'Guardar Punto de Servicio';
-        mostrarAlerta('Error de conexiÃ³n: ' + err, 'danger');
+        mostrarAlerta('Error de conexión: ' + err, 'danger');
       })
       .agregarPuntoServicio({ nombre: nombre, codigo: codigo });
   } else {
@@ -2518,7 +2536,7 @@ function actualizarRelojModal() {
     hour12: true
   };
   const texto = ahora.toLocaleString("es-CO", opciones);
-  el.innerHTML = `ðŸ•’ ${texto} <span style="font-size: 0.72rem; color: #94a3b8; font-weight: 500; margin-left: 0.35rem;">(Hora Colombia)</span>`;
+  el.innerHTML = `🕒 ${texto} <span style="font-size: 0.72rem; color: #94a3b8; font-weight: 500; margin-left: 0.35rem;">(Hora Colombia)</span>`;
 }
 
 function formatearFechaHoraCO(fechaStr) {
@@ -2570,13 +2588,13 @@ function mostrarAlerta(mensaje, tipo) {
 }
 
 // ============================================================================
-// 11. MÃ“DULO ADMINISTRADORA
+// 11. MÓDULO ADMINISTRADORA
 // ============================================================================
 
 /**
- * Abre el modal de gestiÃ³n exclusivo de la Administradora.
+ * Abre el modal de gestión exclusivo de la Administradora.
  * Permite ver todos los datos del ticket y registrar:
- * Costo, AprobaciÃ³n, ObservaciÃ³n, Consulta y Proveedor.
+ * Costo, Aprobación, Observación, Consulta y Proveedor.
  */
 function abrirModalAdministradora(nroTicket) {
   const t = AppState.tickets.find(ticket => ticket.nroTicket === nroTicket);
@@ -2629,7 +2647,7 @@ function guardarCamposAdministradora(e) {
     if (btn) { btn.disabled = false; btn.textContent = "Guardar Cambios"; }
     if (!res) { mostrarAlerta("Sin respuesta del servidor.", "danger"); return; }
     if (res.success) {
-      // ActualizaciÃ³n reactiva instantÃ¡nea en memoria
+      // Actualización reactiva instantánea en memoria
       if (AppState.activeTicket) {
         AppState.activeTicket.costo = datos.costo;
         AppState.activeTicket.aprobacion = datos.aprobacion;
@@ -2662,4 +2680,276 @@ function guardarCamposAdministradora(e) {
     llamarApiBackend("actualizarCamposAdministradora", datos).then(callback);
   }
 }
+
+// ============================================================================
+// 13. VISUALIZACIÓN Y DESCARGA DE ACTA DE ENTREGA TÉCNICA (PDF & PREVIEW)
+// ============================================================================
+function verActaTicket(nroTicket) {
+  var t = AppState.tickets.find(function(ticket) { return ticket.nroTicket === nroTicket; });
+  if (!t && AppState.activeTicket && AppState.activeTicket.nroTicket === nroTicket) {
+    t = AppState.activeTicket;
+  }
+  if (!t) {
+    mostrarToast("No se encontró información del ticket " + nroTicket, "warning");
+    return;
+  }
+
+  AppState.activeActaTicket = t;
+
+  // Actualizar títulos en el encabezado del modal
+  var tituloModal = document.getElementById("actaModalTituloTexto");
+  if (tituloModal) tituloModal.textContent = "Acta de Servicio Técnico — " + t.nroTicket;
+  var badgeFooter = document.getElementById("actaFooterTicketBadge");
+  if (badgeFooter) badgeFooter.textContent = "Ticket: " + t.nroTicket + " (" + (t.area || "Servicio") + ") — Dialimentos S.A.S.";
+
+  // Formatear fechas
+  var fechaEmision = t.fechaCierre || t.fechaIngreso || formatearFechaCO(new Date());
+  var fechaSol = t.fechaIngreso || "-";
+  var fechaAsig = t.fechaAsignacion || "-";
+  var fechaVis = t.fechaVisita || "Correctivo en sitio";
+  var fechaCie = t.fechaCierre || "-";
+
+  // Formatear estado operativo del equipo
+  var estadoOperativoHtml = "";
+  if (t.equipoEnFuncionamiento) {
+    estadoOperativoHtml = '<span class="acta-badge acta-badge-success">SÍ, OPERATIVO</span>';
+  } else {
+    var razon = t.razonNoFuncionamiento || "Por determinar";
+    estadoOperativoHtml = '<span class="acta-badge acta-badge-danger">NO OPERATIVO</span> &mdash; <span style="color: #b91c1c; font-weight: 600;">Motivo: ' + razon + '</span>';
+  }
+
+  // Generar evidencias fotográficas si existen
+  var evidenciasHtml = "";
+  if (t.fotoSolicitudUrl || t.fotoCierreUrl) {
+    evidenciasHtml += '<div class="acta-section-title">4. REGISTRO FOTOGRÁFICO DE EVIDENCIAS</div>' +
+      '<div class="acta-evidence-grid">';
+
+    if (t.fotoSolicitudUrl) {
+      var thumbSol = obtenerDriveThumbnailUrl(t.fotoSolicitudUrl, 400);
+      evidenciasHtml += '<div class="acta-evidence-card">' +
+        '<div class="acta-evidence-label">📷 Evidencia Solicitud Inicial</div>' +
+        '<img src="' + thumbSol + '" alt="Evidencia Solicitud" class="acta-evidence-img" onclick="abrirLightbox(\'' + t.fotoSolicitudUrl + '\', \'Evidencia Solicitud - ' + t.nroTicket + '\')" style="cursor: pointer;" onerror="this.parentElement.style.display=\'none\'">' +
+        '</div>';
+    }
+
+    if (t.fotoCierreUrl) {
+      var thumbCie = obtenerDriveThumbnailUrl(t.fotoCierreUrl, 400);
+      evidenciasHtml += '<div class="acta-evidence-card">' +
+        '<div class="acta-evidence-label">📸 Evidencia Trabajo Finalizado (Cierre)</div>' +
+        '<img src="' + thumbCie + '" alt="Evidencia Cierre" class="acta-evidence-img" onclick="abrirLightbox(\'' + t.fotoCierreUrl + '\', \'Evidencia Cierre - ' + t.nroTicket + '\')" style="cursor: pointer;" onerror="this.parentElement.style.display=\'none\'">' +
+        '</div>';
+    }
+
+    evidenciasHtml += '</div>';
+  }
+
+  var receptorNombre = t.nombreQuienRecibe || t.nombreUsuario || "SOLICITANTE / RESPONSABLE";
+  var receptorCedula = t.cedulaQuienRecibe || t.cedulaSolicitante || "N/A";
+  var tecnicoNombre = t.responsable || "TÉCNICO RESPONSABLE";
+  var tecnicoCedula = t.cedulaResponsable || "N/A";
+
+  // Generar HTML del documento oficial idéntico al enviado por correo
+  var actaHtml =
+    '<div class="acta-header">' +
+      '<div class="acta-brand-col">' +
+        '<div class="acta-company-title">DIALIMENTOS S.A.S.</div>' +
+        '<div class="acta-company-sub">UNA MARCA OPERADA POR DIALIMENTOS S.A.S. &bull; NIT 900.000.000-0</div>' +
+        '<div class="acta-doc-title">ACTA DE SERVICIO TÉCNICO & MANTENIMIENTO</div>' +
+      '</div>' +
+      '<div class="acta-ticket-badge-box">' +
+        '<div class="acta-ticket-badge">' + (t.nroTicket || "TICKET") + '</div>' +
+        '<div class="acta-ticket-date">Fecha Emisión: ' + fechaEmision + '</div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="acta-section-title">1. INFORMACIÓN DE LA SOLICITUD</div>' +
+    '<table class="acta-table">' +
+      '<tr>' +
+        '<th>Punto de Servicio:</th><td>' + (t.puntoServicio || "N/A") + '</td>' +
+        '<th>Tipo de Ticket:</th><td>' + (t.tipoTicket || t.area || "N/A") + '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Solicitante:</th><td>' + (t.nombreUsuario || "N/A") + '</td>' +
+        '<th>Cédula Solicitante:</th><td>' + (t.cedulaSolicitante || "N/A") + '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Correo Contacto:</th><td>' + (t.emailSolicitante || "N/A") + '</td>' +
+        '<th>Teléfono Solicitante:</th><td><strong>' + (t.celularSolicitante || "N/A") + '</strong></td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Tipo de Servicio:</th><td>' + (t.tipoServicio || "N/A") + '</td>' +
+        '<th>Fecha Solicitud:</th><td>' + fechaSol + '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Nivel de Servicio:</th><td>' + (t.nivelServicio || "MEDIO") + '</td>' +
+        '<th>Placa Activo Fijo:</th><td><strong>' + (t.placa || "N/A") + '</strong></td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Equipo Intervenido:</th><td colspan="3">' + (t.descripcionEquipo || "No especificado") + '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Descripción Solicitud:</th><td colspan="3">' + (t.descripcionSolicitud || "Sin descripción") + '</td>' +
+      '</tr>' +
+    '</table>' +
+
+    '<div class="acta-section-title">2. GESTIÓN Y ASIGNACIÓN</div>' +
+    '<table class="acta-table">' +
+      '<tr>' +
+        '<th>Técnico Responsable:</th><td>' + tecnicoNombre + '</td>' +
+        '<th>Cédula Técnico:</th><td>' + tecnicoCedula + '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Teléfono Técnico:</th><td>' + (t.celularResponsable || "N/A") + '</td>' +
+        '<th>Fecha Asignación:</th><td>' + fechaAsig + '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Fecha Programada / Visita:</th><td>' + fechaVis + '</td>' +
+        '<th>Asunto / Técnica:</th><td>' + (t.tecnicaMantenimiento || "Correctivo en sitio") + '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Observaciones Asignación:</th><td colspan="3">' + (t.observacionesAsignacion || "Sin observaciones") + '</td>' +
+      '</tr>' +
+    '</table>' +
+
+    '<div class="acta-section-title">3. CIERRE DEL SERVICIO Y RESULTADOS</div>' +
+    '<table class="acta-table">' +
+      '<tr>' +
+        '<th>Fecha de Terminación:</th><td>' + fechaCie + '</td>' +
+        '<th>Estado Final:</th><td><strong>' + (t.estado || "CERRADO") + '</strong></td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Tipo de Falla:</th><td>' + (t.tipoFalla || "No especificada") + '</td>' +
+        '<th>Repuestos / Insumos:</th><td>' + (t.repuesto || "Ninguno") + '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>¿Equipo en Funcionamiento?:</th><td colspan="3">' + estadoOperativoHtml + '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Trabajo Realizado / Avance:</th><td colspan="3" style="white-space: pre-wrap;">' + (t.respuesta || "Trabajo finalizado a conformidad y satisfacción del solicitante.") + '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<th>Recibido Por (En Sitio):</th><td>' + receptorNombre + '</td>' +
+        '<th>Cédula Quien Recibe:</th><td>' + receptorCedula + '</td>' +
+      '</tr>' +
+    '</table>' +
+
+    evidenciasHtml +
+
+    '<table class="acta-signatures-table">' +
+      '<tr>' +
+        '<td>' +
+          '<div class="acta-sign-box">' +
+            '<strong>' + tecnicoNombre.toUpperCase() + '</strong><br>' +
+            'C.C. ' + tecnicoCedula + '<br>' +
+            '<span style="font-size: 0.76rem; color: #64748b;">Técnico Responsable Asignado</span>' +
+          '</div>' +
+        '</td>' +
+        '<td>' +
+          '<div class="acta-sign-box">' +
+            '<strong>' + receptorNombre.toUpperCase() + '</strong><br>' +
+            'C.C. ' + receptorCedula + '<br>' +
+            '<span style="font-size: 0.76rem; color: #64748b;">Solicitante / Responsable de Punto</span>' +
+          '</div>' +
+        '</td>' +
+      '</tr>' +
+    '</table>' +
+
+    '<div class="acta-footer-doc">' +
+      'Documento oficial generado automáticamente por el Sistema de Mesa de Ayuda de Dialimentos S.A.S. &bull; ' + fechaEmision +
+    '</div>';
+
+  var wrapper = document.getElementById("actaDocumentoWrapper");
+  if (wrapper) {
+    wrapper.innerHTML = actaHtml;
+  }
+
+  abrirModal("modalActaTicket");
+}
+
+/**
+ * Descarga el acta del ticket en formato PDF de alta fidelidad
+ * Compatible con escritorio, tablets y teléfonos móviles
+ */
+function descargarActaPdf() {
+  var sourceEl = document.getElementById("actaDocumentoWrapper");
+  if (!sourceEl) {
+    mostrarToast("No se encontró el contenido del acta para exportar.", "danger");
+    return;
+  }
+
+  var nroTicket = (AppState.activeActaTicket && AppState.activeActaTicket.nroTicket) || "Ticket";
+  var btn = document.getElementById("btnDescargarPdfActa");
+  var txtOriginal = btn ? btn.innerHTML : "";
+  if (btn) {
+    btn.innerHTML = '<span class="spinner-btn"></span> Generando PDF...';
+    btn.disabled = true;
+  }
+
+  // Clonar para garantizar proporciones perfectas A4 incluso en teléfonos móviles
+  var clone = sourceEl.cloneNode(true);
+  clone.id = "actaPdfExportClone";
+  clone.classList.add("acta-pdf-print-mode");
+  clone.style.width = "780px";
+  clone.style.maxWidth = "780px";
+  clone.style.margin = "0";
+  clone.style.padding = "24px 28px";
+  clone.style.background = "#ffffff";
+  clone.style.position = "fixed";
+  clone.style.left = "-9999px";
+  clone.style.top = "0";
+  clone.style.zIndex = "-1000";
+  document.body.appendChild(clone);
+
+  var opt = {
+    margin: [8, 8, 8, 8],
+    filename: "Acta_" + nroTicket + ".pdf",
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: 800
+    },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+  };
+
+  function limpiarBoton() {
+    if (btn) {
+      btn.innerHTML = txtOriginal;
+      btn.disabled = false;
+    }
+    if (document.getElementById("actaPdfExportClone")) {
+      document.body.removeChild(clone);
+    }
+  }
+
+  if (typeof html2pdf !== "undefined") {
+    html2pdf().set(opt).from(clone).save()
+      .then(function() {
+        limpiarBoton();
+        mostrarToast("Acta " + nroTicket + " descargada con éxito en PDF.", "success");
+      })
+      .catch(function(err) {
+        console.error("Error al exportar PDF con html2pdf:", err);
+        limpiarBoton();
+        imprimirActa();
+      });
+  } else {
+    limpiarBoton();
+    imprimirActa();
+  }
+}
+
+/**
+ * Abre el diálogo de impresión / Guardar como PDF nativo del navegador
+ */
+function imprimirActa() {
+  window.print();
+}
+
+window.verActaTicket = verActaTicket;
+window.descargarActaPdf = descargarActaPdf;
+window.imprimirActa = imprimirActa;
 </script>

@@ -172,6 +172,10 @@ function responderApi(action, data) {
         resultado = cerrarTicket(data.cierreData || data);
         break;
 
+      case "obtenerActaPdf":
+        resultado = obtenerActaPdf(data.nroTicket);
+        break;
+
       case "modificarPlaca":
         resultado = modificarPlaca(data.nroTicket, data.nuevaPlaca);
         break;
@@ -1591,6 +1595,34 @@ function generarDocumentoPDF(ticket) {
 
   var blob = Utilities.newBlob(html, "text/html", "Acta_" + (ticket.nroTicket || "Ticket") + ".html");
   return blob.getAs("application/pdf").setName("Acta_" + (ticket.nroTicket || "Ticket") + ".pdf");
+}
+
+/**
+ * Genera y retorna el acta oficial en formato PDF base64 para descarga directa
+ */
+function obtenerActaPdf(nroTicket) {
+  try {
+    if (!nroTicket) {
+      return { success: false, message: "Número de ticket no proporcionado" };
+    }
+    var sheet = getSheetByName(CONFIG.SHEETS.TICKETS);
+    var fila = buscarFilaPorTicket(sheet, nroTicket);
+    if (!fila) {
+      return { success: false, message: "Ticket no encontrado: " + nroTicket };
+    }
+    var ticket = obtenerDetalleTicketPorFila(sheet, fila);
+    var pdfBlob = generarDocumentoPDF(ticket);
+    var base64 = Utilities.base64Encode(pdfBlob.getBytes());
+    return {
+      success: true,
+      nroTicket: nroTicket,
+      filename: "Acta_" + nroTicket + ".pdf",
+      base64: base64
+    };
+  } catch (err) {
+    Logger.log("Error en obtenerActaPdf: " + err.message);
+    return { success: false, message: "Error al generar acta en PDF: " + err.message };
+  }
 }
 
 // ============================================================================
