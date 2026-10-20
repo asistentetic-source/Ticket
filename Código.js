@@ -35,7 +35,11 @@ const CONFIG = {
   DRIVE_FOLDER_ID: "1h6-vMUtci8YKuWISrpm9Fm7nUXkn0C1X",
   DRIVE_FOLDER_NAME: "MesaDeAyuda_Dialimentos_Adjuntos",
   
-  // Correos de los coordinadores
+  // Correo remitente oficial (debe estar configurado como alias "Send mail as" en la cuenta Gmail del script)
+  SENDER_EMAIL: "no-reply@dialimentos.com.co",
+  SENDER_NAME: "Mesa de Ayuda Dialimentos",
+
+  // Correos de coordinadores (fallback si no se encuentran en el sheet EMPLEADOS)
   COORDINADOR_MTO_EMAIL: "pardo@dialimentos.com.co",
   COORDINADOR_TIC_EMAIL: "soporte.tic@dialimentos.com.co",
 
@@ -1686,7 +1690,8 @@ function obtenerEmailCoordinador(area, nroTicket) {
 }
 
 /**
- * Retorna ÚNICAMENTE el correo de coordinación correspondiente al área del ticket.
+ * Retorna ÚNICAMENTE el(los) correo(s) de coordinación correspondientes al área del ticket.
+ * Busca DINÁMICAMENTE en la hoja EMPLEADOS los usuarios con rol "Administrador" del área.
  * Estricta separación: TIC NUNCA va a Mantenimiento, y Mantenimiento NUNCA va a TIC.
  */
 function obtenerEmailsCoordinacion(area, nroTicket) {
@@ -1696,13 +1701,40 @@ function obtenerEmailsCoordinacion(area, nroTicket) {
               areaNorm.indexOf("SISTEMA") !== -1 || 
               areaNorm.indexOf("TECNOLOG") !== -1;
 
-  if (esTIC) {
-    // Para tickets de TIC: única y exclusivamente soporte TIC
-    return [CONFIG.COORDINADOR_TIC_EMAIL];
-  } else {
-    // Para tickets de Mantenimiento: única y exclusivamente coordinación MTO
-    return [CONFIG.COORDINADOR_MTO_EMAIL];
+  // Buscar coordinadores/administradores del área en la hoja EMPLEADOS
+  var correosEncontrados = [];
+  try {
+    var empleados = sheetToJson(CONFIG.SHEETS.EMPLEADOS);
+    var areaBuscada = esTIC ? "TIC" : "MANTENIMIENTO";
+
+    for (var i = 0; i < empleados.length; i++) {
+      var emp = empleados[i];
+      var tipoUsr = String(emp["TIPO USUARIO"] || "").toLowerCase().trim();
+      var areaEmp = String(emp["AREA"] || "").toUpperCase().trim();
+      var emailEmp = String(emp["EMAIL"] || emp["CORREO"] || "").trim();
+
+      // Solo Administradores / Coordinadores del área correspondiente
+      var esAdmin = tipoUsr.indexOf("administrador") !== -1 || tipoUsr.indexOf("coordinador") !== -1;
+      var mismaArea = areaEmp === areaBuscada || 
+                      (areaBuscada === "TIC" && (areaEmp.indexOf("TIC") !== -1 || areaEmp.indexOf("SISTEMA") !== -1 || areaEmp.indexOf("TECNOLOG") !== -1)) ||
+                      (areaBuscada === "MANTENIMIENTO" && (areaEmp.indexOf("MANTEN") !== -1 || areaEmp.indexOf("MTO") !== -1));
+
+      if (esAdmin && mismaArea && esEmailValido(emailEmp) && correosEncontrados.indexOf(emailEmp) === -1) {
+        correosEncontrados.push(emailEmp);
+      }
+    }
+  } catch (e) {
+    Logger.log("Aviso: Error buscando coordinadores en EMPLEADOS: " + e.message);
   }
+
+  // Fallback: si no se encontró ninguno en el sheet, usar los correos hardcodeados de CONFIG
+  if (correosEncontrados.length === 0) {
+    Logger.log("Fallback: usando correo de coordinador de CONFIG para área " + (esTIC ? "TIC" : "MTO"));
+    correosEncontrados.push(esTIC ? CONFIG.COORDINADOR_TIC_EMAIL : CONFIG.COORDINADOR_MTO_EMAIL);
+  }
+
+  Logger.log("Coordinadores encontrados para " + (esTIC ? "TIC" : "MTO") + ": " + correosEncontrados.join(", "));
+  return correosEncontrados;
 }
 
 /**
@@ -1729,32 +1761,41 @@ function enviarCorreoSeguro(destinatarios, asunto, cuerpoHtml, opciones) {
   }
 
   var toStr = unicos.join(",");
+  var senderEmail = CONFIG.SENDER_EMAIL || "";
+  var senderName = CONFIG.SENDER_NAME || "Mesa de Ayuda Dialimentos";
+
   var mailParams = {
     htmlBody: cuerpoHtml,
-    name: "Mesa de Ayuda Dialimentos"
+    name: senderName
   };
+  // Configurar remitente como no-reply@dialimentos.com.co (requiere alias "Send mail as" en Gmail)
+  if (senderEmail) {
+    mailParams.from = senderEmail;
+    mailParams.replyTo = senderEmail;
+  }
   if (opciones.attachments && opciones.attachments.length > 0) {
     mailParams.attachments = opciones.attachments;
   }
 
-  Logger.log("Enviando correo [" + asunto + "] directamente a " + unicos.length + " destinatario(s): " + toStr);
+  Logger.log("Enviando correo [" + asunto + "] desde " + (senderEmail || "cuenta por defecto") + " a " + unicos.length + " destinatario(s): " + toStr);
 
-  // 1. Envío directo usando GmailApp.sendEmail (cada dirección en toStr recibe el correo)
+  // 1. Envío directo usando GmailApp.sendEmail (soporta 'from' para alias configurados)
   try {
     GmailApp.sendEmail(toStr, asunto, '', mailParams);
-    Logger.log("ÉXITO: Correo entregado vía GmailApp a: " + toStr);
+    Logger.log("ÉXITO: Correo entregado vía GmailApp a: " + toStr + " (desde: " + (senderEmail || "default") + ")");
     return true;
   } catch (eGmail) {
     Logger.log("Aviso: GmailApp.sendEmail falló (" + eGmail.message + "), intentando con MailApp...");
   }
 
-  // 2. Fallback MailApp.sendEmail
+  // 2. Fallback MailApp.sendEmail (no soporta 'from', pero sí 'replyTo' y 'name')
   try {
     var mailAppParams = {
       to: toStr,
       subject: asunto,
       htmlBody: cuerpoHtml,
-      name: "Mesa de Ayuda Dialimentos"
+      name: senderName,
+      replyTo: senderEmail || ""
     };
     if (mailParams.attachments) {
       mailAppParams.attachments = mailParams.attachments;
@@ -1891,41 +1932,15 @@ function enviarNotificacionAsignacionTecnico(datos) {
     + '</div>'
     + '</div>';
 
-  var esTIC = (datos.nroTicket && String(datos.nroTicket).indexOf("TIC-") === 0) || 
-              String(datos.area || "").toUpperCase().trim() === "TIC";
-
+  // REGLA DE NEGOCIO: Al asignar, el correo va ÚNICAMENTE al técnico asignado
   var destinatarios = [];
-  // 1. Técnico asignado
   if (esEmailValido(emailTecnico)) {
     destinatarios.push(emailTecnico);
   } else {
     Logger.log("ALERTA: No se pudo obtener correo válido del técnico para asignación: " + (datos.tecnicoNombre || datos.cedulaTecnico));
   }
 
-  // 2. Solicitante
-  if (esEmailValido(emailSolicitante) && destinatarios.indexOf(emailSolicitante) === -1) {
-    destinatarios.push(emailSolicitante);
-  }
-
-  // 3. Administradores / Coordinación
-  for (var i = 0; i < correosCoordinacion.length; i++) {
-    if (destinatarios.indexOf(correosCoordinacion[i]) === -1) {
-      destinatarios.push(correosCoordinacion[i]);
-    }
-  }
-
-  // Filtro estricto entre áreas: jamás cruzar coordinadores de TIC y Mantenimiento
-  destinatarios = destinatarios.filter(function(correo) {
-    var cNorm = String(correo).toLowerCase().trim();
-    if (esTIC) {
-      if (cNorm === String(CONFIG.COORDINADOR_MTO_EMAIL).toLowerCase().trim()) return false;
-    } else {
-      if (cNorm === String(CONFIG.COORDINADOR_TIC_EMAIL).toLowerCase().trim()) return false;
-    }
-    return true;
-  });
-
-  Logger.log("Destinatarios asignación ticket " + datos.nroTicket + ": " + destinatarios.join(", "));
+  Logger.log("Destinatarios asignación ticket " + datos.nroTicket + " (solo técnico): " + destinatarios.join(", "));
   enviarCorreoSeguro(destinatarios, '[ASIGNACIÓN] ' + asuntoBase, cuerpoHtml, { nroTicket: datos.nroTicket });
 }
 
