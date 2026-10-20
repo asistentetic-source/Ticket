@@ -1907,28 +1907,29 @@ textarea.form-control {
 }
 
 /* Hoja del Acta Oficial (Diseño Papel A4 Ejecutivo) */
+/* Hoja del Acta Oficial (Diseño Papel A4 Ejecutivo - 1 Sola Página) */
 .acta-sheet {
   background: #ffffff;
-  padding: 34px 38px;
-  border-radius: 8px;
+  padding: 22px 28px;
+  border-radius: 6px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
   border: 1px solid #e2e8f0;
   color: #1e293b;
-  font-family: var(--font-body), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-  line-height: 1.42;
+  font-family: Helvetica, Arial, sans-serif;
+  line-height: 1.35;
   margin: 0 auto;
-  max-width: 780px;
+  max-width: 760px;
   position: relative;
   box-sizing: border-box;
 }
 
 .acta-header {
-  border-bottom: 2.5px solid var(--diali-purple);
-  padding-bottom: 12px;
-  margin-bottom: 16px;
+  border-bottom: 2px solid #0f172a;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
 }
 
@@ -1938,25 +1939,18 @@ textarea.form-control {
 }
 
 .acta-company-title {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--diali-purple);
+  font-size: 16px;
+  font-weight: bold;
+  color: #0f172a;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
-.acta-company-sub {
-  font-size: 0.74rem;
-  color: var(--text-muted);
-  font-weight: 500;
-  letter-spacing: 0.03em;
-}
-
 .acta-doc-title {
-  font-size: 0.88rem;
-  color: #334155;
+  font-size: 11px;
+  color: #475569;
   font-weight: 700;
-  margin-top: 3px;
+  margin-top: 2px;
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
@@ -1966,50 +1960,43 @@ textarea.form-control {
   flex-shrink: 0;
 }
 
-.acta-ticket-badge {
-  background: linear-gradient(135deg, var(--diali-purple), var(--diali-pink));
-  color: #ffffff;
-  padding: 6px 14px;
-  font-size: 0.92rem;
-  font-weight: 800;
-  border-radius: 6px;
-  display: inline-block;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 8px rgba(131, 0, 101, 0.25);
+.acta-ticket-code {
+  font-size: 13px;
+  font-weight: bold;
+  color: #0f172a;
 }
 
 .acta-ticket-date {
-  font-size: 0.78rem;
+  font-size: 10px;
   color: #64748b;
-  margin-top: 5px;
+  margin-top: 3px;
   font-weight: 500;
 }
 
 .acta-section-title {
-  background: #f8fafc;
-  border-left: 4px solid var(--diali-purple);
-  padding: 6px 10px;
-  font-size: 0.78rem;
-  font-weight: 800;
+  background-color: #f1f5f9;
+  border-left: 4px solid #2563eb;
+  padding: 4px 7px;
+  font-size: 10.5px;
+  font-weight: bold;
   color: #0f172a;
-  margin-top: 16px;
-  margin-bottom: 10px;
+  margin-top: 10px;
+  margin-bottom: 6px;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
-  border-radius: 0 4px 4px 0;
+  letter-spacing: 0.3px;
 }
 
 .acta-table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 12px;
-  font-size: 0.82rem;
+  margin-bottom: 8px;
+  font-size: 10px;
 }
 
 .acta-table th,
 .acta-table td {
   border: 1px solid #cbd5e1;
-  padding: 7px 10px;
+  padding: 4.5px 7px;
   text-align: left;
   vertical-align: top;
   word-break: break-word;
@@ -2017,75 +2004,39 @@ textarea.form-control {
 
 .acta-table th {
   background-color: #f8fafc;
-  font-weight: 700;
+  font-weight: bold;
   color: #334155;
-  width: 25%;
+  width: 24%;
 }
 
 .acta-table td {
-  color: #0f172a;
+  color: #1e293b;
 }
 
 .acta-badge {
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-weight: 700;
-  font-size: 0.76rem;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: bold;
+  font-size: 9.5px;
   display: inline-block;
 }
 
 .acta-badge-success {
   background: #dcfce7;
   color: #15803d;
-  border: 1px solid #bbf7d0;
 }
 
 .acta-badge-danger {
   background: #fee2e2;
   color: #b91c1c;
-  border: 1px solid #fecaca;
-}
-
-/* Evidencias fotográficas en el acta */
-.acta-evidence-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
-  margin-top: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.acta-evidence-card {
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 8px;
-  background: #f8fafc;
-  text-align: center;
-}
-
-.acta-evidence-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #475569;
-  margin-bottom: 6px;
-  text-align: left;
-}
-
-.acta-evidence-img {
-  max-width: 100%;
-  max-height: 180px;
-  border-radius: 4px;
-  object-fit: cover;
-  border: 1px solid #cbd5e1;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* Firmas formales del acta */
 .acta-signatures-table {
   width: 100%;
   border: none;
-  margin-top: 40px;
-  margin-bottom: 20px;
+  margin-top: 32px;
+  margin-bottom: 12px;
   border-collapse: collapse;
 }
 
@@ -2094,56 +2045,37 @@ textarea.form-control {
   width: 50%;
   text-align: center;
   vertical-align: bottom;
-  padding: 10px 20px;
+  padding: 0 15px;
 }
 
 .acta-sign-box {
-  border-top: 1.5px solid #334155;
-  padding-top: 8px;
+  border-top: 1px solid #0f172a;
+  padding-top: 5px;
   width: 85%;
   margin: 0 auto;
-  font-size: 0.82rem;
-  color: #1e293b;
-  line-height: 1.4;
+  font-size: 10px;
+  color: #0f172a;
+  line-height: 1.35;
 }
 
 .acta-footer-doc {
-  margin-top: 25px;
-  font-size: 0.72rem;
+  margin-top: 20px;
+  font-size: 8.5px;
   color: #94a3b8;
   text-align: center;
   border-top: 1px solid #e2e8f0;
-  padding-top: 10px;
+  padding-top: 6px;
 }
 
-/* Modo exportación PDF fija para html2pdf (mantiene proporciones A4 incluso en teléfonos) */
+/* Modo exportación PDF fija para html2pdf (1 sola página A4 garantizada) */
 .acta-pdf-print-mode {
-  width: 780px !important;
-  max-width: 780px !important;
-  font-size: 11px !important;
-  padding: 24px 28px !important;
+  width: 760px !important;
+  max-width: 760px !important;
+  font-size: 10px !important;
+  padding: 20px 24px !important;
 }
 
-.acta-pdf-print-mode .acta-table {
-  font-size: 10.5px !important;
-}
-
-.acta-pdf-print-mode .acta-table th,
-.acta-pdf-print-mode .acta-table td {
-  padding: 6px 8px !important;
-}
-
-.acta-pdf-print-mode .acta-signatures-table {
-  display: table !important;
-  width: 100% !important;
-}
-
-.acta-pdf-print-mode .acta-signatures-table td {
-  display: table-cell !important;
-  width: 50% !important;
-}
-
-/* ── Adaptabilidad Móvil para Acta (Smartphones < 768px) ── */
+/* ── Adaptabilidad Móvil para Acta (< 768px) ── */
 @media (max-width: 768px) {
   .modal-acta-header {
     padding: 0.85rem 1rem;
@@ -2174,7 +2106,7 @@ textarea.form-control {
   .acta-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.75rem;
+    gap: 0.5rem;
   }
 
   .acta-ticket-badge-box {
@@ -2184,31 +2116,31 @@ textarea.form-control {
     justify-content: space-between;
     align-items: center;
     border-top: 1px dashed #e2e8f0;
-    padding-top: 8px;
+    padding-top: 6px;
   }
 
   .acta-company-title {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
   }
 
   .acta-table {
-    font-size: 0.76rem;
+    font-size: 0.75rem;
   }
 
   .acta-table th,
   .acta-table td {
-    padding: 6px 6px;
+    padding: 5px 6px;
   }
 
   .acta-signatures-table {
     margin-top: 24px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
 
   .acta-signatures-table tr {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
 
   .acta-signatures-table td {
@@ -2226,13 +2158,28 @@ textarea.form-control {
   }
 }
 
-/* ── Reglas de Impresión Nativa (Ctrl+P / Imprimir / Guardar como PDF del sistema) ── */
+/* ── Reglas de Impresión Nativa (Ctrl+P / Imprimir / Guardar como PDF de 1 Sola Página) ── */
+@page {
+  size: A4 portrait;
+  margin: 8mm 10mm;
+}
+
 @media print {
+  html, body {
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    overflow: visible !important;
+  }
+
   body * {
     visibility: hidden !important;
   }
 
   #modalActaTicket,
+  #modalActaTicket .modal-backdrop,
   #modalActaTicket .modal-container,
   #actaDocumentoWrapper,
   #actaDocumentoWrapper * {
@@ -2244,8 +2191,9 @@ textarea.form-control {
     left: 0 !important;
     top: 0 !important;
     width: 100% !important;
-    background: transparent !important;
+    margin: 0 !important;
     padding: 0 !important;
+    background: transparent !important;
     box-shadow: none !important;
   }
 
@@ -2253,11 +2201,12 @@ textarea.form-control {
     box-shadow: none !important;
     border: none !important;
     max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
     max-height: none !important;
     overflow: visible !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    transform: none !important;
   }
 
   .modal-acta-header,
@@ -2272,11 +2221,21 @@ textarea.form-control {
     overflow: visible !important;
   }
 
-  #actaDocumentoWrapper {
+  #actaDocumentoWrapper,
+  .acta-sheet {
     box-shadow: none !important;
     border: none !important;
     padding: 0 !important;
-    width: 100% !important;
     margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .acta-table,
+  .acta-signatures-table {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 }

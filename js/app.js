@@ -2679,8 +2679,32 @@ function guardarCamposAdministradora(e) {
 }
 
 // ============================================================================
-// 13. VISUALIZACIÓN Y DESCARGA DE ACTA DE ENTREGA TÉCNICA (PDF & PREVIEW)
+// 13. VISUALIZACIÓN Y DESCARGA DE ACTA DE ENTREGA TÉCNICA (1 SOLA PÁGINA)
 // ============================================================================
+
+/**
+ * Limpia y normaliza cadenas de fecha largas o ISO para que quepan limpias en la tabla
+ */
+function formatearFechaLimpiaActa(fechaStr) {
+  if (!fechaStr) return "-";
+  var s = String(fechaStr).trim();
+  if (s.indexOf("GMT") !== -1 || s.indexOf("hora estándar") !== -1) {
+    try {
+      var d = new Date(s);
+      if (!isNaN(d.getTime())) {
+        var y = d.getFullYear();
+        var m = String(d.getMonth() + 1).padStart(2, '0');
+        var dia = String(d.getDate()).padStart(2, '0');
+        var h = String(d.getHours()).padStart(2, '0');
+        var min = String(d.getMinutes()).padStart(2, '0');
+        var seg = String(d.getSeconds()).padStart(2, '0');
+        return y + "-" + m + "-" + dia + " " + h + ":" + min + ":" + seg;
+      }
+    } catch (e) {}
+  }
+  return s;
+}
+
 function verActaTicket(nroTicket) {
   var t = AppState.tickets.find(function(ticket) { return ticket.nroTicket === nroTicket; });
   if (!t && AppState.activeTicket && AppState.activeTicket.nroTicket === nroTicket) {
@@ -2693,51 +2717,26 @@ function verActaTicket(nroTicket) {
 
   AppState.activeActaTicket = t;
 
-  // Actualizar títulos en el encabezado del modal
+  // Actualizar títulos en el modal
   var tituloModal = document.getElementById("actaModalTituloTexto");
   if (tituloModal) tituloModal.textContent = "Acta de Servicio Técnico — " + t.nroTicket;
   var badgeFooter = document.getElementById("actaFooterTicketBadge");
   if (badgeFooter) badgeFooter.textContent = "Ticket: " + t.nroTicket + " (" + (t.area || "Servicio") + ") — Dialimentos S.A.S.";
 
-  // Formatear fechas
-  var fechaEmision = t.fechaCierre || t.fechaIngreso || formatearFechaCO(new Date());
-  var fechaSol = t.fechaIngreso || "-";
-  var fechaAsig = t.fechaAsignacion || "-";
-  var fechaVis = t.fechaVisita || "Correctivo en sitio";
-  var fechaCie = t.fechaCierre || "-";
+  // Fechas formateadas limpias
+  var fechaEmision = formatearFechaLimpiaActa(t.fechaCierre || t.fechaIngreso);
+  var fechaSol = formatearFechaLimpiaActa(t.fechaIngreso);
+  var fechaAsig = formatearFechaLimpiaActa(t.fechaAsignacion);
+  var fechaVis = formatearFechaLimpiaActa(t.fechaVisita) || "Correctivo en sitio";
+  var fechaCie = formatearFechaLimpiaActa(t.fechaCierre);
 
-  // Formatear estado operativo del equipo
+  // Estado operativo conciso
   var estadoOperativoHtml = "";
   if (t.equipoEnFuncionamiento) {
-    estadoOperativoHtml = '<span class="acta-badge acta-badge-success">SÍ, OPERATIVO</span>';
+    estadoOperativoHtml = '<strong style="color: #15803d;">SÍ, OPERATIVO</strong>';
   } else {
     var razon = t.razonNoFuncionamiento || "Por determinar";
-    estadoOperativoHtml = '<span class="acta-badge acta-badge-danger">NO OPERATIVO</span> &mdash; <span style="color: #b91c1c; font-weight: 600;">Motivo: ' + razon + '</span>';
-  }
-
-  // Generar evidencias fotográficas si existen
-  var evidenciasHtml = "";
-  if (t.fotoSolicitudUrl || t.fotoCierreUrl) {
-    evidenciasHtml += '<div class="acta-section-title">4. REGISTRO FOTOGRÁFICO DE EVIDENCIAS</div>' +
-      '<div class="acta-evidence-grid">';
-
-    if (t.fotoSolicitudUrl) {
-      var thumbSol = obtenerDriveThumbnailUrl(t.fotoSolicitudUrl, 400);
-      evidenciasHtml += '<div class="acta-evidence-card">' +
-        '<div class="acta-evidence-label">📷 Evidencia Solicitud Inicial</div>' +
-        '<img src="' + thumbSol + '" alt="Evidencia Solicitud" class="acta-evidence-img" onclick="abrirLightbox(\'' + t.fotoSolicitudUrl + '\', \'Evidencia Solicitud - ' + t.nroTicket + '\')" style="cursor: pointer;" onerror="this.parentElement.style.display=\'none\'">' +
-        '</div>';
-    }
-
-    if (t.fotoCierreUrl) {
-      var thumbCie = obtenerDriveThumbnailUrl(t.fotoCierreUrl, 400);
-      evidenciasHtml += '<div class="acta-evidence-card">' +
-        '<div class="acta-evidence-label">📸 Evidencia Trabajo Finalizado (Cierre)</div>' +
-        '<img src="' + thumbCie + '" alt="Evidencia Cierre" class="acta-evidence-img" onclick="abrirLightbox(\'' + t.fotoCierreUrl + '\', \'Evidencia Cierre - ' + t.nroTicket + '\')" style="cursor: pointer;" onerror="this.parentElement.style.display=\'none\'">' +
-        '</div>';
-    }
-
-    evidenciasHtml += '</div>';
+    estadoOperativoHtml = '<strong style="color: #b91c1c;">NO OPERATIVO</strong> &mdash; Motivo: ' + razon;
   }
 
   var receptorNombre = t.nombreQuienRecibe || t.nombreUsuario || "SOLICITANTE / RESPONSABLE";
@@ -2745,36 +2744,35 @@ function verActaTicket(nroTicket) {
   var tecnicoNombre = t.responsable || "TÉCNICO RESPONSABLE";
   var tecnicoCedula = t.cedulaResponsable || "N/A";
 
-  // Generar HTML del documento oficial idéntico al enviado por correo
+  // Documento oficial idéntico al PDF de 1 página generado por el sistema
   var actaHtml =
     '<div class="acta-header">' +
       '<div class="acta-brand-col">' +
         '<div class="acta-company-title">DIALIMENTOS S.A.S.</div>' +
-        '<div class="acta-company-sub">UNA MARCA OPERADA POR DIALIMENTOS S.A.S. &bull; NIT 900.000.000-0</div>' +
         '<div class="acta-doc-title">ACTA DE SERVICIO TÉCNICO & MANTENIMIENTO</div>' +
       '</div>' +
       '<div class="acta-ticket-badge-box">' +
-        '<div class="acta-ticket-badge">' + (t.nroTicket || "TICKET") + '</div>' +
-        '<div class="acta-ticket-date">Fecha Emisión: ' + fechaEmision + '</div>' +
+        '<div class="acta-ticket-code">' + (t.nroTicket || "TICKET") + '</div>' +
+        '<div class="acta-ticket-date">Fecha: ' + fechaEmision + '</div>' +
       '</div>' +
     '</div>' +
 
     '<div class="acta-section-title">1. INFORMACIÓN DE LA SOLICITUD</div>' +
     '<table class="acta-table">' +
       '<tr>' +
-        '<th>Punto de Servicio:</th><td>' + (t.puntoServicio || "N/A") + '</td>' +
-        '<th>Tipo de Ticket:</th><td>' + (t.tipoTicket || t.area || "N/A") + '</td>' +
+        '<th>Punto de Servicio:</th><td>' + (t.puntoServicio || "") + '</td>' +
+        '<th>Tipo de Ticket:</th><td>' + (t.tipoTicket || "") + '</td>' +
       '</tr>' +
       '<tr>' +
-        '<th>Solicitante:</th><td>' + (t.nombreUsuario || "N/A") + '</td>' +
-        '<th>Cédula Solicitante:</th><td>' + (t.cedulaSolicitante || "N/A") + '</td>' +
+        '<th>Solicitante:</th><td>' + (t.nombreUsuario || "") + '</td>' +
+        '<th>Cédula:</th><td>' + (t.cedulaSolicitante || "") + '</td>' +
       '</tr>' +
       '<tr>' +
-        '<th>Correo Contacto:</th><td>' + (t.emailSolicitante || "N/A") + '</td>' +
+        '<th>Correo Contacto:</th><td>' + (t.emailSolicitante || "") + '</td>' +
         '<th>Teléfono Solicitante:</th><td><strong>' + (t.celularSolicitante || "N/A") + '</strong></td>' +
       '</tr>' +
       '<tr>' +
-        '<th>Tipo de Servicio:</th><td>' + (t.tipoServicio || "N/A") + '</td>' +
+        '<th>Tipo de Servicio:</th><td>' + (t.tipoServicio || "") + '</td>' +
         '<th>Fecha Solicitud:</th><td>' + fechaSol + '</td>' +
       '</tr>' +
       '<tr>' +
@@ -2782,10 +2780,10 @@ function verActaTicket(nroTicket) {
         '<th>Placa Activo Fijo:</th><td><strong>' + (t.placa || "N/A") + '</strong></td>' +
       '</tr>' +
       '<tr>' +
-        '<th>Equipo Intervenido:</th><td colspan="3">' + (t.descripcionEquipo || "No especificado") + '</td>' +
+        '<th>Equipo Intervenido:</th><td colspan="3">' + (t.descripcionEquipo || "") + '</td>' +
       '</tr>' +
       '<tr>' +
-        '<th>Descripción Solicitud:</th><td colspan="3">' + (t.descripcionSolicitud || "Sin descripción") + '</td>' +
+        '<th>Descripción Solicitud:</th><td colspan="3">' + (t.descripcionSolicitud || "") + '</td>' +
       '</tr>' +
     '</table>' +
 
@@ -2796,15 +2794,15 @@ function verActaTicket(nroTicket) {
         '<th>Cédula Técnico:</th><td>' + tecnicoCedula + '</td>' +
       '</tr>' +
       '<tr>' +
-        '<th>Teléfono Técnico:</th><td>' + (t.celularResponsable || "N/A") + '</td>' +
+        '<th>Teléfono Técnico:</th><td>' + (t.celularResponsable || "") + '</td>' +
         '<th>Fecha Asignación:</th><td>' + fechaAsig + '</td>' +
       '</tr>' +
       '<tr>' +
-        '<th>Fecha Programada / Visita:</th><td>' + fechaVis + '</td>' +
-        '<th>Asunto / Técnica:</th><td>' + (t.tecnicaMantenimiento || "Correctivo en sitio") + '</td>' +
+        '<th>Fecha de Visita:</th><td>' + fechaVis + '</td>' +
+        '<th>Técnica Mantenimiento:</th><td>' + (t.tecnicaMantenimiento || "Correctivo en sitio") + '</td>' +
       '</tr>' +
       '<tr>' +
-        '<th>Observaciones Asignación:</th><td colspan="3">' + (t.observacionesAsignacion || "Sin observaciones") + '</td>' +
+        '<th>Observaciones Trabajo:</th><td colspan="3">' + (t.observacionesAsignacion || "Sin observaciones") + '</td>' +
       '</tr>' +
     '</table>' +
 
@@ -2822,15 +2820,13 @@ function verActaTicket(nroTicket) {
         '<th>¿Equipo en Funcionamiento?:</th><td colspan="3">' + estadoOperativoHtml + '</td>' +
       '</tr>' +
       '<tr>' +
-        '<th>Trabajo Realizado / Avance:</th><td colspan="3" style="white-space: pre-wrap;">' + (t.respuesta || "Trabajo finalizado a conformidad y satisfacción del solicitante.") + '</td>' +
+        '<th>Trabajo Realizado:</th><td colspan="3">' + (t.respuesta || "Trabajo finalizado a satisfacción") + '</td>' +
       '</tr>' +
       '<tr>' +
-        '<th>Recibido Por (En Sitio):</th><td>' + receptorNombre + '</td>' +
-        '<th>Cédula Quien Recibe:</th><td>' + receptorCedula + '</td>' +
+        '<th>Recibido Por (Solicitante):</th><td>' + receptorNombre + '</td>' +
+        '<th>Cédula Solicitante:</th><td>' + receptorCedula + '</td>' +
       '</tr>' +
     '</table>' +
-
-    evidenciasHtml +
 
     '<table class="acta-signatures-table">' +
       '<tr>' +
@@ -2838,21 +2834,21 @@ function verActaTicket(nroTicket) {
           '<div class="acta-sign-box">' +
             '<strong>' + tecnicoNombre.toUpperCase() + '</strong><br>' +
             'C.C. ' + tecnicoCedula + '<br>' +
-            '<span style="font-size: 0.76rem; color: #64748b;">Técnico Responsable Asignado</span>' +
+            'Técnico Asignado' +
           '</div>' +
         '</td>' +
         '<td>' +
           '<div class="acta-sign-box">' +
             '<strong>' + receptorNombre.toUpperCase() + '</strong><br>' +
             'C.C. ' + receptorCedula + '<br>' +
-            '<span style="font-size: 0.76rem; color: #64748b;">Solicitante / Responsable de Punto</span>' +
+            'Solicitante / Responsable de Punto' +
           '</div>' +
         '</td>' +
       '</tr>' +
     '</table>' +
 
     '<div class="acta-footer-doc">' +
-      'Documento oficial generado automáticamente por el Sistema de Mesa de Ayuda de Dialimentos S.A.S. &bull; ' + fechaEmision +
+      'Documento generado automáticamente por el Sistema de Mesa de Ayuda de Dialimentos S.A.S. - ' + fechaEmision +
     '</div>';
 
   var wrapper = document.getElementById("actaDocumentoWrapper");
@@ -2864,83 +2860,117 @@ function verActaTicket(nroTicket) {
 }
 
 /**
- * Descarga el acta del ticket en formato PDF de alta fidelidad
- * Compatible con escritorio, tablets y teléfonos móviles
+ * Descarga el acta oficial en PDF de 1 SOLA PÁGINA
+ * 1. Primero intenta obtener el PDF oficial exacto del backend (Google Apps Script).
+ * 2. Si no responde o está offline, usa html2pdf para capturar directamente la hoja en 1 página.
  */
 function descargarActaPdf() {
   var sourceEl = document.getElementById("actaDocumentoWrapper");
-  if (!sourceEl) {
-    mostrarToast("No se encontró el contenido del acta para exportar.", "danger");
-    return;
-  }
-
   var nroTicket = (AppState.activeActaTicket && AppState.activeActaTicket.nroTicket) || "Ticket";
   var btn = document.getElementById("btnDescargarPdfActa");
   var txtOriginal = btn ? btn.innerHTML : "";
+
   if (btn) {
-    btn.innerHTML = '<span class="spinner-btn"></span> Generando PDF...';
+    btn.innerHTML = '<span class="spinner-btn"></span> Descargando...';
     btn.disabled = true;
   }
 
-  // Clonar para garantizar proporciones perfectas A4 incluso en teléfonos móviles
-  var clone = sourceEl.cloneNode(true);
-  clone.id = "actaPdfExportClone";
-  clone.classList.add("acta-pdf-print-mode");
-  clone.style.width = "780px";
-  clone.style.maxWidth = "780px";
-  clone.style.margin = "0";
-  clone.style.padding = "24px 28px";
-  clone.style.background = "#ffffff";
-  clone.style.position = "fixed";
-  clone.style.left = "-9999px";
-  clone.style.top = "0";
-  clone.style.zIndex = "-1000";
-  document.body.appendChild(clone);
-
-  var opt = {
-    margin: [8, 8, 8, 8],
-    filename: "Acta_" + nroTicket + ".pdf",
-    image: { type: "jpeg", quality: 0.98 },
-    html2canvas: {
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      scrollX: 0,
-      scrollY: 0,
-      windowWidth: 800
-    },
-    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
-  };
-
-  function limpiarBoton() {
+  function finalizar() {
     if (btn) {
       btn.innerHTML = txtOriginal;
       btn.disabled = false;
     }
-    if (document.getElementById("actaPdfExportClone")) {
-      document.body.removeChild(clone);
+  }
+
+  function descargarDesdeBase64(base64Data, filename) {
+    try {
+      var byteCharacters = atob(base64Data);
+      var byteNumbers = new Array(byteCharacters.length);
+      for (var i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      var byteArray = new Uint8Array(byteNumbers);
+      var blob = new Blob([byteArray], { type: "application/pdf" });
+      var link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = filename || ("Acta_" + nroTicket + ".pdf");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+      mostrarToast("Acta " + nroTicket + " descargada con éxito (1 página oficial).", "success");
+      finalizar();
+      return true;
+    } catch (e) {
+      console.warn("Fallo procesando base64:", e);
+      return false;
     }
   }
 
-  if (typeof html2pdf !== "undefined") {
-    html2pdf().set(opt).from(clone).save()
-      .then(function() {
-        limpiarBoton();
-        mostrarToast("Acta " + nroTicket + " descargada con éxito en PDF.", "success");
-      })
-      .catch(function(err) {
-        console.error("Error al exportar PDF con html2pdf:", err);
-        limpiarBoton();
-        imprimirActa();
-      });
-  } else {
-    limpiarBoton();
-    imprimirActa();
+  function generarPdfCliente() {
+    if (!sourceEl) {
+      finalizar();
+      return;
+    }
+    if (typeof html2pdf !== "undefined") {
+      var opt = {
+        margin: [8, 10, 8, 10],
+        filename: "Acta_" + nroTicket + ".pdf",
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        pagebreak: { mode: "avoid-all" }
+      };
+
+      html2pdf().set(opt).from(sourceEl).save()
+        .then(function() {
+          finalizar();
+          mostrarToast("Acta " + nroTicket + " descargada en 1 página (PDF).", "success");
+        })
+        .catch(function(err) {
+          console.error("Error html2pdf:", err);
+          finalizar();
+          imprimirActa();
+        });
+    } else {
+      finalizar();
+      imprimirActa();
+    }
   }
+
+  // 1. Si está ejecutándose en Google Apps Script
+  if (AppState.isGAS && typeof google !== "undefined" && google.script && google.script.run) {
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.success && res.base64) {
+          descargarDesdeBase64(res.base64, res.filename);
+        } else {
+          generarPdfCliente();
+        }
+      })
+      .withFailureHandler(function() {
+        generarPdfCliente();
+      })
+      .obtenerActaPdf(nroTicket);
+    return;
+  }
+
+  // 2. Si está en GitHub Pages / Modo Desacoplado: consultar API backend
+  llamarApiBackend("obtenerActaPdf", { nroTicket: nroTicket })
+    .then(function(res) {
+      if (res && res.success && res.base64) {
+        descargarDesdeBase64(res.base64, res.filename);
+      } else {
+        generarPdfCliente();
+      }
+    })
+    .catch(function() {
+      generarPdfCliente();
+    });
 }
 
 /**
- * Abre el diálogo de impresión / Guardar como PDF nativo del navegador
+ * Abre el diálogo de impresión configurado estrictamente para 1 sola página A4
  */
 function imprimirActa() {
   window.print();
