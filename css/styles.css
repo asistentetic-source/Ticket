@@ -2165,50 +2165,71 @@ textarea.form-control {
 }
 
 @media print {
+  /* 1. Ocultar del flujo absolutamente TODO lo que no sea el modal del acta */
+  body > *:not(#modalActaTicket) {
+    display: none !important;
+  }
+
+  /* 2. Reset estricto de html y body sin alturas forzadas que generen páginas en blanco */
   html, body {
     width: 100% !important;
-    height: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
     margin: 0 !important;
     padding: 0 !important;
     background: #ffffff !important;
+    background-image: none !important;
     overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
-  body * {
-    visibility: hidden !important;
-  }
-
-  #modalActaTicket,
-  #modalActaTicket .modal-backdrop,
-  #modalActaTicket .modal-container,
-  #actaDocumentoWrapper,
-  #actaDocumentoWrapper * {
-    visibility: visible !important;
-  }
-
+  /* 3. El modal entra en flujo normal estático desde el inicio de la página */
   #modalActaTicket {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
+    display: block !important;
+    position: static !important;
     width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
     margin: 0 !important;
     padding: 0 !important;
+    border: none !important;
     background: transparent !important;
     box-shadow: none !important;
+    backdrop-filter: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    page-break-before: avoid !important;
+    break-before: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 
   #modalActaTicket .modal-container {
+    display: block !important;
+    position: static !important;
     box-shadow: none !important;
     border: none !important;
+    border-radius: 0 !important;
     max-width: 100% !important;
     width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
     margin: 0 !important;
     padding: 0 !important;
     transform: none !important;
-    max-height: none !important;
     overflow: visible !important;
+    background: transparent !important;
+    page-break-before: avoid !important;
+    break-before: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 
+  /* Ocultar botones, cabecera de ventana y pie de ventana del modal */
   .modal-acta-header,
   .modal-acta-footer,
   .btn-close {
@@ -2216,25 +2237,72 @@ textarea.form-control {
   }
 
   .modal-acta-body {
+    display: block !important;
+    position: static !important;
     background: transparent !important;
     padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
     overflow: visible !important;
+    page-break-before: avoid !important;
+    break-before: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 
   #actaDocumentoWrapper,
   .acta-sheet {
+    display: block !important;
+    position: static !important;
     box-shadow: none !important;
     border: none !important;
+    border-radius: 0 !important;
     padding: 0 !important;
     margin: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
+    page-break-before: avoid !important;
+    break-before: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
-  .acta-table,
+  .acta-header {
+    margin-bottom: 8px !important;
+    padding-bottom: 6px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .acta-section-title {
+    margin-top: 8px !important;
+    margin-bottom: 4px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  .acta-table {
+    margin-bottom: 6px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
   .acta-signatures-table {
+    margin-top: 18px !important;
+    margin-bottom: 6px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .acta-footer-doc {
+    margin-top: 10px !important;
+    padding-top: 4px !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }

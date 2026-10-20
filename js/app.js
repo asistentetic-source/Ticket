@@ -2973,6 +2973,13 @@ function descargarActaPdf() {
  * Abre el diálogo de impresión configurado estrictamente para 1 sola página A4
  */
 function imprimirActa() {
+  document.body.classList.add("printing-acta-mode");
+  var limpiar = function() {
+    document.body.classList.remove("printing-acta-mode");
+    window.removeEventListener("afterprint", limpiar);
+  };
+  window.addEventListener("afterprint", limpiar);
+  setTimeout(limpiar, 4000);
   window.print();
 }
 
