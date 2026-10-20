@@ -158,6 +158,10 @@ function responderApi(action, data) {
         resultado = obtenerImagenDriveBase64(data.urlOId || data.url);
         break;
 
+      case "sincronizarPermisosEmpleados":
+        resultado = sincronizarPermisosEmpleados();
+        break;
+
       default:
         resultado = { success: false, message: "Acción no soportada: " + action };
         break;
@@ -247,11 +251,54 @@ function sheetToJson(sheetName) {
 // 4. API DE CATÁLOGOS Y AUTENTICACIÓN
 // ============================================================================
 /**
+ * Retorna los permisos automáticos predeterminados según el rol y área de un empleado
+ */
+function obtenerPermisosPorDefectoRol(tipoUsuario, area) {
+  var tipo = String(tipoUsuario || "").toLowerCase();
+  var a = String(area || "").toUpperCase();
+
+  if (tipo.indexOf("administradora") !== -1) {
+    return "GESTIONAR_COSTOS, VER_TODOS, BUSCAR, EDITAR_PLACA, CREAR";
+  }
+  if (tipo.indexOf("administrador") !== -1 || tipo.indexOf("coordinador") !== -1) {
+    if (a.indexOf("RRHH") !== -1 || a.indexOf("RECURSO") !== -1) {
+      return "RRHH, VER_TODOS, BUSCAR, CREAR";
+    }
+    return "ASIGNAR, CERRAR, BUSCAR, EDITAR_PLACA, VER_TODOS, PUNTOS, CREAR";
+  }
+  if (tipo.indexOf("tecnico") !== -1 || tipo.indexOf("técnico") !== -1) {
+    return "CERRAR, BUSCAR, EDITAR_PLACA, VER_TODOS, CREAR";
+  }
+  if (tipo.indexOf("reclutador") !== -1) {
+    return "RRHH, CREAR";
+  }
+  // Usuario normal (Empleado)
+  return "CREAR";
+}
+
+/**
  * Obtiene todos los catálogos maestros para inicializar la interfaz.
  */
 function obtenerCatalogos() {
   try {
     var empleados = sheetToJson(CONFIG.SHEETS.EMPLEADOS);
+    var sheetEmp = null;
+    try { sheetEmp = getSheetByName(CONFIG.SHEETS.EMPLEADOS); } catch(e) {}
+
+    // Auto-escribir permisos en la columna G de EMPLEADOS si alguna fila está vacía
+    empleados.forEach(function(emp) {
+      var permActual = String(emp["PERMISOS"] || emp["permisos"] || "").trim();
+      if (!permActual) {
+        var rolEmp = emp["TIPO USUARIO"] || "Empleado";
+        var areaEmp = emp["AREA"] || "";
+        var permCalc = obtenerPermisosPorDefectoRol(rolEmp, areaEmp);
+        emp["PERMISOS"] = permCalc;
+        if (sheetEmp && emp._rowIndex) {
+          try { sheetEmp.getRange(emp._rowIndex, 7).setValue(permCalc); } catch(err) {}
+        }
+      }
+    });
+
     var puntos = sheetToJson(CONFIG.SHEETS.PUNTOS);
     var tiposServicio = sheetToJson(CONFIG.SHEETS.TIPO_SERVICIO);
     var tiposFalla = sheetToJson(CONFIG.SHEETS.TIPO_FALLA);
@@ -657,6 +704,9 @@ function agregarEmpleadoIndividual(datos) {
     var tipoUsuario = String(datos.tipoUsuario || "Empleado").trim();
     var area = String(datos.area || "OPERACIONES").trim().toUpperCase();
     var permisos = String(datos.permisos || "").trim();
+    if (!permisos) {
+      permisos = obtenerPermisosPorDefectoRol(tipoUsuario, area);
+    }
 
     if (!cedula || !nombres) {
       return { success: false, message: "La cédula y los nombres completos son obligatorios." };
@@ -718,6 +768,9 @@ function agregarEmpleadosMasivo(listaEmpleados) {
       var tipoUsuario = String(emp.tipoUsuario || emp["TIPO USUARIO"] || emp.rol || "Empleado").trim();
       var area = String(emp.area || emp.AREA || "OPERACIONES").trim().toUpperCase();
       var permisos = String(emp.permisos || emp.PERMISOS || emp[6] || "").trim();
+      if (!permisos) {
+        permisos = obtenerPermisosPorDefectoRol(tipoUsuario, area);
+      }
 
       var cedulaNumerica = cedula.replace(/[^0-9]/g, "");
       if (!cedulaNumerica || !nombres) {
@@ -742,9 +795,9 @@ function agregarEmpleadosMasivo(listaEmpleados) {
       };
     }
 
-    // Inserción en bloque para alta velocidad
+    // Inserción en bloque para alta velocidad (7 columnas con columna G de Permisos)
     var lastRow = sheet.getLastRow();
-    sheet.getRange(lastRow + 1, 1, filasParaInsertar.length, 6).setValues(filasParaInsertar);
+    sheet.getRange(lastRow + 1, 1, filasParaInsertar.length, 7).setValues(filasParaInsertar);
 
     return {
       success: true,
@@ -756,6 +809,33 @@ function agregarEmpleadosMasivo(listaEmpleados) {
   } catch (error) {
     Logger.log("Error en agregarEmpleadosMasivo: " + error.message);
     return { success: false, message: error.message };
+  }
+}
+
+/**
+ * Recorre la hoja EMPLEADOS y rellena la columna G con los permisos predeterminados si está vacía.
+ */
+function sincronizarPermisosEmpleados() {
+  try {
+    var sheet = getSheetByName(CONFIG.SHEETS.EMPLEADOS);
+    var data = sheet.getDataRange().getValues();
+    if (data.length <= 1) return { success: true, actualizados: 0 };
+
+    var actualizados = 0;
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i];
+      var perm = String(row[6] || "").trim(); // Columna G: PERMISOS
+      if (!perm) {
+        var rol = String(row[4] || "Empleado");
+        var area = String(row[5] || "");
+        var permAsignar = obtenerPermisosPorDefectoRol(rol, area);
+        sheet.getRange(i + 1, 7).setValue(permAsignar);
+        actualizados++;
+      }
+    }
+    return { success: true, actualizados: actualizados };
+  } catch(e) {
+    return { success: false, message: e.message };
   }
 }
 
