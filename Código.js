@@ -269,7 +269,8 @@ function obtenerCatalogos() {
         email: t["EMAIL"] || "",
         celular: t["CELULAR"] || "",
         tipoUsuario: t["TIPO USUARIO"] || "Tecnico",
-        area: String(t["AREA"] || "").toUpperCase().trim()
+        area: String(t["AREA"] || "").toUpperCase().trim(),
+        permisos: String(t["PERMISOS"] || t["permisos"] || "").trim()
       };
     });
 
@@ -446,7 +447,8 @@ function login(cedula) {
           cedula: CONFIG.ADMINISTRADORA.USUARIO,
           nombres: CONFIG.ADMINISTRADORA.NOMBRES,
           tipoUsuario: CONFIG.ADMINISTRADORA.TIPO_USUARIO,
-          area: CONFIG.ADMINISTRADORA.AREA
+          area: CONFIG.ADMINISTRADORA.AREA,
+          permisos: "GESTIONAR_COSTOS,VER_TODOS,FILTRAR,BUSCAR,EDITAR_PLACA"
         },
         message: "Perfil de Administradora detectado."
       };
@@ -464,6 +466,7 @@ function login(cedula) {
         var rol = String(emp["TIPO USUARIO"] || "Empleado").trim();
         var rolLower = rol.toLowerCase();
         var areaEmp = String(emp["AREA"] || "").toUpperCase().trim();
+        var permisosEmp = String(emp["PERMISOS"] || emp["permisos"] || "").trim();
 
         // Normalizar área registrada en la hoja de cálculo
         var areaNormalizada = "MANTENIMIENTO";
@@ -485,7 +488,8 @@ function login(cedula) {
               cedula: String(emp["CEDULA"]),
               nombres: emp["NOMBRES APELLIDOS"],
               tipoUsuario: rol,
-              area: areaNormalizada
+              area: areaNormalizada,
+              permisos: permisosEmp
             },
             message: "Perfil administrativo detectado."
           };
@@ -497,7 +501,8 @@ function login(cedula) {
           email: emp["EMAIL"],
           celular: emp["CELULAR"],
           tipoUsuario: rol,
-          area: areaEmp
+          area: areaEmp,
+          permisos: permisosEmp
         };
         break;
       }
@@ -538,7 +543,8 @@ function loginAdmin(cedula, password, area) {
             email: "",
             celular: "",
             tipoUsuario: CONFIG.ADMINISTRADORA.TIPO_USUARIO,
-            area: CONFIG.ADMINISTRADORA.AREA
+            area: CONFIG.ADMINISTRADORA.AREA,
+            permisos: "GESTIONAR_COSTOS,VER_TODOS,FILTRAR,BUSCAR,EDITAR_PLACA"
           }
         };
       } else {
@@ -558,6 +564,7 @@ function loginAdmin(cedula, password, area) {
       if (cedulaEmp === cedulaBuscada && cedulaBuscada !== "") {
         var rol = String(emp["TIPO USUARIO"] || "").trim();
         var areaEmp = String(emp["AREA"] || "").toUpperCase().trim();
+        var permisosEmp = String(emp["PERMISOS"] || emp["permisos"] || "").trim();
 
         // Determinar área normalizada automáticamente si no viene provista
         var areaNormalizada = areaLimpia;
@@ -583,7 +590,8 @@ function loginAdmin(cedula, password, area) {
           email: emp["EMAIL"],
           celular: emp["CELULAR"],
           tipoUsuario: areaNormalizada === "RRHH" ? "Reclutador" : (rol || "Administrador"),
-          area: areaNormalizada
+          area: areaNormalizada,
+          permisos: permisosEmp
         };
         break;
       }
@@ -648,6 +656,7 @@ function agregarEmpleadoIndividual(datos) {
     var celular = String(datos.celular || "").trim();
     var tipoUsuario = String(datos.tipoUsuario || "Empleado").trim();
     var area = String(datos.area || "OPERACIONES").trim().toUpperCase();
+    var permisos = String(datos.permisos || "").trim();
 
     if (!cedula || !nombres) {
       return { success: false, message: "La cédula y los nombres completos son obligatorios." };
@@ -665,8 +674,8 @@ function agregarEmpleadoIndividual(datos) {
       }
     }
 
-    // Insertar fila: CEDULA, NOMBRES APELLIDOS, EMAIL, CELULAR, TIPO USUARIO, AREA
-    sheet.appendRow([cedula, nombres, email, celular, tipoUsuario, area]);
+    // Insertar fila: CEDULA, NOMBRES APELLIDOS, EMAIL, CELULAR, TIPO USUARIO, AREA, PERMISOS
+    sheet.appendRow([cedula, nombres, email, celular, tipoUsuario, area, permisos]);
 
     return {
       success: true,
@@ -708,6 +717,7 @@ function agregarEmpleadosMasivo(listaEmpleados) {
       var celular = String(emp.celular || emp.CELULAR || emp.telefono || "").trim();
       var tipoUsuario = String(emp.tipoUsuario || emp["TIPO USUARIO"] || emp.rol || "Empleado").trim();
       var area = String(emp.area || emp.AREA || "OPERACIONES").trim().toUpperCase();
+      var permisos = String(emp.permisos || emp.PERMISOS || emp[6] || "").trim();
 
       var cedulaNumerica = cedula.replace(/[^0-9]/g, "");
       if (!cedulaNumerica || !nombres) {
@@ -722,7 +732,7 @@ function agregarEmpleadosMasivo(listaEmpleados) {
       }
 
       cedulasExistentes[cedulaNumerica] = true;
-      filasParaInsertar.push([cedula, nombres, email, celular, tipoUsuario, area]);
+      filasParaInsertar.push([cedula, nombres, email, celular, tipoUsuario, area, permisos]);
     }
 
     if (filasParaInsertar.length === 0) {

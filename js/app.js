@@ -36,6 +36,7 @@ async function llamarApiBackend(action, data = {}) {
 // Estado global de la aplicación
 const AppState = {
   currentUser: null,
+  currentUserPermisosSet: null,
   catalogos: null,
   tickets: [],
   activeTicket: null,
@@ -331,6 +332,97 @@ function onAreaSolicitudChange() {
 }
 
 // ============================================================================
+// SISTEMA GRANULAR DE PERMISOS (Columna G: PERMISOS en Google Sheets)
+// ============================================================================
+/**
+ * Resuelve el conjunto de permisos activos para un usuario.
+ * Prioridad 1: Palabras clave en la columna G: PERMISOS del archivo Excel.
+ * Prioridad 2 (Fallback): Permisos predeterminados según su TIPO USUARIO (Rol).
+ */
+function obtenerPermisosUsuario(user) {
+  if (!user) return new Set();
+  const raw = String(user.permisos || "").trim().toUpperCase();
+  const tipo = String(user.tipoUsuario || "").toLowerCase();
+  const area = normalizarArea(user.area);
+
+  // 1. Si el usuario tiene permisos definidos explícitamente en la columna G:
+  if (raw) {
+    const lista = raw.split(/[,;|]+/).map(p => p.trim()).filter(Boolean);
+    const setPermisos = new Set(lista);
+
+    // Comodín de administración total
+    if (setPermisos.has("TODO") || setPermisos.has("ADMIN") || setPermisos.has("ALL") || setPermisos.has("*")) {
+      return new Set([
+        "CREAR", "ASIGNAR", "CERRAR", "FILTRAR", "BUSCAR", 
+        "VER_TODOS", "EDITAR_PLACA", "GESTIONAR_COSTOS", "RRHH", "PUNTOS"
+      ]);
+    }
+
+    // Compatibilidad de sinónimos habituales
+    if (setPermisos.has("BUSCAR")) setPermisos.add("FILTRAR");
+    if (setPermisos.has("FILTRAR")) setPermisos.add("BUSCAR");
+    if (setPermisos.has("COSTOS") || setPermisos.has("GESTIONAR")) setPermisos.add("GESTIONAR_COSTOS");
+    if (setPermisos.has("EMPLEADOS")) setPermisos.add("RRHH");
+
+    // Por defecto todo usuario registrado puede crear solicitudes a menos que se especifique NO_CREAR
+    if (!setPermisos.has("NO_CREAR") && !setPermisos.has("SIN_CREAR")) {
+      setPermisos.add("CREAR");
+    }
+
+    return setPermisos;
+  }
+
+  // 2. FALLBACK RETROCOMPATIBLE: Si la columna G está vacía en Google Sheets,
+  // inferir los permisos por defecto según el TIPO USUARIO para no bloquear a nadie.
+  const fallback = new Set();
+  fallback.add("CREAR"); // Todo usuario registrado puede crear solicitudes
+
+  if (tipo === "administradora") {
+    fallback.add("GESTIONAR_COSTOS");
+    fallback.add("VER_TODOS");
+    fallback.add("FILTRAR");
+    fallback.add("BUSCAR");
+    fallback.add("EDITAR_PLACA");
+  } else if (tipo.includes("administrador") || tipo.includes("coordinador")) {
+    fallback.add("ASIGNAR");
+    fallback.add("CERRAR");
+    fallback.add("FILTRAR");
+    fallback.add("BUSCAR");
+    fallback.add("VER_TODOS");
+    fallback.add("EDITAR_PLACA");
+    fallback.add("PUNTOS");
+    if (area === "RRHH" || area.includes("HUMAN")) fallback.add("RRHH");
+  } else if (tipo.includes("tecnico") || tipo.includes("técnico")) {
+    fallback.add("CERRAR");
+    fallback.add("FILTRAR");
+    fallback.add("BUSCAR");
+    fallback.add("VER_TODOS");
+    fallback.add("EDITAR_PLACA");
+  } else if (tipo.includes("reclutador")) {
+    fallback.add("RRHH");
+  }
+
+  return fallback;
+}
+
+/**
+ * Consulta si el usuario logueado actualmente posee un permiso específico.
+ */
+function tienePermiso(permiso) {
+  if (!AppState.currentUser) return false;
+  if (!AppState.currentUserPermisosSet) {
+    AppState.currentUserPermisosSet = obtenerPermisosUsuario(AppState.currentUser);
+  }
+  const p = String(permiso).trim().toUpperCase();
+  return AppState.currentUserPermisosSet.has(p) || 
+         AppState.currentUserPermisosSet.has("TODO") || 
+         AppState.currentUserPermisosSet.has("ADMIN");
+}
+
+window.tienePermiso = tienePermiso;
+window.obtenerPermisosUsuario = obtenerPermisosUsuario;
+
+// ============================================================================
 // 2. AUTENTICACIÓN Y SESIÓN
 // ============================================================================
 function verificarSesion() {
@@ -341,6 +433,7 @@ function verificarSesion() {
   } catch (e) {}
 
   AppState.currentUser = null;
+  AppState.currentUserPermisosSet = null;
   AppState.pendingAdminUser = null;
 
   // Siempre mostrar la pantalla de login al iniciar o recargar
@@ -480,6 +573,7 @@ function cerrarSesion() {
   detenerAutoRefresco();
   localStorage.removeItem("DIALIMENTOS_USER");
   AppState.currentUser = null;
+  AppState.currentUserPermisosSet = null;
   AppState.pendingAdminUser = null;
   AppState.filtros.area = "TODAS";
   AppState.filtros.estado = "TODOS";
@@ -589,17 +683,23 @@ function mostrarAppPrincipal() {
   document.getElementById("loginView").style.display = "none";
   document.getElementById("mainAppView").style.display = "block";
 
+  // Inicializar conjunto de permisos del usuario activo
+  AppState.currentUserPermisosSet = obtenerPermisosUsuario(AppState.currentUser);
+
   // Mostrar datos del usuario activo
   document.getElementById("headerUserName").textContent = AppState.currentUser.nombres;
-  document.getElementById("headerUserRole").textContent = AppState.currentUser.tipoUsuario;
+  const roleEl = document.getElementById("headerUserRole");
+  if (roleEl) {
+    roleEl.textContent = AppState.currentUser.tipoUsuario;
+    const arrayPermisos = Array.from(AppState.currentUserPermisosSet || []);
+    roleEl.title = "Permisos activos: " + (arrayPermisos.join(", ") || "Por defecto de su rol");
+  }
   document.getElementById("headerUserInitial").textContent = AppState.currentUser.nombres.charAt(0);
 
   // Ajustar permisos visuales según rol y área
-  const esAdmin = AppState.currentUser.tipoUsuario.toLowerCase().includes("administrador");
   const esAdministradora = AppState.currentUser.tipoUsuario.toLowerCase() === "administradora";
-  const esTecnico = AppState.currentUser.tipoUsuario.toLowerCase().includes("tecnico") || AppState.currentUser.tipoUsuario.toLowerCase().includes("técnico");
-  const esReclutador = AppState.currentUser.tipoUsuario.toLowerCase().includes("reclutador");
   const areaUser = normalizarArea(AppState.currentUser.area);
+  const puedeVerTodos = tienePermiso("VER_TODOS");
 
   // Configurar filtro de área
   const selArea = document.getElementById("filtroArea");
@@ -613,7 +713,7 @@ function mostrarAppPrincipal() {
       selArea.style.opacity = "0.85";
       selArea.title = "Fijado a área de Mantenimiento";
     }
-  } else if ((esAdmin || esTecnico) && (areaUser === "TIC" || areaUser === "MANTENIMIENTO")) {
+  } else if (puedeVerTodos && (areaUser === "TIC" || areaUser === "MANTENIMIENTO")) {
     const valorArea = areaUser === "TIC" ? "TIC" : "Mantenimiento";
     AppState.filtros.area = valorArea;
     if (selArea) {
@@ -632,18 +732,31 @@ function mostrarAppPrincipal() {
     }
   }
 
-  // Mostrar panel de acciones RRHH solo para Reclutador o Administrador de RRHH
+  // Mostrar panel de acciones RRHH solo si tiene permiso RRHH
   const rrhhContainer = document.getElementById("rrhhActionsContainer");
   if (rrhhContainer) {
-    rrhhContainer.style.display = (esReclutador || (esAdmin && areaUser === "RRHH")) ? "flex" : "none";
+    rrhhContainer.style.display = tienePermiso("RRHH") ? "flex" : "none";
   }
 
-  // Mostrar filtros de Punto y Rango de Fechas solo para Administradores y Técnicos
-  const mostrarFiltrosExtra = esAdmin || esTecnico || esAdministradora;
+  // Mostrar botón Añadir Punto si tiene permiso PUNTOS o ASIGNAR
+  const btnNuevoPunto = document.getElementById("btnNuevoPuntoHeader");
+  if (btnNuevoPunto) {
+    btnNuevoPunto.style.display = (tienePermiso("PUNTOS") || tienePermiso("ASIGNAR")) ? "" : "none";
+  }
+
+  // Mostrar filtros de Punto y Rango de Fechas según permiso de filtrado / búsqueda
+  const mostrarFiltrosExtra = tienePermiso("FILTRAR") || tienePermiso("BUSCAR");
   const elFiltroPunto = document.getElementById("filtroPunto");
   const elDateRangeWrapper = document.getElementById("dateRangeWrapper");
   if (elFiltroPunto) elFiltroPunto.style.display = mostrarFiltrosExtra ? "" : "none";
   if (elDateRangeWrapper) elDateRangeWrapper.style.display = mostrarFiltrosExtra ? "inline-block" : "none";
+
+  // Mostrar botón de creación de tickets según permiso CREAR
+  const puedeCrear = tienePermiso("CREAR");
+  const btnFab = document.getElementById("btnFabNuevoTicket");
+  if (btnFab) btnFab.style.display = puedeCrear ? "flex" : "none";
+  const btnNuevoHdr = document.getElementById("btnCrearTicketPrincipal");
+  if (btnNuevoHdr) btnNuevoHdr.style.display = puedeCrear ? "" : "none";
 
   // Inicializar rango de fechas: del día 1 del mes actual al día de hoy
   if (mostrarFiltrosExtra) {
@@ -732,13 +845,10 @@ function cargarTickets(esSilencioso = false, onComplete = null) {
   if (!AppState.currentUser) return;
   const filtros = { ...AppState.filtros };
 
-  // Empleado y Reclutador: solo ven sus propios tickets
   const rol = String(AppState.currentUser.tipoUsuario || "").toLowerCase();
   const esAdministradora = rol === "administradora";
-  const soloPropio = rol === 'empleado' || rol === 'reclutador';
-  if (soloPropio) {
-    filtros.cedulaSolicitante = AppState.currentUser.cedula;
-  }
+  const puedeVerTodos = tienePermiso("VER_TODOS");
+  const areaUser = normalizarArea(AppState.currentUser.area);
 
   // Administradora: ve TODOS los tickets de Mantenimiento
   if (esAdministradora) {
@@ -747,14 +857,17 @@ function cargarTickets(esSilencioso = false, onComplete = null) {
     delete filtros.cedulaResponsable;
     filtros.userRole = AppState.currentUser.tipoUsuario;
     filtros.userArea = AppState.currentUser.area;
+  } else if (!puedeVerTodos) {
+    // Si no tiene permiso de ver todos, solo ve sus tickets propios
+    filtros.cedulaSolicitante = AppState.currentUser.cedula;
+    filtros.userRole = AppState.currentUser.tipoUsuario;
+    filtros.userArea = AppState.currentUser.area;
   } else {
-    // Administrador o Técnico: restringir estrictamente a los casos de su área asignada
-    const esAdmin = rol.includes("administrador");
-    const esTecnico = rol.includes("tecnico") || rol.includes("técnico");
-    const areaUser = normalizarArea(AppState.currentUser.area);
-    if ((esAdmin || esTecnico) && (areaUser === "TIC" || areaUser === "MANTENIMIENTO")) {
+    // Si tiene permiso de ver todos, filtrar por su área si pertenece a TIC o Mantenimiento
+    if (areaUser === "TIC" || areaUser === "MANTENIMIENTO") {
       filtros.area = areaUser === "TIC" ? "TIC" : "Mantenimiento";
     }
+    delete filtros.cedulaSolicitante;
     filtros.userArea = normalizarArea(AppState.currentUser.area);
     filtros.userRole = AppState.currentUser.tipoUsuario;
     filtros.userCedula = AppState.currentUser.cedula;
@@ -773,18 +886,14 @@ function cargarTickets(esSilencioso = false, onComplete = null) {
       return;
     }
     if (res.success) {
-      // Blindaje local: asegurar que administradores y técnicos solo almacenen y contabilicen tickets de su área
-      // Excepción: Administradora siempre ve todos los de Mantenimiento
-      const r = String(AppState.currentUser.tipoUsuario || "").toLowerCase();
-      const esAdm = r.includes("administrador");
-      const esTec = r.includes("tecnico") || r.includes("técnico");
-      const esAdministradora = r === "administradora";
       const aUser = normalizarArea(AppState.currentUser.area);
 
       if (esAdministradora) {
         // Administradora: todos los tickets de Mantenimiento
         AppState.tickets = (res.tickets || []).filter(t => normalizarArea(t.area) === "MANTENIMIENTO");
-      } else if ((esAdm || esTec) && (aUser === "TIC" || aUser === "MANTENIMIENTO")) {
+      } else if (!puedeVerTodos) {
+        AppState.tickets = (res.tickets || []).filter(t => String(t.cedulaSolicitante).trim() === String(AppState.currentUser.cedula).trim());
+      } else if (aUser === "TIC" || aUser === "MANTENIMIENTO") {
         AppState.tickets = (res.tickets || []).filter(t => normalizarArea(t.area) === aUser);
       } else {
         AppState.tickets = res.tickets || [];
@@ -841,11 +950,9 @@ function renderizarTablaTickets() {
   const tbody = document.getElementById("ticketsTableBody");
   if (!tbody) return;
 
-  const esAdmin = AppState.currentUser.tipoUsuario.toLowerCase().includes("administrador");
   const esAdministradora = AppState.currentUser.tipoUsuario.toLowerCase() === "administradora";
-  const esTecnico = AppState.currentUser.tipoUsuario.toLowerCase().includes("tecnico") || AppState.currentUser.tipoUsuario.toLowerCase().includes("técnico");
-  const esReclutador = AppState.currentUser.tipoUsuario.toLowerCase().includes("reclutador");
   const areaUser = normalizarArea(AppState.currentUser.area);
+  const puedeVerTodos = tienePermiso("VER_TODOS");
 
   const filtroPuntoVal = (AppState.filtros.punto || "TODOS");
   const filtroFecIni = AppState.filtros.fechaInicio || "";
@@ -853,10 +960,10 @@ function renderizarTablaTickets() {
   const filtroBusq = (AppState.filtros.busqueda || "").toLowerCase();
 
   const ticketsAMostrar = AppState.tickets.filter(t => {
-    // Filtro de área por rol
+    // Filtro de área por rol / alcance
     if (esAdministradora) {
       if (normalizarArea(t.area) !== "MANTENIMIENTO") return false;
-    } else if ((esAdmin || esTecnico) && (areaUser === "TIC" || areaUser === "MANTENIMIENTO")) {
+    } else if (puedeVerTodos && (areaUser === "TIC" || areaUser === "MANTENIMIENTO")) {
       if (normalizarArea(t.area) !== areaUser) return false;
     }
     // Filtro por estado
@@ -894,22 +1001,22 @@ function renderizarTablaTickets() {
     const areaTicketNorm = normalizarArea(t.area);
     const esMismaArea = !areaUser || areaUser === areaTicketNorm;
     
-    // Botones de acción contextuales según rol y estado
+    // Botones de acción contextuales según permisos y estado
     let botonesAccion = `<button class="btn btn-secondary btn-sm" onclick="verDetalleTicket('${t.nroTicket}')">Ver</button>`;
 
-    if (esAdmin && esMismaArea && t.estado.toUpperCase() === "ABIERTO") {
+    if (tienePermiso("ASIGNAR") && esMismaArea && t.estado.toUpperCase() === "ABIERTO") {
       botonesAccion += ` <button class="btn btn-primary btn-sm" onclick="abrirModalAsignar('${t.nroTicket}')">Asignar</button>`;
     }
 
-    if ((esTecnico || esAdmin) && esMismaArea && (t.estado.toUpperCase() === "PROCESO" || t.estado.toUpperCase() === "PENDIENTE")) {
+    if (tienePermiso("CERRAR") && esMismaArea && (t.estado.toUpperCase() === "PROCESO" || t.estado.toUpperCase() === "PENDIENTE")) {
       const esPend = t.estado.toUpperCase() === "PENDIENTE";
       const txtBtn = esPend ? "Reanudar / Gestionar" : "Cerrar";
       const clsBtn = esPend ? "btn-warning" : "btn-success";
       botonesAccion += ` <button class="btn ${clsBtn} btn-sm" onclick="abrirModalCierre('${t.nroTicket}')">${txtBtn}</button>`;
     }
 
-    // Botón exclusivo para la Administradora
-    if (esAdministradora) {
+    // Botón para Administradora o usuarios con permiso GESTIONAR_COSTOS
+    if (tienePermiso("GESTIONAR_COSTOS") || esAdministradora) {
       botonesAccion += ` <button class="btn btn-sm" style="background: rgba(217, 119, 6, 0.12); border: 1px solid rgba(217, 119, 6, 0.35); color: #b45309; font-weight: 600;" onclick="abrirModalAdministradora('${t.nroTicket}')">💼 Gestionar</button>`;
     }
 
@@ -923,7 +1030,9 @@ function renderizarTablaTickets() {
         <td class="col-servicio"><strong>${t.tipoServicio}</strong><br><small style="color: var(--text-dim);">📍 ${t.puntoServicio}</small></td>
         <td class="col-equipo">
           <div style="font-weight: 600;">⚙️ ${t.descripcionEquipo || 'Sin equipo'}</div>
-          <span class="badge-plate" style="font-size: 0.72rem; cursor: pointer;" title="Clic para modificar placa" onclick="abrirModalEditarPlaca('${t.nroTicket}', '${t.placa}')">${t.placa || 'Sin Placa'} ✏️</span>
+          ${tienePermiso("EDITAR_PLACA")
+            ? `<span class="badge-plate" style="font-size: 0.72rem; cursor: pointer;" title="Clic para modificar placa" onclick="abrirModalEditarPlaca('${t.nroTicket}', '${t.placa}')">${t.placa || 'Sin Placa'} ✏️</span>`
+            : `<span class="badge-plate" style="font-size: 0.72rem;" title="Placa del equipo">${t.placa || 'Sin Placa'}</span>`}
         </td>
         <td class="col-desc" style="max-width: 220px; white-space: normal; line-height: 1.35;">
           ${t.descripcionSolicitud}
@@ -933,12 +1042,12 @@ function renderizarTablaTickets() {
         <td class="col-resp">
           <span class="resp-label" style="display: none;">👤 Responsable: </span>
           ${t.responsable ? `<span>👤 ${t.responsable}</span>` : '<span style="color: var(--text-dim);">👤 Sin Asignar</span>'}
-          ${esAdministradora && t.proveedor ? `<br><small style="color: var(--text-muted); font-size: 0.74rem;">🏭 ${t.proveedor}</small>` : ''}
+          ${(esAdministradora || tienePermiso("GESTIONAR_COSTOS")) && t.proveedor ? `<br><small style="color: var(--text-muted); font-size: 0.74rem;">🏭 ${t.proveedor}</small>` : ''}
         </td>
         <td class="col-estado">
           <span class="badge-tag ${estadoClass}">${t.estado}</span>
-          ${esAdministradora && t.aprobacion ? `<br><span style="display: inline-block; margin-top: 4px; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-weight: 500;">📋 ${t.aprobacion}</span>` : ''}
-          ${esAdministradora && t.costo ? `<br><span style="display: inline-block; margin-top: 2px; font-size: 0.72rem; padding: 1px 5px; border-radius: 4px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-weight: 600;">💰 ${t.costo}</span>` : ''}
+          ${(esAdministradora || tienePermiso("GESTIONAR_COSTOS")) && t.aprobacion ? `<br><span style="display: inline-block; margin-top: 4px; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-weight: 500;">📋 ${t.aprobacion}</span>` : ''}
+          ${(esAdministradora || tienePermiso("GESTIONAR_COSTOS")) && t.costo ? `<br><span style="display: inline-block; margin-top: 2px; font-size: 0.72rem; padding: 1px 5px; border-radius: 4px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-weight: 600;">💰 ${t.costo}</span>` : ''}
         </td>
         <td class="col-acciones">
           <div class="actions-container">
@@ -954,13 +1063,12 @@ function renderizarTablaTickets() {
 function onFiltroChange() {
   const rol = String(AppState.currentUser && AppState.currentUser.tipoUsuario || "").toLowerCase();
   const esAdministradora = rol === "administradora";
-  const esAdmin = rol.includes("administrador");
-  const esTecnico = rol.includes("tecnico") || rol.includes("técnico");
+  const puedeVerTodos = tienePermiso("VER_TODOS");
   const areaUser = normalizarArea(AppState.currentUser && AppState.currentUser.area);
 
   if (esAdministradora) {
     AppState.filtros.area = "Mantenimiento";
-  } else if ((esAdmin || esTecnico) && (areaUser === "TIC" || areaUser === "MANTENIMIENTO")) {
+  } else if (puedeVerTodos && (areaUser === "TIC" || areaUser === "MANTENIMIENTO")) {
     AppState.filtros.area = areaUser === "TIC" ? "TIC" : "Mantenimiento";
   } else {
     AppState.filtros.area = document.getElementById("filtroArea").value;
@@ -1804,10 +1912,10 @@ function verDetalleTicket(nroTicket) {
   const cardAdmin = document.getElementById("detFaseAdminCard");
   const tieneDatosAdmin = !!(t.costo || t.aprobacion || t.obsAdmin || t.consultaAdmin || t.proveedor);
   const rolUserActivo = String(AppState.currentUser && AppState.currentUser.tipoUsuario || "").toLowerCase();
-  const esAdmOAdmin = rolUserActivo === "administradora" || rolUserActivo.includes("administrador");
+  const puedeGestionarCostos = tienePermiso("GESTIONAR_COSTOS") || rolUserActivo === "administradora" || rolUserActivo.includes("administrador");
 
   if (cardAdmin) {
-    if (tieneDatosAdmin || esAdmOAdmin) {
+    if (tieneDatosAdmin || puedeGestionarCostos) {
       cardAdmin.style.display = "block";
       const elCosto = document.getElementById("detCosto");
       if (elCosto) elCosto.textContent = t.costo || "Sin costo registrado";
@@ -1826,7 +1934,7 @@ function verDetalleTicket(nroTicket) {
 
   const btnAdminContainer = document.getElementById("detBtnAdminContainer");
   if (btnAdminContainer) {
-    btnAdminContainer.style.display = (rolUserActivo === "administradora") ? "block" : "none";
+    btnAdminContainer.style.display = (tienePermiso("GESTIONAR_COSTOS") || rolUserActivo === "administradora") ? "block" : "none";
   }
 
   abrirModal("modalDetalleTicket");
@@ -2098,13 +2206,15 @@ function cambiarTabEmpleados(tab) {
 /** Guarda un empleado individual en la hoja EMPLEADOS */
 function guardarEmpleadoIndividual(e) {
   e.preventDefault();
+  const elPermisos = document.getElementById('empPermisos');
   const datos = {
     cedula: document.getElementById('empCedula').value.trim(),
     nombres: document.getElementById('empNombres').value.trim().toUpperCase(),
     email: document.getElementById('empEmail').value.trim(),
     celular: document.getElementById('empCelular').value.trim(),
     tipoUsuario: document.getElementById('empTipoUsuario').value,
-    area: document.getElementById('empArea').value.trim().toUpperCase()
+    area: document.getElementById('empArea').value.trim().toUpperCase(),
+    permisos: elPermisos ? elPermisos.value.trim().toUpperCase() : ""
   };
 
   if (!datos.cedula || !datos.nombres || !datos.email || !datos.celular) {
@@ -2182,7 +2292,8 @@ function procesarArchivoExcelEmpleados(input) {
             email: String(row[2] || '').trim(),
             celular: String(row[3] || '').trim(),
             tipoUsuario: String(row[4] || 'Empleado').trim() || 'Empleado',
-            area: String(row[5] || 'OPERACIONES').trim().toUpperCase() || 'OPERACIONES'
+            area: String(row[5] || 'OPERACIONES').trim().toUpperCase() || 'OPERACIONES',
+            permisos: String(row[6] || '').trim().toUpperCase()
           };
         })
         .filter(function(emp) { return emp.cedula !== '' && emp.nombres !== ''; });
@@ -2213,7 +2324,8 @@ function analizarTextoPegado() {
         email: cols[2] || '',
         celular: cols[3] || '',
         tipoUsuario: cols[4] || 'Empleado',
-        area: (cols[5] || 'OPERACIONES').toUpperCase()
+        area: (cols[5] || 'OPERACIONES').toUpperCase(),
+        permisos: (cols[6] || '').toUpperCase()
       };
     })
     .filter(function(emp) { return emp.cedula !== '' && emp.nombres !== ''; });
@@ -2242,6 +2354,7 @@ function mostrarVistaPreviewMasivo() {
       <td>${emp.celular}</td>
       <td><span style="font-size:0.75rem; background: rgba(99,102,241,0.15); color:#818cf8; padding: 0.15rem 0.45rem; border-radius: 4px;">${emp.tipoUsuario}</span></td>
       <td style="font-size:0.75rem;">${emp.area}</td>
+      <td style="font-size:0.72rem; color: var(--text-muted);">${emp.permisos || '<em style="color: var(--text-dim);">Por rol</em>'}</td>
     </tr>`;
   }).join('');
 
@@ -2310,13 +2423,14 @@ function ejecutarImportacionMasiva() {
 function descargarPlantillaExcel() {
   try {
     const wb = XLSX.utils.book_new();
-    const headers = ['CEDULA', 'NOMBRES APELLIDOS', 'EMAIL', 'CELULAR', 'TIPO USUARIO', 'AREA'];
+    const headers = ['CEDULA', 'NOMBRES APELLIDOS', 'EMAIL', 'CELULAR', 'TIPO USUARIO', 'AREA', 'PERMISOS'];
     const ejemplos = [
-      ['1022922805', 'JUAN DAVID PINEDA', 'jdpineda@dialimentos.com.co', '3118019926', 'Empleado', 'OPERACIONES']
+      ['1022922805', 'JUAN DAVID PINEDA', 'jdpineda@dialimentos.com.co', '3118019926', 'Empleado', 'OPERACIONES', 'CREAR'],
+      ['79565579', 'JEOFFREY PARDO DIAZ', 'pardo@dialimentos.com.co', '3186666686', 'Administrador', 'TIC', 'ASIGNAR, CERRAR, FILTRAR, BUSCAR, EDITAR_PLACA, VER_TODOS']
     ];
     const ws = XLSX.utils.aoa_to_sheet([headers, ...ejemplos]);
     // Ancho de columnas
-    ws['!cols'] = [{ wch: 14 }, { wch: 30 }, { wch: 32 }, { wch: 14 }, { wch: 18 }, { wch: 16 }];
+    ws['!cols'] = [{ wch: 14 }, { wch: 30 }, { wch: 32 }, { wch: 14 }, { wch: 18 }, { wch: 16 }, { wch: 35 }];
     XLSX.utils.book_append_sheet(wb, ws, 'Empleados');
     XLSX.writeFile(wb, 'Plantilla_Empleados_Dialimentos.xlsx');
   } catch (err) {

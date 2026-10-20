@@ -271,7 +271,7 @@
           <span id="badgeAutoRefresh" style="display: none; font-size: 0.75rem; color: var(--text-muted); background: #fbf7fa; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.5rem 0.75rem; align-items: center; gap: 0.35rem; font-weight: 600;" title="Actualización automática activa cada 5 minutos">
             ⏱️ Auto: 5m
           </span>
-          <button class="btn btn-primary" onclick="abrirModalNuevoTicket()">
+          <button id="btnCrearTicketPrincipal" class="btn btn-primary" onclick="abrirModalNuevoTicket()">
             <span>➕</span> Crear Solicitud
           </button>
         </div>
@@ -793,6 +793,11 @@
                 <label class="form-label">Área de la Empresa <span class="required">*</span></label>
                 <input type="text" id="empArea" class="form-control" placeholder="Ej: OPERACIONES, TIC, MANTENIMIENTO, etc." value="OPERACIONES" required style="text-transform: uppercase;">
               </div>
+              <div style="grid-column: 1 / -1;">
+                <label class="form-label">Permisos Específicos (Columna G en Google Sheets) <span style="font-weight: normal; color: var(--text-dim);">(Opcional)</span></label>
+                <input type="text" id="empPermisos" class="form-control" placeholder="Ej: ASIGNAR, CERRAR, FILTRAR, BUSCAR, EDITAR_PLACA, VER_TODOS" style="text-transform: uppercase;">
+                <small style="color: var(--text-dim); font-size: 0.72rem; display: block; margin-top: 4px;">Separados por coma. Si se deja en blanco, tomará automáticamente los permisos estándar según su Tipo de Usuario (Rol).</small>
+              </div>
             </div>
           </div>
           <div class="modal-footer">
@@ -808,9 +813,9 @@
           <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-md); padding: 0.85rem 1rem; margin-bottom: 1.25rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
               <div>
-                <strong style="color: #1d4ed8; font-size: 0.85rem;">📋 Columnas requeridas del archivo Excel:</strong>
+                <strong style="color: #1d4ed8; font-size: 0.85rem;">📋 Columnas del archivo Excel:</strong>
                 <p style="font-size: 0.75rem; color: #475569; margin-top: 0.2rem; font-family: monospace;">
-                  [A] CEDULA | [B] NOMBRES APELLIDOS | [C] EMAIL | [D] CELULAR | [E] TIPO USUARIO | [F] AREA
+                  [A] CEDULA | [B] NOMBRES APELLIDOS | [C] EMAIL | [D] CELULAR | [E] TIPO USUARIO | [F] AREA | [G] PERMISOS (Opcional)
                 </p>
               </div>
               <button type="button" class="btn btn-secondary btn-sm" onclick="descargarPlantillaExcel()" style="font-size: 0.78rem; display: inline-flex; align-items: center; gap: 0.35rem; background: #ffffff; border-color: #93c5fd; color: #1d4ed8;">
@@ -862,6 +867,7 @@
                     <th>Celular</th>
                     <th>Rol</th>
                     <th>Área</th>
+                    <th>Permisos</th>
                   </tr>
                 </thead>
                 <tbody id="previewTableBody"></tbody>

@@ -1,20 +1,23 @@
-<script>
+﻿<script>
 // ============================================================================
-// CONEXIÓN API REST - GOOGLE SHEETS DATABASE (Modo GitHub / Desacoplado)
+// CONEXIÃ“N API REST - GOOGLE SHEETS DATABASE (Modo GitHub / Desacoplado)
 // ============================================================================
 const CONFIG_APP = {
   API_URL: "https://script.google.com/macros/s/AKfycbwDycsNdNOWSko40bSHZdXGNLDzekeBlXBgXQo6jTp3wSA9dmTV9gLY8JUk_Lk9Qig/exec"
 };
 
 /**
- * Realiza peticiones asíncronas de alta velocidad a la API de Google Apps Script
- * permitiendo que la aplicación funcione en GitHub / GitHub Pages conectada a Google Sheets
+ * Realiza peticiones asÃ­ncronas de alta velocidad a la API de Google Apps Script
+ * permitiendo que la aplicaciÃ³n funcione en GitHub / GitHub Pages conectada a Google Sheets
  */
 async function llamarApiBackend(action, data = {}) {
   try {
     const res = await fetch(CONFIG_APP.API_URL, {
       method: "POST",
       redirect: "follow",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
       body: JSON.stringify({ action: action, ...data })
     });
     return await res.json();
@@ -27,13 +30,14 @@ async function llamarApiBackend(action, data = {}) {
 /**
  * ============================================================================
  * CLIENT-SIDE LOGIC - MESA DE AYUDA DIALIMENTOS
- * Compatible con Google Apps Script (google.script.run) y ejecución local.
+ * Compatible con Google Apps Script (google.script.run) y ejecuciÃ³n local.
  * ============================================================================
  */
 
-// Estado global de la aplicación
+// Estado global de la aplicaciÃ³n
 const AppState = {
   currentUser: null,
+  currentUserPermisosSet: null,
   catalogos: null,
   tickets: [],
   activeTicket: null,
@@ -46,7 +50,7 @@ const AppState = {
 };
 
 // ============================================================================
-// 1. INICIALIZACIÓN
+// 1. INICIALIZACIÃ“N
 // ============================================================================
 document.addEventListener("DOMContentLoaded", function () {
   initApp();
@@ -57,14 +61,14 @@ function initApp() {
   cargarCatalogos();
 }
 
-// Cargar catálogos maestros desde el backend o mock local
+// Cargar catÃ¡logos maestros desde el backend o mock local
 function cargarCatalogos() {
   if (AppState.isGAS) {
     google.script.run
       .withSuccessHandler(function (res) {
         if (!res) {
-          mostrarAlerta("Error del servidor al cargar catálogos. Asegúrate de haber republished la Web App en GAS.", "danger");
-          console.error("obtenerCatalogos devolvió null");
+          mostrarAlerta("Error del servidor al cargar catÃ¡logos. AsegÃºrate de haber republished la Web App en GAS.", "danger");
+          console.error("obtenerCatalogos devolviÃ³ null");
           return;
         }
         if (res.success) {
@@ -72,12 +76,12 @@ function cargarCatalogos() {
           poblarSelectsCatalogos();
           verificarSesion();
         } else {
-          mostrarAlerta("Error al cargar catálogos: " + res.message, "danger");
+          mostrarAlerta("Error al cargar catÃ¡logos: " + res.message, "danger");
         }
       })
       .withFailureHandler(function (err) {
         console.error("FailureHandler obtenerCatalogos:", err);
-        mostrarAlerta("Fallo de conexión con Google Apps Script: " + (err.message || err), "danger");
+        mostrarAlerta("Fallo de conexiÃ³n con Google Apps Script: " + (err.message || err), "danger");
       })
       .obtenerCatalogos();
   } else {
@@ -96,7 +100,7 @@ function cargarCatalogos() {
   }
 }
 
-// Poblar los selects dinámicamente con los datos del Excel
+// Poblar los selects dinÃ¡micamente con los datos del Excel
 function poblarSelectsCatalogos() {
   if (!AppState.catalogos) return;
 
@@ -108,7 +112,7 @@ function poblarSelectsCatalogos() {
     selPunto.innerHTML = '<option value="">Seleccione Punto de Servicio...</option>';
     AppState.catalogos.puntos.forEach(p => {
       const nombre = p.nombre || p["NOMBRE"] || p["PUNTO DE SERVICIO"] || p["PUNTO"] || p["DESCRIPCION"] || "";
-      const codigo = p.codigo || p["CODIGO"] || p["CÓDIGO"] || p["COD"] || "";
+      const codigo = p.codigo || p["CODIGO"] || p["CÃ“DIGO"] || p["COD"] || "";
       const label = codigo ? `${nombre} (${codigo})` : nombre;
       if (nombre && nombre !== "undefined") {
         selPunto.innerHTML += `<option value="${nombre}">${label}</option>`;
@@ -116,7 +120,7 @@ function poblarSelectsCatalogos() {
       }
     });
   }
-  // Poblar también el filtro de punto en la barra principal
+  // Poblar tambiÃ©n el filtro de punto en la barra principal
   if (selFiltroPunto) {
     selFiltroPunto.innerHTML = '<option value="TODOS">Todos los Puntos</option>';
     puntosOpciones.forEach(p => {
@@ -124,7 +128,7 @@ function poblarSelectsCatalogos() {
     });
   }
 
-  // 2. Tipos de Falla (Modal de cierre - se inicializa limpio y se puebla según el área del ticket)
+  // 2. Tipos de Falla (Modal de cierre - se inicializa limpio y se puebla segÃºn el Ã¡rea del ticket)
   const selFalla = document.getElementById("cierreTipoFalla");
   if (selFalla) {
     selFalla.innerHTML = '<option value="">Seleccione tipo de falla...</option>';
@@ -133,20 +137,20 @@ function poblarSelectsCatalogos() {
   // 3. Tipos de Repuestos (Modal de cierre)
   const selRepuesto = document.getElementById("cierreRepuesto");
   if (selRepuesto) {
-    selRepuesto.innerHTML = '<option value="">Seleccione condición del repuesto...</option>';
+    selRepuesto.innerHTML = '<option value="">Seleccione condiciÃ³n del repuesto...</option>';
     AppState.catalogos.tiposRepuesto.forEach(r => {
       selRepuesto.innerHTML += `<option value="${r}">${r}</option>`;
     });
   }
 
-  // 4. Técnicos (Modal de asignación - se inicializa limpio y se puebla dinámicamente según el área del ticket)
+  // 4. TÃ©cnicos (Modal de asignaciÃ³n - se inicializa limpio y se puebla dinÃ¡micamente segÃºn el Ã¡rea del ticket)
   const selTecnico = document.getElementById("asignacionTecnico");
   if (selTecnico) {
-    selTecnico.innerHTML = '<option value="">Seleccione Técnico...</option>';
+    selTecnico.innerHTML = '<option value="">Seleccione TÃ©cnico...</option>';
   }
 }
 
-// Función auxiliar para normalizar nombres de áreas (TIC vs MANTENIMIENTO)
+// FunciÃ³n auxiliar para normalizar nombres de Ã¡reas (TIC vs MANTENIMIENTO)
 function normalizarArea(area) {
   if (!area) return "";
   const a = String(area).trim().toUpperCase();
@@ -156,15 +160,15 @@ function normalizarArea(area) {
   return a;
 }
 
-// Clasifica un ítem de tipo de falla como TIC o MANTENIMIENTO según código, área o palabras clave
+// Clasifica un Ã­tem de tipo de falla como TIC o MANTENIMIENTO segÃºn cÃ³digo, Ã¡rea o palabras clave
 function clasificarAreaFalla(f) {
   if (f && f.area) {
     const a = normalizarArea(f.area);
     if (a === "TIC" || a === "MANTENIMIENTO") return a;
   }
 
-  // Por código numérico de la hoja TIPO FALLA (1-16: Mantenimiento, 17-34: TIC)
-  const cod = parseInt(f.codigo || f.Código || f.CODIGO || f.id || "", 10);
+  // Por cÃ³digo numÃ©rico de la hoja TIPO FALLA (1-16: Mantenimiento, 17-34: TIC)
+  const cod = parseInt(f.codigo || f.CÃ³digo || f.CODIGO || f.id || "", 10);
   if (!isNaN(cod)) {
     if (cod >= 1 && cod <= 16) return "MANTENIMIENTO";
     if (cod >= 17) return "TIC";
@@ -182,16 +186,16 @@ function clasificarAreaFalla(f) {
   return "MANTENIMIENTO";
 }
 
-// Determina el área a mostrar en el selector de fallas según el perfil del técnico o ticket
+// Determina el Ã¡rea a mostrar en el selector de fallas segÃºn el perfil del tÃ©cnico o ticket
 function determinarAreaParaFalla(ticket) {
-  // 1. Si el usuario logueado es técnico, manda el área de ese técnico (TIC vs Mantenimiento)
+  // 1. Si el usuario logueado es tÃ©cnico, manda el Ã¡rea de ese tÃ©cnico (TIC vs Mantenimiento)
   if (AppState.currentUser) {
     const rol = String(AppState.currentUser.tipoUsuario || "").toLowerCase();
     const areaUser = normalizarArea(AppState.currentUser.area);
-    if ((rol.includes("tecnico") || rol.includes("técnico")) && areaUser) {
+    if ((rol.includes("tecnico") || rol.includes("tÃ©cnico")) && areaUser) {
       return areaUser;
     }
-    // Si es un coordinador/admin con área específica
+    // Si es un coordinador/admin con Ã¡rea especÃ­fica
     if (areaUser === "TIC" || areaUser === "MANTENIMIENTO") {
       if (ticket && ticket.area) {
         const areaTicket = normalizarArea(ticket.area);
@@ -201,7 +205,7 @@ function determinarAreaParaFalla(ticket) {
     }
   }
 
-  // 2. Si el ticket tiene un técnico responsable asignado, usar el área de ese técnico
+  // 2. Si el ticket tiene un tÃ©cnico responsable asignado, usar el Ã¡rea de ese tÃ©cnico
   if (ticket && ticket.cedulaResponsable && AppState.catalogos && AppState.catalogos.tecnicos) {
     const tec = AppState.catalogos.tecnicos.find(t => String(t.cedula).trim() === String(ticket.cedulaResponsable).trim());
     if (tec && tec.area) {
@@ -210,7 +214,7 @@ function determinarAreaParaFalla(ticket) {
     }
   }
 
-  // 3. Área del ticket
+  // 3. Ãrea del ticket
   if (ticket && ticket.area) {
     const a = normalizarArea(ticket.area);
     if (a === "TIC" || a === "MANTENIMIENTO") return a;
@@ -226,7 +230,7 @@ function determinarAreaParaFalla(ticket) {
   return "MANTENIMIENTO";
 }
 
-// Filtra y puebla el desplegable de Tipos de Falla según el área exacta (TIC vs MANTENIMIENTO)
+// Filtra y puebla el desplegable de Tipos de Falla segÃºn el Ã¡rea exacta (TIC vs MANTENIMIENTO)
 function poblarTiposFallaPorArea(areaTarget) {
   const selFalla = document.getElementById("cierreTipoFalla");
   if (!selFalla) return;
@@ -236,7 +240,7 @@ function poblarTiposFallaPorArea(areaTarget) {
 
   let fallas = (AppState.catalogos && AppState.catalogos.tiposFalla) ? AppState.catalogos.tiposFalla : [];
 
-  // Filtrar estrictamente: si es TIC sólo fallas de TIC, si es Mantenimiento sólo Mantenimiento
+  // Filtrar estrictamente: si es TIC sÃ³lo fallas de TIC, si es Mantenimiento sÃ³lo Mantenimiento
   let fallasFiltradas = fallas.filter(f => {
     const a = clasificarAreaFalla(f);
     return a === areaNorm;
@@ -249,55 +253,55 @@ function poblarTiposFallaPorArea(areaTarget) {
     if (typeof f === "string") {
       nombre = f;
     } else if (f && typeof f === "object") {
-      nombre = f.nombre || f["Nombre del tipo"] || f["DESCRIPCION CATEGORIA"] || f["DESCRIPCIÓN CATEGORIA"] || f.descripcion || "";
+      nombre = f.nombre || f["Nombre del tipo"] || f["DESCRIPCION CATEGORIA"] || f["DESCRIPCIÃ“N CATEGORIA"] || f.descripcion || "";
     }
     nombre = String(nombre || "").trim();
-    // Excluir si es puramente un número (como '1', '2', '3') o vacío
+    // Excluir si es puramente un nÃºmero (como '1', '2', '3') o vacÃ­o
     if (nombre && nombre !== "undefined" && isNaN(Number(nombre)) && !nombresAgregados.has(nombre)) {
       nombresAgregados.add(nombre);
       selFalla.innerHTML += `<option value="${nombre}">${nombre}</option>`;
     }
   });
 
-  // Catálogo completo de respaldo idéntico a la hoja TIPO FALLA de Google Sheets
+  // CatÃ¡logo completo de respaldo idÃ©ntico a la hoja TIPO FALLA de Google Sheets
   if (nombresAgregados.size === 0) {
     const catalogoTIC = [
       "HARDWARE",
       "SOFTWARE",
       "RED / CONECTIVIDAD",
       "INTERNET",
-      "TELEFONÍA",
+      "TELEFONÃA",
       "IMPRESORAS",
       "SISTEMAS / APLICACIONES",
-      "CORREO ELECTRÓNICO",
+      "CORREO ELECTRÃ“NICO",
       "CUENTAS Y ACCESOS",
-      "CONTRASEÑAS",
+      "CONTRASEÃ‘AS",
       "SERVIDORES",
       "ALMACENAMIENTO",
-      "SEGURIDAD INFORMÁTICA",
+      "SEGURIDAD INFORMÃTICA",
       "PUNTOS DE VENTA (POS)",
-      "PERIFÉRICOS",
+      "PERIFÃ‰RICOS",
       "CABLEADO / PUNTOS DE RED",
-      "EQUIPOS DE COMUNICACIÓN",
+      "EQUIPOS DE COMUNICACIÃ“N",
       "OTROS"
     ];
 
     const catalogoMTO = [
-      "HIDRÁULICO",
-      "ELÉCTRICO",
-      "CARPINTERÍA",
-      "PLOMERÍA",
-      "CERRAJERÍA",
+      "HIDRÃULICO",
+      "ELÃ‰CTRICO",
+      "CARPINTERÃA",
+      "PLOMERÃA",
+      "CERRAJERÃA",
       "PINTURA",
       "OBRA CIVIL",
-      "AIRE ACONDICIONADO / CLIMATIZACIÓN",
+      "AIRE ACONDICIONADO / CLIMATIZACIÃ“N",
       "MOBILIARIO",
-      "VIDRIERÍA",
-      "ILUMINACIÓN",
-      "EQUIPOS Y ELECTRODOMÉSTICOS",
+      "VIDRIERÃA",
+      "ILUMINACIÃ“N",
+      "EQUIPOS Y ELECTRODOMÃ‰STICOS",
       "PISOS Y PAREDES",
       "TECHOS / CUBIERTAS",
-      "SEÑALIZACIÓN",
+      "SEÃ‘ALIZACIÃ“N",
       "OTROS"
     ];
 
@@ -308,7 +312,7 @@ function poblarTiposFallaPorArea(areaTarget) {
   }
 }
 
-// Filtrar tipos de servicio según el área seleccionada (Mantenimiento vs TIC)
+// Filtrar tipos de servicio segÃºn el Ã¡rea seleccionada (Mantenimiento vs TIC)
 function onAreaSolicitudChange() {
   const areaSeleccionada = document.getElementById("solicitudArea").value;
   const selServicio = document.getElementById("solicitudTipoServicio");
@@ -329,16 +333,108 @@ function onAreaSolicitudChange() {
 }
 
 // ============================================================================
-// 2. AUTENTICACIÓN Y SESIÓN
+// SISTEMA GRANULAR DE PERMISOS (Columna G: PERMISOS en Google Sheets)
+// ============================================================================
+/**
+ * Resuelve el conjunto de permisos activos para un usuario.
+ * Prioridad 1: Palabras clave en la columna G: PERMISOS del archivo Excel.
+ * Prioridad 2 (Fallback): Permisos predeterminados segÃºn su TIPO USUARIO (Rol).
+ */
+function obtenerPermisosUsuario(user) {
+  if (!user) return new Set();
+  const raw = String(user.permisos || "").trim().toUpperCase();
+  const tipo = String(user.tipoUsuario || "").toLowerCase();
+  const area = normalizarArea(user.area);
+
+  // 1. Si el usuario tiene permisos definidos explÃ­citamente en la columna G:
+  if (raw) {
+    const lista = raw.split(/[,;|]+/).map(p => p.trim()).filter(Boolean);
+    const setPermisos = new Set(lista);
+
+    // ComodÃ­n de administraciÃ³n total
+    if (setPermisos.has("TODO") || setPermisos.has("ADMIN") || setPermisos.has("ALL") || setPermisos.has("*")) {
+      return new Set([
+        "CREAR", "ASIGNAR", "CERRAR", "FILTRAR", "BUSCAR", 
+        "VER_TODOS", "EDITAR_PLACA", "GESTIONAR_COSTOS", "RRHH", "PUNTOS"
+      ]);
+    }
+
+    // Compatibilidad de sinÃ³nimos habituales
+    if (setPermisos.has("BUSCAR")) setPermisos.add("FILTRAR");
+    if (setPermisos.has("FILTRAR")) setPermisos.add("BUSCAR");
+    if (setPermisos.has("COSTOS") || setPermisos.has("GESTIONAR")) setPermisos.add("GESTIONAR_COSTOS");
+    if (setPermisos.has("EMPLEADOS")) setPermisos.add("RRHH");
+
+    // Por defecto todo usuario registrado puede crear solicitudes a menos que se especifique NO_CREAR
+    if (!setPermisos.has("NO_CREAR") && !setPermisos.has("SIN_CREAR")) {
+      setPermisos.add("CREAR");
+    }
+
+    return setPermisos;
+  }
+
+  // 2. FALLBACK RETROCOMPATIBLE: Si la columna G estÃ¡ vacÃ­a en Google Sheets,
+  // inferir los permisos por defecto segÃºn el TIPO USUARIO para no bloquear a nadie.
+  const fallback = new Set();
+  fallback.add("CREAR"); // Todo usuario registrado puede crear solicitudes
+
+  if (tipo === "administradora") {
+    fallback.add("GESTIONAR_COSTOS");
+    fallback.add("VER_TODOS");
+    fallback.add("FILTRAR");
+    fallback.add("BUSCAR");
+    fallback.add("EDITAR_PLACA");
+  } else if (tipo.includes("administrador") || tipo.includes("coordinador")) {
+    fallback.add("ASIGNAR");
+    fallback.add("CERRAR");
+    fallback.add("FILTRAR");
+    fallback.add("BUSCAR");
+    fallback.add("VER_TODOS");
+    fallback.add("EDITAR_PLACA");
+    fallback.add("PUNTOS");
+    if (area === "RRHH" || area.includes("HUMAN")) fallback.add("RRHH");
+  } else if (tipo.includes("tecnico") || tipo.includes("tÃ©cnico")) {
+    fallback.add("CERRAR");
+    fallback.add("FILTRAR");
+    fallback.add("BUSCAR");
+    fallback.add("VER_TODOS");
+    fallback.add("EDITAR_PLACA");
+  } else if (tipo.includes("reclutador")) {
+    fallback.add("RRHH");
+  }
+
+  return fallback;
+}
+
+/**
+ * Consulta si el usuario logueado actualmente posee un permiso especÃ­fico.
+ */
+function tienePermiso(permiso) {
+  if (!AppState.currentUser) return false;
+  if (!AppState.currentUserPermisosSet) {
+    AppState.currentUserPermisosSet = obtenerPermisosUsuario(AppState.currentUser);
+  }
+  const p = String(permiso).trim().toUpperCase();
+  return AppState.currentUserPermisosSet.has(p) || 
+         AppState.currentUserPermisosSet.has("TODO") || 
+         AppState.currentUserPermisosSet.has("ADMIN");
+}
+
+window.tienePermiso = tienePermiso;
+window.obtenerPermisosUsuario = obtenerPermisosUsuario;
+
+// ============================================================================
+// 2. AUTENTICACIÃ“N Y SESIÃ“N
 // ============================================================================
 function verificarSesion() {
-  // Limpiar cualquier sesión residual en el navegador para exigir siempre login
+  // Limpiar cualquier sesiÃ³n residual en el navegador para exigir siempre login
   try {
     localStorage.removeItem("DIALIMENTOS_USER");
     sessionStorage.removeItem("DIALIMENTOS_USER");
   } catch (e) {}
 
   AppState.currentUser = null;
+  AppState.currentUserPermisosSet = null;
   AppState.pendingAdminUser = null;
 
   // Siempre mostrar la pantalla de login al iniciar o recargar
@@ -350,7 +446,7 @@ function verificarSesion() {
 function ejecutarLogin(cedulaManual) {
   const cedulaInput = cedulaManual || document.getElementById("cedulaInput").value.trim();
   if (!cedulaInput) {
-    mostrarAlerta("Ingrese un número de cédula válido", "warning");
+    mostrarAlerta("Ingrese un nÃºmero de cÃ©dula vÃ¡lido", "warning");
     return;
   }
 
@@ -363,7 +459,7 @@ function ejecutarLogin(cedulaManual) {
   const resetBtnLogin = function() {
     if (btnLogin) {
       btnLogin.disabled = false;
-      btnLogin.innerHTML = `Iniciar Sesión`;
+      btnLogin.innerHTML = `Iniciar SesiÃ³n`;
     }
   };
 
@@ -382,7 +478,7 @@ function ejecutarLogin(cedulaManual) {
         area: "MANTENIMIENTO"
       };
 
-      // Configurar vista del panel de contraseña con los datos del usuario
+      // Configurar vista del panel de contraseÃ±a con los datos del usuario
       const nameElem = document.getElementById("adminDetectedName");
       const roleElem = document.getElementById("adminDetectedRole");
       const cedulaElem = document.getElementById("adminDetectedCedula");
@@ -391,33 +487,33 @@ function ejecutarLogin(cedulaManual) {
       if (nameElem) nameElem.textContent = AppState.pendingAdminUser.nombres || "Usuario";
       if (cedulaElem) cedulaElem.textContent = AppState.pendingAdminUser.cedula || cedulaInput;
 
-      // Asignar icono y texto formateado de rol y área automáticamente
+      // Asignar icono y texto formateado de rol y Ã¡rea automÃ¡ticamente
       const area = (AppState.pendingAdminUser.area || "").toUpperCase();
       const tipo = (AppState.pendingAdminUser.tipoUsuario || "").toLowerCase();
 
-      let labelArea = "Coordinación";
-      let icono = "💼";
+      let labelArea = "CoordinaciÃ³n";
+      let icono = "ðŸ’¼";
 
       if (tipo.includes("administradora") || cedulaInput === "1234") {
         labelArea = "Administradora (Mantenimiento)";
-        icono = "💼";
+        icono = "ðŸ’¼";
       } else if (area.includes("TIC") || area.includes("SISTEMA")) {
-        labelArea = "Coordinación de TIC / Sistemas";
-        icono = "💻";
+        labelArea = "CoordinaciÃ³n de TIC / Sistemas";
+        icono = "ðŸ’»";
       } else if (area.includes("MTO") || area.includes("MANTENIMIENTO")) {
-        labelArea = "Coordinación de Mantenimiento";
-        icono = "🔧";
+        labelArea = "CoordinaciÃ³n de Mantenimiento";
+        icono = "ðŸ”§";
       } else if (area.includes("RRHH") || area.includes("RECURSO") || tipo.includes("reclutador")) {
         labelArea = "Recursos Humanos (Reclutador)";
-        icono = "👥";
+        icono = "ðŸ‘¥";
       } else {
-        labelArea = AppState.pendingAdminUser.tipoUsuario || "Coordinación";
+        labelArea = AppState.pendingAdminUser.tipoUsuario || "CoordinaciÃ³n";
       }
 
       if (roleElem) roleElem.textContent = labelArea;
       if (iconElem) iconElem.textContent = icono;
 
-      // Mostrar panel de contraseña
+      // Mostrar panel de contraseÃ±a
       document.getElementById("panelLoginEmpleado").style.display = "none";
       document.getElementById("panelLoginAdmin").style.display = "block";
       const adminPass = document.getElementById("adminPasswordInput");
@@ -427,7 +523,7 @@ function ejecutarLogin(cedulaManual) {
       }
     } else {
       resetBtnLogin();
-      mostrarAlerta(res.message || "Cédula no encontrada en el registro de empleados", "danger");
+      mostrarAlerta(res.message || "CÃ©dula no encontrada en el registro de empleados", "danger");
     }
   };
 
@@ -436,7 +532,7 @@ function ejecutarLogin(cedulaManual) {
       .withSuccessHandler(callback)
       .withFailureHandler(function (err) {
         resetBtnLogin();
-        mostrarAlerta("Error de autenticación: " + err, "danger");
+        mostrarAlerta("Error de autenticaciÃ³n: " + err, "danger");
       })
       .login(cedulaInput);
   } else {
@@ -444,7 +540,7 @@ function ejecutarLogin(cedulaManual) {
       .then(callback)
       .catch(function(err) {
         resetBtnLogin();
-        mostrarAlerta("Error de conexión con el servidor", "danger");
+        mostrarAlerta("Error de conexiÃ³n con el servidor", "danger");
       });
   }
 }
@@ -460,7 +556,7 @@ function volverALoginCedula() {
   const btnLogin = document.getElementById("btnLogin");
   if (btnLogin) {
     btnLogin.disabled = false;
-    btnLogin.innerHTML = `Iniciar Sesión`;
+    btnLogin.innerHTML = `Iniciar SesiÃ³n`;
   }
   const btnAdmin = document.getElementById("btnAdminLogin");
   if (btnAdmin) {
@@ -478,6 +574,7 @@ function cerrarSesion() {
   detenerAutoRefresco();
   localStorage.removeItem("DIALIMENTOS_USER");
   AppState.currentUser = null;
+  AppState.currentUserPermisosSet = null;
   AppState.pendingAdminUser = null;
   AppState.filtros.area = "TODAS";
   AppState.filtros.estado = "TODOS";
@@ -516,7 +613,7 @@ function toggleAdminLogin(mostrarAdmin) {
   }
 }
 
-// Exportar explícitamente al ámbito global para evitar problemas de contexto en eventos inline HTML
+// Exportar explÃ­citamente al Ã¡mbito global para evitar problemas de contexto en eventos inline HTML
 window.volverALoginCedula = volverALoginCedula;
 window.ejecutarLogin = ejecutarLogin;
 window.ejecutarLoginAdmin = ejecutarLoginAdmin;
@@ -530,7 +627,7 @@ function ejecutarLoginAdmin() {
 
   const password = document.getElementById("adminPasswordInput").value.trim();
   if (!password) {
-    mostrarAlerta("Ingrese su contraseña de acceso.", "warning");
+    mostrarAlerta("Ingrese su contraseÃ±a de acceso.", "warning");
     return;
   }
 
@@ -556,7 +653,7 @@ function ejecutarLoginAdmin() {
       AppState.currentUser = res.user;
       mostrarAppPrincipal();
     } else {
-      mostrarAlerta(res.message || "Contraseña incorrecta.", "danger");
+      mostrarAlerta(res.message || "ContraseÃ±a incorrecta.", "danger");
       const passInput = document.getElementById("adminPasswordInput");
       if (passInput) {
         passInput.select();
@@ -570,7 +667,7 @@ function ejecutarLoginAdmin() {
       .withSuccessHandler(callback)
       .withFailureHandler(function (err) {
         resetBtnAdmin();
-        mostrarAlerta("Error de autenticación: " + err, "danger");
+        mostrarAlerta("Error de autenticaciÃ³n: " + err, "danger");
       })
       .loginAdmin(cedula, password, area);
   } else {
@@ -578,7 +675,7 @@ function ejecutarLoginAdmin() {
       .then(callback)
       .catch(function(err) {
         resetBtnAdmin();
-        mostrarAlerta("Error de conexión con el servidor", "danger");
+        mostrarAlerta("Error de conexiÃ³n con el servidor", "danger");
       });
   }
 }
@@ -587,19 +684,25 @@ function mostrarAppPrincipal() {
   document.getElementById("loginView").style.display = "none";
   document.getElementById("mainAppView").style.display = "block";
 
+  // Inicializar conjunto de permisos del usuario activo
+  AppState.currentUserPermisosSet = obtenerPermisosUsuario(AppState.currentUser);
+
   // Mostrar datos del usuario activo
   document.getElementById("headerUserName").textContent = AppState.currentUser.nombres;
-  document.getElementById("headerUserRole").textContent = AppState.currentUser.tipoUsuario;
+  const roleEl = document.getElementById("headerUserRole");
+  if (roleEl) {
+    roleEl.textContent = AppState.currentUser.tipoUsuario;
+    const arrayPermisos = Array.from(AppState.currentUserPermisosSet || []);
+    roleEl.title = "Permisos activos: " + (arrayPermisos.join(", ") || "Por defecto de su rol");
+  }
   document.getElementById("headerUserInitial").textContent = AppState.currentUser.nombres.charAt(0);
 
-  // Ajustar permisos visuales según rol y área
-  const esAdmin = AppState.currentUser.tipoUsuario.toLowerCase().includes("administrador");
+  // Ajustar permisos visuales segÃºn rol y Ã¡rea
   const esAdministradora = AppState.currentUser.tipoUsuario.toLowerCase() === "administradora";
-  const esTecnico = AppState.currentUser.tipoUsuario.toLowerCase().includes("tecnico") || AppState.currentUser.tipoUsuario.toLowerCase().includes("técnico");
-  const esReclutador = AppState.currentUser.tipoUsuario.toLowerCase().includes("reclutador");
   const areaUser = normalizarArea(AppState.currentUser.area);
+  const puedeVerTodos = tienePermiso("VER_TODOS");
 
-  // Configurar filtro de área
+  // Configurar filtro de Ã¡rea
   const selArea = document.getElementById("filtroArea");
   if (esAdministradora) {
     // Administradora ve solo Mantenimiento pero puede filtrar estados
@@ -609,9 +712,9 @@ function mostrarAppPrincipal() {
       selArea.disabled = true;
       selArea.style.cursor = "not-allowed";
       selArea.style.opacity = "0.85";
-      selArea.title = "Fijado a área de Mantenimiento";
+      selArea.title = "Fijado a Ã¡rea de Mantenimiento";
     }
-  } else if ((esAdmin || esTecnico) && (areaUser === "TIC" || areaUser === "MANTENIMIENTO")) {
+  } else if (puedeVerTodos && (areaUser === "TIC" || areaUser === "MANTENIMIENTO")) {
     const valorArea = areaUser === "TIC" ? "TIC" : "Mantenimiento";
     AppState.filtros.area = valorArea;
     if (selArea) {
@@ -619,7 +722,7 @@ function mostrarAppPrincipal() {
       selArea.disabled = true;
       selArea.style.cursor = "not-allowed";
       selArea.style.opacity = "0.85";
-      selArea.title = "Fijado a su área (" + valorArea + ")";
+      selArea.title = "Fijado a su Ã¡rea (" + valorArea + ")";
     }
   } else {
     if (selArea) {
@@ -630,27 +733,33 @@ function mostrarAppPrincipal() {
     }
   }
 
-  // Mostrar panel de acciones RRHH solo para Reclutador o Administrador de RRHH
+  // Mostrar panel de acciones RRHH solo si tiene permiso RRHH
   const rrhhContainer = document.getElementById("rrhhActionsContainer");
   if (rrhhContainer) {
-    rrhhContainer.style.display = (esReclutador || (esAdmin && areaUser === "RRHH")) ? "flex" : "none";
+    rrhhContainer.style.display = tienePermiso("RRHH") ? "flex" : "none";
   }
 
-  // Mostrar indicador de auto-refresco si es coordinador o técnico
-  const esCoordinadorOTecnico = esAdmin || esTecnico || esAdministradora || esReclutador;
-  const badgeAuto = document.getElementById("badgeAutoRefresh");
-  if (badgeAuto) {
-    badgeAuto.style.display = esCoordinadorOTecnico ? "inline-flex" : "none";
+  // Mostrar botÃ³n AÃ±adir Punto si tiene permiso PUNTOS o ASIGNAR
+  const btnNuevoPunto = document.getElementById("btnNuevoPuntoHeader");
+  if (btnNuevoPunto) {
+    btnNuevoPunto.style.display = (tienePermiso("PUNTOS") || tienePermiso("ASIGNAR")) ? "" : "none";
   }
 
-  // Mostrar filtros de Punto y Rango de Fechas solo para Administradores y Técnicos
-  const mostrarFiltrosExtra = esAdmin || esTecnico || esAdministradora;
+  // Mostrar filtros de Punto y Rango de Fechas segÃºn permiso de filtrado / bÃºsqueda
+  const mostrarFiltrosExtra = tienePermiso("FILTRAR") || tienePermiso("BUSCAR");
   const elFiltroPunto = document.getElementById("filtroPunto");
   const elDateRangeWrapper = document.getElementById("dateRangeWrapper");
   if (elFiltroPunto) elFiltroPunto.style.display = mostrarFiltrosExtra ? "" : "none";
   if (elDateRangeWrapper) elDateRangeWrapper.style.display = mostrarFiltrosExtra ? "inline-block" : "none";
 
-  // Inicializar rango de fechas: del día 1 del mes actual al día de hoy
+  // Mostrar botÃ³n de creaciÃ³n de tickets segÃºn permiso CREAR
+  const puedeCrear = tienePermiso("CREAR");
+  const btnFab = document.getElementById("btnFabNuevoTicket");
+  if (btnFab) btnFab.style.display = puedeCrear ? "flex" : "none";
+  const btnNuevoHdr = document.getElementById("btnCrearTicketPrincipal");
+  if (btnNuevoHdr) btnNuevoHdr.style.display = puedeCrear ? "" : "none";
+
+  // Inicializar rango de fechas: del dÃ­a 1 del mes actual al dÃ­a de hoy
   if (mostrarFiltrosExtra) {
     const hoy = new Date();
     const yyyy = hoy.getFullYear();
@@ -674,7 +783,7 @@ function mostrarAppPrincipal() {
 }
 
 // ============================================================================
-// 3. AUTO-REFRESCO Y GESTIÓN DE TICKETS
+// 3. AUTO-REFRESCO Y GESTIÃ“N DE TICKETS
 // ============================================================================
 let timerAutoRefresco = null;
 
@@ -685,17 +794,17 @@ function iniciarAutoRefresco() {
   const rol = String(AppState.currentUser.tipoUsuario || "").toLowerCase();
   const esCoordinadorOTecnico = rol.includes("administrador") || 
                                 rol.includes("tecnico") || 
-                                rol.includes("técnico") || 
+                                rol.includes("tÃ©cnico") || 
                                 rol.includes("administradora") ||
                                 rol.includes("reclutador") ||
                                 rol.includes("coordinador");
 
   if (esCoordinadorOTecnico) {
-    console.log("⏱️ Auto-refresco programado cada 5 minutos para", AppState.currentUser.tipoUsuario);
+    console.log("â±ï¸ Auto-refresco programado cada 5 minutos para", AppState.currentUser.tipoUsuario);
     // Intervalo de 5 minutos = 300,000 ms
     timerAutoRefresco = setInterval(function() {
       if (AppState.currentUser) {
-        console.log("🔄 Ejecutando auto-refresco cada 5 minutos...");
+        console.log("ðŸ”„ Ejecutando auto-refresco cada 5 minutos...");
         cargarTickets(true);
       }
     }, 5 * 60 * 1000);
@@ -723,10 +832,10 @@ function recargarTicketsManual() {
   cargarTickets(false, function(res) {
     btns.forEach(b => {
       b.disabled = false;
-      b.innerHTML = `🔄 Actualizar`;
+      b.innerHTML = `ðŸ”„ Actualizar`;
     });
     if (res && res.success) {
-      mostrarAlerta("Lista de tickets actualizada con éxito.", "success");
+      mostrarAlerta("Lista de tickets actualizada con Ã©xito.", "success");
     }
   });
 }
@@ -737,13 +846,10 @@ function cargarTickets(esSilencioso = false, onComplete = null) {
   if (!AppState.currentUser) return;
   const filtros = { ...AppState.filtros };
 
-  // Empleado y Reclutador: solo ven sus propios tickets
   const rol = String(AppState.currentUser.tipoUsuario || "").toLowerCase();
   const esAdministradora = rol === "administradora";
-  const soloPropio = rol === 'empleado' || rol === 'reclutador';
-  if (soloPropio) {
-    filtros.cedulaSolicitante = AppState.currentUser.cedula;
-  }
+  const puedeVerTodos = tienePermiso("VER_TODOS");
+  const areaUser = normalizarArea(AppState.currentUser.area);
 
   // Administradora: ve TODOS los tickets de Mantenimiento
   if (esAdministradora) {
@@ -752,14 +858,17 @@ function cargarTickets(esSilencioso = false, onComplete = null) {
     delete filtros.cedulaResponsable;
     filtros.userRole = AppState.currentUser.tipoUsuario;
     filtros.userArea = AppState.currentUser.area;
+  } else if (!puedeVerTodos) {
+    // Si no tiene permiso de ver todos, solo ve sus tickets propios
+    filtros.cedulaSolicitante = AppState.currentUser.cedula;
+    filtros.userRole = AppState.currentUser.tipoUsuario;
+    filtros.userArea = AppState.currentUser.area;
   } else {
-    // Administrador o Técnico: restringir estrictamente a los casos de su área asignada
-    const esAdmin = rol.includes("administrador");
-    const esTecnico = rol.includes("tecnico") || rol.includes("técnico");
-    const areaUser = normalizarArea(AppState.currentUser.area);
-    if ((esAdmin || esTecnico) && (areaUser === "TIC" || areaUser === "MANTENIMIENTO")) {
+    // Si tiene permiso de ver todos, filtrar por su Ã¡rea si pertenece a TIC o Mantenimiento
+    if (areaUser === "TIC" || areaUser === "MANTENIMIENTO") {
       filtros.area = areaUser === "TIC" ? "TIC" : "Mantenimiento";
     }
+    delete filtros.cedulaSolicitante;
     filtros.userArea = normalizarArea(AppState.currentUser.area);
     filtros.userRole = AppState.currentUser.tipoUsuario;
     filtros.userCedula = AppState.currentUser.cedula;
@@ -769,27 +878,23 @@ function cargarTickets(esSilencioso = false, onComplete = null) {
     if (onComplete && typeof onComplete === "function") {
       onComplete(res);
     }
-    // Protección: GAS puede retornar null si el servidor lanza una excepción no capturada
+    // ProtecciÃ³n: GAS puede retornar null si el servidor lanza una excepciÃ³n no capturada
     if (!res) {
       if (!esSilencioso) {
         mostrarAlerta("Error del servidor al cargar tickets. Revisa los permisos o el script en GAS.", "danger");
       }
-      console.error("obtenerTickets devolvió null — posible error interno en el servidor GAS.");
+      console.error("obtenerTickets devolviÃ³ null â€” posible error interno en el servidor GAS.");
       return;
     }
     if (res.success) {
-      // Blindaje local: asegurar que administradores y técnicos solo almacenen y contabilicen tickets de su área
-      // Excepción: Administradora siempre ve todos los de Mantenimiento
-      const r = String(AppState.currentUser.tipoUsuario || "").toLowerCase();
-      const esAdm = r.includes("administrador");
-      const esTec = r.includes("tecnico") || r.includes("técnico");
-      const esAdministradora = r === "administradora";
       const aUser = normalizarArea(AppState.currentUser.area);
 
       if (esAdministradora) {
         // Administradora: todos los tickets de Mantenimiento
         AppState.tickets = (res.tickets || []).filter(t => normalizarArea(t.area) === "MANTENIMIENTO");
-      } else if ((esAdm || esTec) && (aUser === "TIC" || aUser === "MANTENIMIENTO")) {
+      } else if (!puedeVerTodos) {
+        AppState.tickets = (res.tickets || []).filter(t => String(t.cedulaSolicitante).trim() === String(AppState.currentUser.cedula).trim());
+      } else if (aUser === "TIC" || aUser === "MANTENIMIENTO") {
         AppState.tickets = (res.tickets || []).filter(t => normalizarArea(t.area) === aUser);
       } else {
         AppState.tickets = res.tickets || [];
@@ -821,7 +926,7 @@ function cargarTickets(esSilencioso = false, onComplete = null) {
       .catch(function(err) {
         if (onComplete && typeof onComplete === "function") onComplete({ success: false, error: err });
         if (!esSilencioso) {
-          mostrarAlerta("Error de conexión al cargar tickets", "danger");
+          mostrarAlerta("Error de conexiÃ³n al cargar tickets", "danger");
         }
       });
   }
@@ -846,11 +951,9 @@ function renderizarTablaTickets() {
   const tbody = document.getElementById("ticketsTableBody");
   if (!tbody) return;
 
-  const esAdmin = AppState.currentUser.tipoUsuario.toLowerCase().includes("administrador");
   const esAdministradora = AppState.currentUser.tipoUsuario.toLowerCase() === "administradora";
-  const esTecnico = AppState.currentUser.tipoUsuario.toLowerCase().includes("tecnico") || AppState.currentUser.tipoUsuario.toLowerCase().includes("técnico");
-  const esReclutador = AppState.currentUser.tipoUsuario.toLowerCase().includes("reclutador");
   const areaUser = normalizarArea(AppState.currentUser.area);
+  const puedeVerTodos = tienePermiso("VER_TODOS");
 
   const filtroPuntoVal = (AppState.filtros.punto || "TODOS");
   const filtroFecIni = AppState.filtros.fechaInicio || "";
@@ -858,16 +961,16 @@ function renderizarTablaTickets() {
   const filtroBusq = (AppState.filtros.busqueda || "").toLowerCase();
 
   const ticketsAMostrar = AppState.tickets.filter(t => {
-    // Filtro de área por rol
+    // Filtro de Ã¡rea por rol / alcance
     if (esAdministradora) {
       if (normalizarArea(t.area) !== "MANTENIMIENTO") return false;
-    } else if ((esAdmin || esTecnico) && (areaUser === "TIC" || areaUser === "MANTENIMIENTO")) {
+    } else if (puedeVerTodos && (areaUser === "TIC" || areaUser === "MANTENIMIENTO")) {
       if (normalizarArea(t.area) !== areaUser) return false;
     }
     // Filtro por estado
     const estadoFiltro = AppState.filtros.estado || "TODOS";
     if (estadoFiltro !== "TODOS" && (t.estado || "").toUpperCase() !== estadoFiltro) return false;
-    // Filtro por área selector
+    // Filtro por Ã¡rea selector
     const areaFiltro = AppState.filtros.area || "TODAS";
     if (areaFiltro !== "TODAS" && t.area !== areaFiltro) return false;
     // Filtro por punto de servicio
@@ -878,7 +981,7 @@ function renderizarTablaTickets() {
       if (filtroFecIni && fechaTkt < filtroFecIni) return false;
       if (filtroFecFin && fechaTkt > filtroFecFin) return false;
     }
-    // Filtro de búsqueda por texto
+    // Filtro de bÃºsqueda por texto
     if (filtroBusq) {
       const haystack = [
         t.nroTicket, t.placa, t.descripcionEquipo, t.puntoServicio, t.descripcionSolicitud
@@ -899,23 +1002,23 @@ function renderizarTablaTickets() {
     const areaTicketNorm = normalizarArea(t.area);
     const esMismaArea = !areaUser || areaUser === areaTicketNorm;
     
-    // Botones de acción contextuales según rol y estado
+    // Botones de acciÃ³n contextuales segÃºn permisos y estado
     let botonesAccion = `<button class="btn btn-secondary btn-sm" onclick="verDetalleTicket('${t.nroTicket}')">Ver</button>`;
 
-    if (esAdmin && esMismaArea && t.estado.toUpperCase() === "ABIERTO") {
+    if (tienePermiso("ASIGNAR") && esMismaArea && t.estado.toUpperCase() === "ABIERTO") {
       botonesAccion += ` <button class="btn btn-primary btn-sm" onclick="abrirModalAsignar('${t.nroTicket}')">Asignar</button>`;
     }
 
-    if ((esTecnico || esAdmin) && esMismaArea && (t.estado.toUpperCase() === "PROCESO" || t.estado.toUpperCase() === "PENDIENTE")) {
+    if (tienePermiso("CERRAR") && esMismaArea && (t.estado.toUpperCase() === "PROCESO" || t.estado.toUpperCase() === "PENDIENTE")) {
       const esPend = t.estado.toUpperCase() === "PENDIENTE";
       const txtBtn = esPend ? "Reanudar / Gestionar" : "Cerrar";
       const clsBtn = esPend ? "btn-warning" : "btn-success";
       botonesAccion += ` <button class="btn ${clsBtn} btn-sm" onclick="abrirModalCierre('${t.nroTicket}')">${txtBtn}</button>`;
     }
 
-    // Botón exclusivo para la Administradora
-    if (esAdministradora) {
-      botonesAccion += ` <button class="btn btn-sm" style="background: rgba(217, 119, 6, 0.12); border: 1px solid rgba(217, 119, 6, 0.35); color: #b45309; font-weight: 600;" onclick="abrirModalAdministradora('${t.nroTicket}')">💼 Gestionar</button>`;
+    // BotÃ³n para Administradora o usuarios con permiso GESTIONAR_COSTOS
+    if (tienePermiso("GESTIONAR_COSTOS") || esAdministradora) {
+      botonesAccion += ` <button class="btn btn-sm" style="background: rgba(217, 119, 6, 0.12); border: 1px solid rgba(217, 119, 6, 0.35); color: #b45309; font-weight: 600;" onclick="abrirModalAdministradora('${t.nroTicket}')">ðŸ’¼ Gestionar</button>`;
     }
 
     return `
@@ -925,25 +1028,27 @@ function renderizarTablaTickets() {
           <small class="ticket-time" style="color: var(--text-dim); font-size: 0.78rem;">${formatearFechaHoraCO(t.fechaIngreso)}</small>
         </td>
         <td class="col-area"><span class="badge-tag ${areaClass}">${t.area}</span></td>
-        <td class="col-servicio"><strong>${t.tipoServicio}</strong><br><small style="color: var(--text-dim);">📍 ${t.puntoServicio}</small></td>
+        <td class="col-servicio"><strong>${t.tipoServicio}</strong><br><small style="color: var(--text-dim);">ðŸ“ ${t.puntoServicio}</small></td>
         <td class="col-equipo">
-          <div style="font-weight: 600;">⚙️ ${t.descripcionEquipo || 'Sin equipo'}</div>
-          <span class="badge-plate" style="font-size: 0.72rem; cursor: pointer;" title="Clic para modificar placa" onclick="abrirModalEditarPlaca('${t.nroTicket}', '${t.placa}')">${t.placa || 'Sin Placa'} ✏️</span>
+          <div style="font-weight: 600;">âš™ï¸ ${t.descripcionEquipo || 'Sin equipo'}</div>
+          ${tienePermiso("EDITAR_PLACA")
+            ? `<span class="badge-plate" style="font-size: 0.72rem; cursor: pointer;" title="Clic para modificar placa" onclick="abrirModalEditarPlaca('${t.nroTicket}', '${t.placa}')">${t.placa || 'Sin Placa'} âœï¸</span>`
+            : `<span class="badge-plate" style="font-size: 0.72rem;" title="Placa del equipo">${t.placa || 'Sin Placa'}</span>`}
         </td>
         <td class="col-desc" style="max-width: 220px; white-space: normal; line-height: 1.35;">
           ${t.descripcionSolicitud}
-          ${t.fotoSolicitudUrl ? `<br><span class="badge-evidence" onclick="verFotoTicket('${t.nroTicket}', '${t.fotoSolicitudUrl}', 'Solicitud')" title="Ver evidencia fotográfica adjunta">📷 Evidencia</span>` : ''}
-          ${t.fotoCierreUrl ? ` <span class="badge-evidence badge-evidence-cierre" onclick="verFotoTicket('${t.nroTicket}', '${t.fotoCierreUrl}', 'Cierre')" title="Ver foto del trabajo finalizado">📸 Foto Cierre</span>` : ''}
+          ${t.fotoSolicitudUrl ? `<br><span class="badge-evidence" onclick="verFotoTicket('${t.nroTicket}', '${t.fotoSolicitudUrl}', 'Solicitud')" title="Ver evidencia fotogrÃ¡fica adjunta">ðŸ“· Evidencia</span>` : ''}
+          ${t.fotoCierreUrl ? ` <span class="badge-evidence badge-evidence-cierre" onclick="verFotoTicket('${t.nroTicket}', '${t.fotoCierreUrl}', 'Cierre')" title="Ver foto del trabajo finalizado">ðŸ“¸ Foto Cierre</span>` : ''}
         </td>
         <td class="col-resp">
-          <span class="resp-label" style="display: none;">👤 Responsable: </span>
-          ${t.responsable ? `<span>👤 ${t.responsable}</span>` : '<span style="color: var(--text-dim);">👤 Sin Asignar</span>'}
-          ${esAdministradora && t.proveedor ? `<br><small style="color: var(--text-muted); font-size: 0.74rem;">🏭 ${t.proveedor}</small>` : ''}
+          <span class="resp-label" style="display: none;">ðŸ‘¤ Responsable: </span>
+          ${t.responsable ? `<span>ðŸ‘¤ ${t.responsable}</span>` : '<span style="color: var(--text-dim);">ðŸ‘¤ Sin Asignar</span>'}
+          ${(esAdministradora || tienePermiso("GESTIONAR_COSTOS")) && t.proveedor ? `<br><small style="color: var(--text-muted); font-size: 0.74rem;">ðŸ­ ${t.proveedor}</small>` : ''}
         </td>
         <td class="col-estado">
           <span class="badge-tag ${estadoClass}">${t.estado}</span>
-          ${esAdministradora && t.aprobacion ? `<br><span style="display: inline-block; margin-top: 4px; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-weight: 500;">📋 ${t.aprobacion}</span>` : ''}
-          ${esAdministradora && t.costo ? `<br><span style="display: inline-block; margin-top: 2px; font-size: 0.72rem; padding: 1px 5px; border-radius: 4px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-weight: 600;">💰 ${t.costo}</span>` : ''}
+          ${(esAdministradora || tienePermiso("GESTIONAR_COSTOS")) && t.aprobacion ? `<br><span style="display: inline-block; margin-top: 4px; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-weight: 500;">ðŸ“‹ ${t.aprobacion}</span>` : ''}
+          ${(esAdministradora || tienePermiso("GESTIONAR_COSTOS")) && t.costo ? `<br><span style="display: inline-block; margin-top: 2px; font-size: 0.72rem; padding: 1px 5px; border-radius: 4px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-weight: 600;">ðŸ’° ${t.costo}</span>` : ''}
         </td>
         <td class="col-acciones">
           <div class="actions-container">
@@ -955,17 +1060,16 @@ function renderizarTablaTickets() {
   }).join("");
 }
 
-// Filtros de búsqueda
+// Filtros de bÃºsqueda
 function onFiltroChange() {
   const rol = String(AppState.currentUser && AppState.currentUser.tipoUsuario || "").toLowerCase();
   const esAdministradora = rol === "administradora";
-  const esAdmin = rol.includes("administrador");
-  const esTecnico = rol.includes("tecnico") || rol.includes("técnico");
+  const puedeVerTodos = tienePermiso("VER_TODOS");
   const areaUser = normalizarArea(AppState.currentUser && AppState.currentUser.area);
 
   if (esAdministradora) {
     AppState.filtros.area = "Mantenimiento";
-  } else if ((esAdmin || esTecnico) && (areaUser === "TIC" || areaUser === "MANTENIMIENTO")) {
+  } else if (puedeVerTodos && (areaUser === "TIC" || areaUser === "MANTENIMIENTO")) {
     AppState.filtros.area = areaUser === "TIC" ? "TIC" : "Mantenimiento";
   } else {
     AppState.filtros.area = document.getElementById("filtroArea").value;
@@ -973,7 +1077,7 @@ function onFiltroChange() {
   AppState.filtros.estado = document.getElementById("filtroEstado").value;
   AppState.filtros.busqueda = document.getElementById("buscarInput").value;
 
-  // Filtros extra: Punto y Rango de Fechas (solo visibles para admins/técnicos)
+  // Filtros extra: Punto y Rango de Fechas (solo visibles para admins/tÃ©cnicos)
   const elPunto = document.getElementById("filtroPunto");
   const elFecIni = document.getElementById("filtroFechaInicio");
   const elFecFin = document.getElementById("filtroFechaFin");
@@ -1001,7 +1105,7 @@ const NOMBRES_MESES = [
 ];
 
 function formatearFechaVisual(fechaStr) {
-  if (!fechaStr) return "—";
+  if (!fechaStr) return "â€”";
   const partes = fechaStr.split("-");
   if (partes.length !== 3) return fechaStr;
   return `${partes[2]}/${partes[1]}/${partes[0]}`;
@@ -1068,7 +1172,7 @@ function actualizarDisplaysYBotones() {
   const vIni = formatearFechaVisual(DatePickerState.fechaInicio);
   const vFin = formatearFechaVisual(DatePickerState.fechaFin);
 
-  if (lbl) lbl.textContent = `${vIni} – ${vFin}`;
+  if (lbl) lbl.textContent = `${vIni} â€“ ${vFin}`;
   if (dIni) dIni.textContent = vIni;
   if (dFin) dFin.textContent = vFin;
   if (btn) {
@@ -1095,14 +1199,14 @@ function renderCalendario() {
   const mm = dateCursor.getMonth();
   title.textContent = `${NOMBRES_MESES[mm]} ${yyyy}`;
 
-  // Encabezados de días: D, L, M, M, J, V, S
+  // Encabezados de dÃ­as: D, L, M, M, J, V, S
   const diasSemana = ["D", "L", "M", "M", "J", "V", "S"];
   let html = diasSemana.map(d => `<div class="cal-day-name">${d}</div>`).join("");
 
   const primerDiaSemana = new Date(yyyy, mm, 1).getDay(); // 0 = Domingo
   const diasEnMes = new Date(yyyy, mm + 1, 0).getDate();
 
-  // Días vacíos previos
+  // DÃ­as vacÃ­os previos
   for (let i = 0; i < primerDiaSemana; i++) {
     html += `<div class="cal-day cal-day-empty"></div>`;
   }
@@ -1149,7 +1253,7 @@ function seleccionarDia(ymd) {
     DatePickerState.seleccionandoFin = false;
   }
 
-  // Quitar estilo activo de botones rápidos al seleccionar manualmente
+  // Quitar estilo activo de botones rÃ¡pidos al seleccionar manualmente
   document.querySelectorAll(".date-quick-btn").forEach(b => b.classList.remove("active"));
 
   actualizarDisplaysYBotones();
@@ -1181,7 +1285,7 @@ function aplicarRapido(preset) {
     fFin = formatearYMD(hoy);
   }
 
-  // Marcar botón activo
+  // Marcar botÃ³n activo
   document.querySelectorAll(".date-quick-btn").forEach(b => {
     b.classList.remove("active");
     if (b.getAttribute("onclick") && b.getAttribute("onclick").includes(`'${preset}'`)) {
@@ -1225,7 +1329,7 @@ document.addEventListener("click", function (e) {
   }
 });
 
-// Exportar al ámbito global
+// Exportar al Ã¡mbito global
 window.toggleDatePicker = toggleDatePicker;
 window.aplicarRapido = aplicarRapido;
 window.navCal = navCal;
@@ -1241,7 +1345,7 @@ function abrirModalNuevoTicket() {
   document.getElementById("solicitudNombre").value = AppState.currentUser.nombres;
   document.getElementById("solicitudCedula").value = AppState.currentUser.cedula;
   document.getElementById("solicitudEmail").value = AppState.currentUser.email;
-  // Halar automáticamente el celular del empleado logueado
+  // Halar automÃ¡ticamente el celular del empleado logueado
   const elSolCel = document.getElementById("solicitudCelular");
   if (elSolCel) {
     elSolCel.value = AppState.currentUser.celular || "";
@@ -1290,7 +1394,7 @@ function guardarNuevoTicket(e) {
     btn.disabled = false;
     btn.textContent = "Enviar Solicitud";
     if (!res) {
-      mostrarAlerta("No se recibió respuesta del servidor al crear el ticket.", "danger");
+      mostrarAlerta("No se recibiÃ³ respuesta del servidor al crear el ticket.", "danger");
       return;
     }
     if (res.success) {
@@ -1317,7 +1421,7 @@ function guardarNuevoTicket(e) {
 }
 
 // ============================================================================
-// 5. ASIGNACIÓN DE TICKET (COORDINADOR)
+// 5. ASIGNACIÃ“N DE TICKET (COORDINADOR)
 // ============================================================================
 function abrirModalAsignar(nroTicket) {
   const ticket = AppState.tickets.find(t => t.nroTicket === nroTicket);
@@ -1354,16 +1458,16 @@ function abrirModalAsignar(nroTicket) {
     }
   }
 
-  // Repoblar técnicos filtrados estrictamente por el área del ticket
-  // No debe aparecer ningún técnico ni administrador de la otra área
+  // Repoblar tÃ©cnicos filtrados estrictamente por el Ã¡rea del ticket
+  // No debe aparecer ningÃºn tÃ©cnico ni administrador de la otra Ã¡rea
   const selTecnico = document.getElementById("asignacionTecnico");
   if (selTecnico && AppState.catalogos && AppState.catalogos.tecnicos) {
     const areaTicketNorm = normalizarArea(ticket.area);
-    selTecnico.innerHTML = '<option value="">Seleccione Técnico...</option>';
+    selTecnico.innerHTML = '<option value="">Seleccione TÃ©cnico...</option>';
     AppState.catalogos.tecnicos
       .filter(t => {
         const areaTecNorm = normalizarArea(t.area);
-        // Debe pertenecer estrictamente a la misma área del ticket (TIC con TIC, Mantenimiento con Mantenimiento)
+        // Debe pertenecer estrictamente a la misma Ã¡rea del ticket (TIC con TIC, Mantenimiento con Mantenimiento)
         return areaTecNorm === areaTicketNorm;
       })
       .forEach(t => {
@@ -1386,7 +1490,7 @@ function guardarAsignacionTicket(e) {
   const selectedOpt = selTecnico.options[selTecnico.selectedIndex];
 
   if (!selTecnico.value) {
-    mostrarAlerta("Debe seleccionar un técnico.", "warning");
+    mostrarAlerta("Debe seleccionar un tÃ©cnico.", "warning");
     return;
   }
 
@@ -1417,10 +1521,10 @@ function guardarAsignacionTicket(e) {
 
   const callback = function (res) {
     btn.disabled = false;
-    btn.textContent = "Confirmar Asignación";
+    btn.textContent = "Confirmar AsignaciÃ³n";
     if (!res) {
-      mostrarAlerta("No se recibió respuesta del servidor al asignar ticket. Verifica la conexión o la versión desplegada en GAS.", "danger");
-      console.error("asignarTicket devolvió null.");
+      mostrarAlerta("No se recibiÃ³ respuesta del servidor al asignar ticket. Verifica la conexiÃ³n o la versiÃ³n desplegada en GAS.", "danger");
+      console.error("asignarTicket devolviÃ³ null.");
       return;
     }
     if (res.success) {
@@ -1437,7 +1541,7 @@ function guardarAsignacionTicket(e) {
       .withSuccessHandler(callback)
       .withFailureHandler(function (err) {
         btn.disabled = false;
-        btn.textContent = "Confirmar Asignación";
+        btn.textContent = "Confirmar AsignaciÃ³n";
         mostrarAlerta("Error: " + err, "danger");
       })
       .asignarTicket(asignacionData);
@@ -1447,7 +1551,7 @@ function guardarAsignacionTicket(e) {
 }
 
 // ============================================================================
-// 6. CIERRE / GESTIÓN DE TICKET (TÉCNICO)
+// 6. CIERRE / GESTIÃ“N DE TICKET (TÃ‰CNICO)
 // ============================================================================
 function abrirModalCierre(nroTicket) {
   const ticket = AppState.tickets.find(t => t.nroTicket === nroTicket);
@@ -1457,7 +1561,7 @@ function abrirModalCierre(nroTicket) {
   document.getElementById("cierreNroTicket").textContent = ticket.nroTicket;
   document.getElementById("cierreEquipoInfo").textContent = ticket.descripcionEquipo + " | Punto: " + ticket.puntoServicio;
   
-  // 1. Poblar tipos de falla según el técnico / área (TIC vs Mantenimiento)
+  // 1. Poblar tipos de falla segÃºn el tÃ©cnico / Ã¡rea (TIC vs Mantenimiento)
   const areaFalla = determinarAreaParaFalla(ticket);
   poblarTiposFallaPorArea(areaFalla);
 
@@ -1465,7 +1569,7 @@ function abrirModalCierre(nroTicket) {
   document.getElementById("formCierreTicket").reset();
   removerFoto('cierre');
 
-  // 3. ¡PRECARGAR TODOS LOS DATOS PREVIAMENTE GUARDADOS!
+  // 3. Â¡PRECARGAR TODOS LOS DATOS PREVIAMENTE GUARDADOS!
   document.getElementById("cierrePlacaModificada").value = ticket.placa || "";
 
   // Tipo de Falla
@@ -1473,7 +1577,7 @@ function abrirModalCierre(nroTicket) {
     const selFalla = document.getElementById("cierreTipoFalla");
     if (selFalla) {
       selFalla.value = ticket.tipoFalla;
-      // Si por alguna razón no coincidió exactamente, buscar coincidencia parcial
+      // Si por alguna razÃ³n no coincidiÃ³ exactamente, buscar coincidencia parcial
       if (!selFalla.value) {
         for (let i = 0; i < selFalla.options.length; i++) {
           if (selFalla.options[i].text.toLowerCase().includes(ticket.tipoFalla.toLowerCase())) {
@@ -1485,7 +1589,7 @@ function abrirModalCierre(nroTicket) {
     }
   }
 
-  // Repuestos guardados (formato "Condición - Detalle")
+  // Repuestos guardados (formato "CondiciÃ³n - Detalle")
   if (ticket.repuesto) {
     const repStr = String(ticket.repuesto).trim();
     if (repStr && repStr !== "Ninguno") {
@@ -1498,15 +1602,15 @@ function abrirModalCierre(nroTicket) {
     }
   }
 
-  // Mostrar la indicación o instrucción que dejó el coordinador al asignar
+  // Mostrar la indicaciÃ³n o instrucciÃ³n que dejÃ³ el coordinador al asignar
   const estadoTicketActual = (ticket.estado || "").toUpperCase();
   const instruccionCoord = (ticket.observacionesAsignacion || (estadoTicketActual === "PROCESO" ? ticket.respuesta : "") || "").trim();
   const elInstruccion = document.getElementById("cierreInstruccionCoordinador");
   if (elInstruccion) {
-    elInstruccion.textContent = instruccionCoord ? instruccionCoord : "(Sin observaciones adicionales de la coordinación al asignar)";
+    elInstruccion.textContent = instruccionCoord ? instruccionCoord : "(Sin observaciones adicionales de la coordinaciÃ³n al asignar)";
   }
 
-  // Observación / Razón por la cual queda PENDIENTE
+  // ObservaciÃ³n / RazÃ³n por la cual queda PENDIENTE
   if (ticket.razonNoFuncionamiento) {
     document.getElementById("cierreRazonNoOperativo").value = ticket.razonNoFuncionamiento;
   } else if (ticket.respuesta && ticket.respuesta.indexOf("[PENDIENTE:") !== -1) {
@@ -1516,9 +1620,9 @@ function abrirModalCierre(nroTicket) {
     }
   }
 
-  // Observación del trabajo realizado (¿Qué se hizo? - Llenado por el Técnico):
-  // Si el ticket apenas está en PROCESO, dejar el campo en blanco para que el técnico escriba lo que hizo.
-  // Solo si ya fue guardado previamente en PENDIENTE o CERRADO con una respuesta técnica real, precargarla.
+  // ObservaciÃ³n del trabajo realizado (Â¿QuÃ© se hizo? - Llenado por el TÃ©cnico):
+  // Si el ticket apenas estÃ¡ en PROCESO, dejar el campo en blanco para que el tÃ©cnico escriba lo que hizo.
+  // Solo si ya fue guardado previamente en PENDIENTE o CERRADO con una respuesta tÃ©cnica real, precargarla.
   let obsTecnico = "";
   if (estadoTicketActual !== "PROCESO" && ticket.respuesta && ticket.respuesta.trim() !== instruccionCoord) {
     obsTecnico = ticket.respuesta;
@@ -1528,20 +1632,20 @@ function abrirModalCierre(nroTicket) {
   }
   document.getElementById("cierreObservacion").value = obsTecnico.trim();
 
-  // Quién recibe y cédula: Se traen automáticamente de quien creó la incidencia/ticket
+  // QuiÃ©n recibe y cÃ©dula: Se traen automÃ¡ticamente de quien creÃ³ la incidencia/ticket
   const nombreSol = ticket.nombreUsuario || ticket.nombreQuienRecibe || "";
   const cedulaSol = ticket.cedulaSolicitante || ticket.cedulaQuienRecibe || "";
   document.getElementById("cierreQuienRecibe").value = nombreSol;
   document.getElementById("cierreCedulaRecibe").value = cedulaSol;
 
-  // Evidencia fotográfica previa si existe
+  // Evidencia fotogrÃ¡fica previa si existe
   if (ticket.fotoCierreUrl) {
     const box = document.getElementById("cierreFotoPreview");
     const img = document.getElementById("cierreFotoImg");
     const name = document.getElementById("cierreFotoNombre");
     if (box && img) {
       img.src = obtenerDriveThumbnailUrl(ticket.fotoCierreUrl, 400);
-      if (name) name.textContent = "Evidencia de cierre registrada ↗";
+      if (name) name.textContent = "Evidencia de cierre registrada â†—";
       box.style.display = "flex";
     }
   }
@@ -1614,7 +1718,7 @@ function guardarCierreTicket(e) {
   const razonNoOperativo = document.getElementById("cierreRazonNoOperativo").value.trim();
 
   if (esPendiente && !razonNoOperativo) {
-    mostrarAlerta("Debe especificar la razón por la cual el ticket queda PENDIENTE.", "warning");
+    mostrarAlerta("Debe especificar la razÃ³n por la cual el ticket queda PENDIENTE.", "warning");
     document.getElementById("cierreRazonNoOperativo").focus();
     return;
   }
@@ -1643,7 +1747,7 @@ function guardarCierreTicket(e) {
   };
 
   if (!cierreData.observacionTrabajo) {
-    mostrarAlerta("Ingrese la observación del trabajo realizado.", "warning");
+    mostrarAlerta("Ingrese la observaciÃ³n del trabajo realizado.", "warning");
     return;
   }
 
@@ -1655,7 +1759,7 @@ function guardarCierreTicket(e) {
     btn.disabled = false;
     btn.textContent = esPendiente ? "Guardar como Ticket PENDIENTE" : "Finalizar y Cerrar Ticket";
     if (!res) {
-      mostrarAlerta("No se recibió respuesta del servidor al guardar el cierre del ticket.", "danger");
+      mostrarAlerta("No se recibiÃ³ respuesta del servidor al guardar el cierre del ticket.", "danger");
       return;
     }
     if (res.success) {
@@ -1682,7 +1786,7 @@ function guardarCierreTicket(e) {
 }
 
 // ============================================================================
-// 7. MODIFICAR PLACA RÁPIDO
+// 7. MODIFICAR PLACA RÃPIDO
 // ============================================================================
 function abrirModalEditarPlaca(nroTicket, placaActual) {
   AppState.activeTicket = { nroTicket: nroTicket, placa: placaActual };
@@ -1698,7 +1802,7 @@ function guardarModificacionPlaca(e) {
 
   const callback = function (res) {
     if (!res) {
-      mostrarAlerta("No se recibió respuesta al modificar la placa.", "danger");
+      mostrarAlerta("No se recibiÃ³ respuesta al modificar la placa.", "danger");
       return;
     }
     if (res.success) {
@@ -1721,7 +1825,7 @@ function guardarModificacionPlaca(e) {
 }
 
 // ============================================================================
-// 8. DETALLE COMPLETO Y ACORDEÓN (3 SECCIONES)
+// 8. DETALLE COMPLETO Y ACORDEÃ“N (3 SECCIONES)
 // ============================================================================
 function verDetalleTicket(nroTicket) {
   const t = AppState.tickets.find(ticket => ticket.nroTicket === nroTicket);
@@ -1729,7 +1833,7 @@ function verDetalleTicket(nroTicket) {
 
   document.getElementById("detalleTitulo").textContent = `Detalle del Ticket: ${t.nroTicket}`;
   
-  // Sección 1: Solicitud
+  // SecciÃ³n 1: Solicitud
   const elFechaIngreso = document.getElementById("detFechaIngreso");
   if (elFechaIngreso) elFechaIngreso.textContent = t.fechaIngreso || "-";
   document.getElementById("detPunto").textContent = t.puntoServicio || "-";
@@ -1743,21 +1847,21 @@ function verDetalleTicket(nroTicket) {
   document.getElementById("detPlaca").textContent = t.placa || "-";
   document.getElementById("detDescripcion").textContent = t.descripcionSolicitud || "-";
 
-  // Sección 2: Asignación
-  document.getElementById("detTecnico").textContent = t.responsable ? `${t.responsable} (C.C. ${t.cedulaResponsable})` : "Pendiente de Asignación";
+  // SecciÃ³n 2: AsignaciÃ³n
+  document.getElementById("detTecnico").textContent = t.responsable ? `${t.responsable} (C.C. ${t.cedulaResponsable})` : "Pendiente de AsignaciÃ³n";
   const elFechaAsig = document.getElementById("detFechaAsignacion");
   if (elFechaAsig) elFechaAsig.textContent = t.fechaAsignacion || "-";
   document.getElementById("detFechaVisita").textContent = t.fechaVisita || "No programada";
   document.getElementById("detTecnica").textContent = t.tecnicaMantenimiento || "-";
   document.getElementById("detObsAsignacion").textContent = t.observacionesAsignacion || "-";
 
-  // Sección 3: Cierre
+  // SecciÃ³n 3: Cierre
   document.getElementById("detFechaCierre").textContent = t.fechaCierre || "En Proceso";
   document.getElementById("detEstadoFinal").textContent = t.estado || "-";
   document.getElementById("detFalla").textContent = t.tipoFalla || "-";
   document.getElementById("detRepuestos").textContent = t.repuesto || "-";
 
-  // Mostrar razón por la cual queda PENDIENTE si existe
+  // Mostrar razÃ³n por la cual queda PENDIENTE si existe
   const contRazon = document.getElementById("detRazonPendienteItem");
   const elRazon = document.getElementById("detRazonPendiente");
   if (contRazon && elRazon) {
@@ -1770,7 +1874,7 @@ function verDetalleTicket(nroTicket) {
     }
   }
 
-  // Trabajo Realizado / Avance del Técnico
+  // Trabajo Realizado / Avance del TÃ©cnico
   const elDetTrabajo = document.getElementById("detTrabajo");
   if (elDetTrabajo) {
     elDetTrabajo.textContent = t.respuesta || "-";
@@ -1780,7 +1884,7 @@ function verDetalleTicket(nroTicket) {
   const receptorCedula = t.cedulaQuienRecibe || t.cedulaSolicitante || "";
   document.getElementById("detRecibe").textContent = receptorNombre ? `${receptorNombre}${receptorCedula ? ' (C.C. ' + receptorCedula + ')' : ''}` : "-";
   
-  // Renderizar evidencias fotográficas si existen
+  // Renderizar evidencias fotogrÃ¡ficas si existen
   const contFotoSol = document.getElementById("detFotoSolicitudItem");
   const elFotoSol = document.getElementById("detFotoSolicitudContent");
   if (contFotoSol && elFotoSol) {
@@ -1805,14 +1909,14 @@ function verDetalleTicket(nroTicket) {
     }
   }
 
-  // Sección 4: Gestión Administrativa (Administradora / Costos)
+  // SecciÃ³n 4: GestiÃ³n Administrativa (Administradora / Costos)
   const cardAdmin = document.getElementById("detFaseAdminCard");
   const tieneDatosAdmin = !!(t.costo || t.aprobacion || t.obsAdmin || t.consultaAdmin || t.proveedor);
   const rolUserActivo = String(AppState.currentUser && AppState.currentUser.tipoUsuario || "").toLowerCase();
-  const esAdmOAdmin = rolUserActivo === "administradora" || rolUserActivo.includes("administrador");
+  const puedeGestionarCostos = tienePermiso("GESTIONAR_COSTOS") || rolUserActivo === "administradora" || rolUserActivo.includes("administrador");
 
   if (cardAdmin) {
-    if (tieneDatosAdmin || esAdmOAdmin) {
+    if (tieneDatosAdmin || puedeGestionarCostos) {
       cardAdmin.style.display = "block";
       const elCosto = document.getElementById("detCosto");
       if (elCosto) elCosto.textContent = t.costo || "Sin costo registrado";
@@ -1831,14 +1935,14 @@ function verDetalleTicket(nroTicket) {
 
   const btnAdminContainer = document.getElementById("detBtnAdminContainer");
   if (btnAdminContainer) {
-    btnAdminContainer.style.display = (rolUserActivo === "administradora") ? "block" : "none";
+    btnAdminContainer.style.display = (tienePermiso("GESTIONAR_COSTOS") || rolUserActivo === "administradora") ? "block" : "none";
   }
 
   abrirModal("modalDetalleTicket");
 }
 
 // ============================================================================
-// 9. UTILIDADES Y MANEJO DE IMÁGENES & GOOGLE DRIVE
+// 9. UTILIDADES Y MANEJO DE IMÃGENES & GOOGLE DRIVE
 // ============================================================================
 function manejarSeleccionFoto(input, tipo) {
   if (input.files && input.files[0]) {
@@ -1910,7 +2014,7 @@ function extraerDriveId(url) {
   return "";
 }
 
-// Genera la URL de miniatura directa para visualización web
+// Genera la URL de miniatura directa para visualizaciÃ³n web
 function obtenerDriveThumbnailUrl(driveUrl, ancho) {
   if (!driveUrl) return "";
   ancho = ancho || 800;
@@ -1922,7 +2026,7 @@ function obtenerDriveThumbnailUrl(driveUrl, ancho) {
   return driveUrl;
 }
 
-// Genera la URL directa de Google Drive para abrir en una nueva pestaña
+// Genera la URL directa de Google Drive para abrir en una nueva pestaÃ±a
 function obtenerDriveViewUrl(driveUrl) {
   var folderUrl = "https://drive.google.com/drive/folders/1h6-vMUtci8YKuWISrpm9Fm7nUXkn0C1X";
   if (!driveUrl) return folderUrl;
@@ -1939,19 +2043,19 @@ function renderizarComponenteFoto(driveUrl, titulo) {
   if (!driveUrl) return "";
   var thumbUrl = obtenerDriveThumbnailUrl(driveUrl, 600);
   var viewUrl = obtenerDriveViewUrl(driveUrl);
-  var safeTitulo = (titulo || "Evidencia Fotográfica").replace(/'/g, "\\'");
+  var safeTitulo = (titulo || "Evidencia FotogrÃ¡fica").replace(/'/g, "\\'");
 
   return '<div class="evidence-card">' +
     '<div class="evidence-thumb-wrapper" onclick="abrirLightbox(\'' + driveUrl + '\', \'' + safeTitulo + '\')" title="Clic para ampliar imagen">' +
       '<img src="' + thumbUrl + '" alt="Evidencia" loading="lazy" onerror="onImageError(this, \'' + driveUrl + '\')">' +
       '<div class="evidence-overlay-zoom">' +
-        '<span>🔍 Clic para ampliar</span>' +
+        '<span>ðŸ” Clic para ampliar</span>' +
       '</div>' +
     '</div>' +
     '<div class="evidence-actions">' +
       '<span style="font-size: 0.75rem; color: var(--text-dim);">Google Drive</span>' +
       '<a href="' + viewUrl + '" target="_blank" rel="noopener noreferrer" class="btn-drive-link">' +
-        '<span>📁</span> Abrir en Drive ↗' +
+        '<span>ðŸ“</span> Abrir en Drive â†—' +
       '</a>' +
     '</div>' +
   '</div>';
@@ -2001,7 +2105,7 @@ function mostrarFallbackImg(imgEl, originalUrl) {
   if (parent) {
     parent.innerHTML = `
       <div style="padding: 1.5rem; text-align: center; color: var(--text-muted);">
-        <span style="font-size: 2rem; display: block; margin-bottom: 0.35rem;">🖼️</span>
+        <span style="font-size: 2rem; display: block; margin-bottom: 0.35rem;">ðŸ–¼ï¸</span>
         <span style="font-size: 0.82rem; display: block; color: #93c5fd; font-weight: 600;">Ver Evidencia Adjunta</span>
         <span style="font-size: 0.72rem; color: var(--text-dim);">Clic para ver en Google Drive</span>
       </div>
@@ -2022,7 +2126,7 @@ function abrirLightbox(driveUrl, titulo) {
   const elImg = document.getElementById("lightboxImg");
   const elBtn = document.getElementById("lightboxDriveBtn");
 
-  if (elTitulo) elTitulo.textContent = titulo || "Evidencia Fotográfica";
+  if (elTitulo) elTitulo.textContent = titulo || "Evidencia FotogrÃ¡fica";
   if (elImg) {
     elImg.src = thumbUrl;
     elImg.onerror = function() {
@@ -2062,10 +2166,10 @@ function cerrarModal(modalId) {
 // 10.5 FUNCIONES RECLUTADOR / RECURSOS HUMANOS
 // ============================================================================
 
-/** Datos de empleados cargados desde Excel, esperando confirmación */
+/** Datos de empleados cargados desde Excel, esperando confirmaciÃ³n */
 var _datosEmpleadosMasivoPendientes = [];
 
-/** Abre el modal de gestión de empleados (RRHH) */
+/** Abre el modal de gestiÃ³n de empleados (RRHH) */
 function abrirModalGestionEmpleados() {
   limpiarCargaMasiva();
   cambiarTabEmpleados('individual');
@@ -2080,7 +2184,7 @@ function abrirModalNuevoPunto() {
   abrirModal('modalNuevoPunto');
 }
 
-/** Cambia entre pestaña individual y masiva */
+/** Cambia entre pestaÃ±a individual y masiva */
 function cambiarTabEmpleados(tab) {
   const tabIndividual = document.getElementById('tabContentIndividual');
   const tabMasivo = document.getElementById('tabContentMasivo');
@@ -2103,13 +2207,15 @@ function cambiarTabEmpleados(tab) {
 /** Guarda un empleado individual en la hoja EMPLEADOS */
 function guardarEmpleadoIndividual(e) {
   e.preventDefault();
+  const elPermisos = document.getElementById('empPermisos');
   const datos = {
     cedula: document.getElementById('empCedula').value.trim(),
     nombres: document.getElementById('empNombres').value.trim().toUpperCase(),
     email: document.getElementById('empEmail').value.trim(),
     celular: document.getElementById('empCelular').value.trim(),
     tipoUsuario: document.getElementById('empTipoUsuario').value,
-    area: document.getElementById('empArea').value.trim().toUpperCase()
+    area: document.getElementById('empArea').value.trim().toUpperCase(),
+    permisos: elPermisos ? elPermisos.value.trim().toUpperCase() : ""
   };
 
   if (!datos.cedula || !datos.nombres || !datos.email || !datos.celular) {
@@ -2139,7 +2245,7 @@ function guardarEmpleadoIndividual(e) {
       .withFailureHandler(function(err) {
         btn.disabled = false;
         btn.textContent = 'Registrar Empleado';
-        mostrarAlerta('Error de conexión: ' + err, 'danger');
+        mostrarAlerta('Error de conexiÃ³n: ' + err, 'danger');
       })
       .agregarEmpleadoIndividual(datos);
   } else {
@@ -2154,7 +2260,7 @@ function procesarArchivoExcelEmpleados(input) {
 
   // Mostrar nombre del archivo
   const nombreEl = document.getElementById('excelNombreArchivo');
-  if (nombreEl) { nombreEl.textContent = '📄 ' + file.name; nombreEl.style.display = 'block'; }
+  if (nombreEl) { nombreEl.textContent = 'ðŸ“„ ' + file.name; nombreEl.style.display = 'block'; }
 
   const reader = new FileReader();
   reader.onload = function(e) {
@@ -2166,7 +2272,7 @@ function procesarArchivoExcelEmpleados(input) {
       const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
 
       if (rows.length < 2) {
-        mostrarAlerta('El archivo está vacío o no tiene datos suficientes.', 'warning');
+        mostrarAlerta('El archivo estÃ¡ vacÃ­o o no tiene datos suficientes.', 'warning');
         return;
       }
 
@@ -2187,7 +2293,8 @@ function procesarArchivoExcelEmpleados(input) {
             email: String(row[2] || '').trim(),
             celular: String(row[3] || '').trim(),
             tipoUsuario: String(row[4] || 'Empleado').trim() || 'Empleado',
-            area: String(row[5] || 'OPERACIONES').trim().toUpperCase() || 'OPERACIONES'
+            area: String(row[5] || 'OPERACIONES').trim().toUpperCase() || 'OPERACIONES',
+            permisos: String(row[6] || '').trim().toUpperCase()
           };
         })
         .filter(function(emp) { return emp.cedula !== '' && emp.nombres !== ''; });
@@ -2204,7 +2311,7 @@ function procesarArchivoExcelEmpleados(input) {
 function analizarTextoPegado() {
   const texto = document.getElementById('textareaPegarEmpleados').value.trim();
   if (!texto) {
-    mostrarAlerta('Pega el contenido copiado de Excel en el área de texto.', 'warning');
+    mostrarAlerta('Pega el contenido copiado de Excel en el Ã¡rea de texto.', 'warning');
     return;
   }
 
@@ -2218,7 +2325,8 @@ function analizarTextoPegado() {
         email: cols[2] || '',
         celular: cols[3] || '',
         tipoUsuario: cols[4] || 'Empleado',
-        area: (cols[5] || 'OPERACIONES').toUpperCase()
+        area: (cols[5] || 'OPERACIONES').toUpperCase(),
+        permisos: (cols[6] || '').toUpperCase()
       };
     })
     .filter(function(emp) { return emp.cedula !== '' && emp.nombres !== ''; });
@@ -2247,6 +2355,7 @@ function mostrarVistaPreviewMasivo() {
       <td>${emp.celular}</td>
       <td><span style="font-size:0.75rem; background: rgba(99,102,241,0.15); color:#818cf8; padding: 0.15rem 0.45rem; border-radius: 4px;">${emp.tipoUsuario}</span></td>
       <td style="font-size:0.75rem;">${emp.area}</td>
+      <td style="font-size:0.72rem; color: var(--text-muted);">${emp.permisos || '<em style="color: var(--text-dim);">Por rol</em>'}</td>
     </tr>`;
   }).join('');
 
@@ -2274,7 +2383,7 @@ function limpiarCargaMasiva() {
   if (btnImportar) btnImportar.disabled = true;
 }
 
-/** Ejecuta la importación masiva enviando datos al backend */
+/** Ejecuta la importaciÃ³n masiva enviando datos al backend */
 function ejecutarImportacionMasiva() {
   if (!_datosEmpleadosMasivoPendientes.length) {
     mostrarAlerta('No hay empleados para importar. Carga un archivo Excel primero.', 'warning');
@@ -2283,12 +2392,12 @@ function ejecutarImportacionMasiva() {
 
   const btn = document.getElementById('btnImportarMasivo');
   btn.disabled = true;
-  btn.textContent = '⏳ Importando ' + _datosEmpleadosMasivoPendientes.length + ' empleados...';
+  btn.textContent = 'â³ Importando ' + _datosEmpleadosMasivoPendientes.length + ' empleados...';
 
   const callback = function(res) {
-    btn.textContent = '🚀 Importar Empleados a la Base de Datos';
+    btn.textContent = 'ðŸš€ Importar Empleados a la Base de Datos';
     if (res.success) {
-      mostrarAlerta('✅ ' + res.message, 'success');
+      mostrarAlerta('âœ… ' + res.message, 'success');
       limpiarCargaMasiva();
       cerrarModal('modalGestionEmpleados');
     } else {
@@ -2302,8 +2411,8 @@ function ejecutarImportacionMasiva() {
       .withSuccessHandler(callback)
       .withFailureHandler(function(err) {
         btn.disabled = false;
-        btn.textContent = '🚀 Importar Empleados a la Base de Datos';
-        mostrarAlerta('Error de conexión: ' + err, 'danger');
+        btn.textContent = 'ðŸš€ Importar Empleados a la Base de Datos';
+        mostrarAlerta('Error de conexiÃ³n: ' + err, 'danger');
       })
       .agregarEmpleadosMasivo(_datosEmpleadosMasivoPendientes);
   } else {
@@ -2315,13 +2424,14 @@ function ejecutarImportacionMasiva() {
 function descargarPlantillaExcel() {
   try {
     const wb = XLSX.utils.book_new();
-    const headers = ['CEDULA', 'NOMBRES APELLIDOS', 'EMAIL', 'CELULAR', 'TIPO USUARIO', 'AREA'];
+    const headers = ['CEDULA', 'NOMBRES APELLIDOS', 'EMAIL', 'CELULAR', 'TIPO USUARIO', 'AREA', 'PERMISOS'];
     const ejemplos = [
-      ['1022922805', 'JUAN DAVID PINEDA', 'jdpineda@dialimentos.com.co', '3118019926', 'Empleado', 'OPERACIONES']
+      ['1022922805', 'JUAN DAVID PINEDA', 'jdpineda@dialimentos.com.co', '3118019926', 'Empleado', 'OPERACIONES', 'CREAR'],
+      ['79565579', 'JEOFFREY PARDO DIAZ', 'pardo@dialimentos.com.co', '3186666686', 'Administrador', 'TIC', 'ASIGNAR, CERRAR, FILTRAR, BUSCAR, EDITAR_PLACA, VER_TODOS']
     ];
     const ws = XLSX.utils.aoa_to_sheet([headers, ...ejemplos]);
     // Ancho de columnas
-    ws['!cols'] = [{ wch: 14 }, { wch: 30 }, { wch: 32 }, { wch: 14 }, { wch: 18 }, { wch: 16 }];
+    ws['!cols'] = [{ wch: 14 }, { wch: 30 }, { wch: 32 }, { wch: 14 }, { wch: 18 }, { wch: 16 }, { wch: 35 }];
     XLSX.utils.book_append_sheet(wb, ws, 'Empleados');
     XLSX.writeFile(wb, 'Plantilla_Empleados_Dialimentos.xlsx');
   } catch (err) {
@@ -2329,11 +2439,11 @@ function descargarPlantillaExcel() {
   }
 }
 
-/** Auto-genera un código corto para el punto de servicio */
+/** Auto-genera un cÃ³digo corto para el punto de servicio */
 function autogenerarCodigoPunto(nombre) {
   const codigoEl = document.getElementById('puntoCodigoInput');
   if (!codigoEl) return;
-  // Tomar las primeras letras de cada palabra, máximo 8 caracteres
+  // Tomar las primeras letras de cada palabra, mÃ¡ximo 8 caracteres
   const codigo = nombre.trim().toUpperCase()
     .replace(/[^A-Z0-9 ]/g, '')
     .split(' ')
@@ -2351,7 +2461,7 @@ function guardarNuevoPunto(e) {
   const codigo = document.getElementById('puntoCodigoInput').value.trim().toUpperCase();
 
   if (!nombre || !codigo) {
-    mostrarAlerta('El nombre y código del punto son obligatorios.', 'warning');
+    mostrarAlerta('El nombre y cÃ³digo del punto son obligatorios.', 'warning');
     return;
   }
 
@@ -2363,7 +2473,7 @@ function guardarNuevoPunto(e) {
     btn.disabled = false;
     btn.textContent = 'Guardar Punto de Servicio';
     if (res.success) {
-      mostrarAlerta('✅ ' + res.message, 'success');
+      mostrarAlerta('âœ… ' + res.message, 'success');
       // Agregar al select de puntos en el formulario de ticket sin recargar
       const selPunto = document.getElementById('solicitudPunto');
       if (selPunto && res.punto) {
@@ -2382,7 +2492,7 @@ function guardarNuevoPunto(e) {
       .withFailureHandler(function(err) {
         btn.disabled = false;
         btn.textContent = 'Guardar Punto de Servicio';
-        mostrarAlerta('Error de conexión: ' + err, 'danger');
+        mostrarAlerta('Error de conexiÃ³n: ' + err, 'danger');
       })
       .agregarPuntoServicio({ nombre: nombre, codigo: codigo });
   } else {
@@ -2408,7 +2518,7 @@ function actualizarRelojModal() {
     hour12: true
   };
   const texto = ahora.toLocaleString("es-CO", opciones);
-  el.innerHTML = `🕒 ${texto} <span style="font-size: 0.72rem; color: #94a3b8; font-weight: 500; margin-left: 0.35rem;">(Hora Colombia)</span>`;
+  el.innerHTML = `ðŸ•’ ${texto} <span style="font-size: 0.72rem; color: #94a3b8; font-weight: 500; margin-left: 0.35rem;">(Hora Colombia)</span>`;
 }
 
 function formatearFechaHoraCO(fechaStr) {
@@ -2460,13 +2570,13 @@ function mostrarAlerta(mensaje, tipo) {
 }
 
 // ============================================================================
-// 11. MÓDULO ADMINISTRADORA
+// 11. MÃ“DULO ADMINISTRADORA
 // ============================================================================
 
 /**
- * Abre el modal de gestión exclusivo de la Administradora.
+ * Abre el modal de gestiÃ³n exclusivo de la Administradora.
  * Permite ver todos los datos del ticket y registrar:
- * Costo, Aprobación, Observación, Consulta y Proveedor.
+ * Costo, AprobaciÃ³n, ObservaciÃ³n, Consulta y Proveedor.
  */
 function abrirModalAdministradora(nroTicket) {
   const t = AppState.tickets.find(ticket => ticket.nroTicket === nroTicket);
@@ -2519,7 +2629,7 @@ function guardarCamposAdministradora(e) {
     if (btn) { btn.disabled = false; btn.textContent = "Guardar Cambios"; }
     if (!res) { mostrarAlerta("Sin respuesta del servidor.", "danger"); return; }
     if (res.success) {
-      // Actualización reactiva instantánea en memoria
+      // ActualizaciÃ³n reactiva instantÃ¡nea en memoria
       if (AppState.activeTicket) {
         AppState.activeTicket.costo = datos.costo;
         AppState.activeTicket.aprobacion = datos.aprobacion;
