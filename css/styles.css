@@ -1863,38 +1863,6 @@ textarea.form-control {
   }
 }
 
-/* ── Botón Flotante Móvil para Nueva Solicitud (FAB) ── */
-.mobile-fab-create {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .mobile-fab-create {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    position: fixed;
-    bottom: calc(1.15rem + env(safe-area-inset-bottom, 0px));
-    right: 1.15rem;
-    z-index: 800;
-    background: linear-gradient(135deg, var(--diali-pink) 0%, var(--diali-purple) 100%);
-    color: #ffffff;
-    padding: 0.82rem 1.3rem;
-    border-radius: var(--radius-full);
-    font-weight: 800;
-    font-size: 0.92rem;
-    box-shadow: 0 8px 25px rgba(206, 0, 88, 0.45);
-    border: none;
-    cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-  }
-
-  .mobile-fab-create:active {
-    transform: scale(0.94);
-  }
-}
-
 /* ==========================================================================
    VISOR Y DESCARGA DE ACTA DE ENTREGA TÉCNICA (PDF & PREVIEW)
    ========================================================================== */

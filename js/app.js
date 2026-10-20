@@ -753,8 +753,6 @@ function mostrarAppPrincipal() {
 
   // Mostrar botón de creación de tickets según permiso CREAR
   const puedeCrear = tienePermiso("CREAR");
-  const btnFab = document.getElementById("btnFabNuevoTicket");
-  if (btnFab) btnFab.style.display = puedeCrear ? "flex" : "none";
   const btnNuevoHdr = document.getElementById("btnCrearTicketPrincipal");
   if (btnNuevoHdr) btnNuevoHdr.style.display = puedeCrear ? "" : "none";
 
