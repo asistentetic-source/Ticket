@@ -1132,7 +1132,7 @@ function renderizarTablaTickets() {
           <span class="resp-label" style="display: none;">👤 Responsable: </span>
           ${t.responsable ? `<span>👤 ${t.responsable}</span>` : '<span style="color: var(--text-dim);">👤 Sin Asignar</span>'}
           ${puedeVerAdmin && t.proveedor ? `<br><small style="color: var(--text-muted); font-size: 0.74rem;" title="Proveedor">🏭 ${t.proveedor}</small>` : ''}
-          ${puedeVerAdmin && t.consultaAdmin ? `<br><small style="color: var(--text-dim); font-size: 0.72rem;" title="Consulta realizada a">📞 ${t.consultaAdmin}</small>` : ''}
+          ${puedeVerAdmin && t.consultaAdmin ? `<br><small style="color: var(--text-dim); font-size: 0.72rem;" title="Preaprobado por / Consulta realizada a">📞 ${t.consultaAdmin}</small>` : ''}
         </td>
         <td class="col-estado">
           <span class="badge-tag ${estadoClass}">${t.estado}</span>
