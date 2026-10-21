@@ -392,6 +392,7 @@ function obtenerPermisosUsuario(user) {
     fallback.add("VER_TODOS");
     fallback.add("EDITAR_PLACA");
     fallback.add("PUNTOS");
+    fallback.add("GESTIONAR_COSTOS");
     if (area === "RRHH" || area.includes("HUMAN")) fallback.add("RRHH");
   } else if (tipo.includes("tecnico") || tipo.includes("técnico")) {
     fallback.add("CERRAR");
@@ -420,8 +421,88 @@ function tienePermiso(permiso) {
          AppState.currentUserPermisosSet.has("ADMIN");
 }
 
+/**
+ * Determina si el usuario logueado tiene permiso para ver los datos de gestión administrativa
+ * (Estado de Aprobación, Costo, Proveedor, A quién se le hizo la consulta, Observación administrativa).
+ * Regla de negocio:
+ * - Administradora (cédula 1234): Mantenimiento.
+ * - Administradores, Coordinadores y Técnicos del área a la que pertenece el ticket (TIC vs Mantenimiento).
+ * - Usuarios con permiso explícito GESTIONAR_COSTOS.
+ * - Los solicitantes y usuarios de otras áreas NO ven estos datos internos.
+ */
+function puedeVerDatosAdministrativosTicket(t) {
+  if (!AppState.currentUser) return false;
+  const rol = String(AppState.currentUser.tipoUsuario || "").toLowerCase();
+
+  const esPerfilAutorizado = rol === "administradora" ||
+                             rol.includes("administrador") || 
+                             rol.includes("coordinador") || 
+                             rol.includes("tecnico") || 
+                             rol.includes("técnico") ||
+                             tienePermiso("GESTIONAR_COSTOS");
+
+  if (!esPerfilAutorizado) {
+    return false;
+  }
+
+  let areaTicket = normalizarArea(t && t.area ? t.area : "");
+  if (!areaTicket && t && t.nroTicket) {
+    const nro = String(t.nroTicket).toUpperCase();
+    if (nro.startsWith("TIC-")) areaTicket = "TIC";
+    else if (nro.startsWith("MTO-")) areaTicket = "MANTENIMIENTO";
+  }
+
+  // Perfil Administradora: exclusivo Mantenimiento
+  if (rol === "administradora") {
+    return areaTicket === "MANTENIMIENTO";
+  }
+
+  const areaUser = normalizarArea(AppState.currentUser.area);
+  // Si no tiene área fija asignada, permitir (acceso global)
+  if (!areaUser) return true;
+  if (!areaTicket) return true;
+
+  return areaUser === areaTicket;
+}
+
+/**
+ * Determina si el usuario logueado puede registrar o modificar los campos administrativos del ticket.
+ * (Administradora, Administradores y Coordinadores del área).
+ */
+function puedeGestionarCostosTicket(t) {
+  if (!AppState.currentUser) return false;
+  const rol = String(AppState.currentUser.tipoUsuario || "").toLowerCase();
+
+  const esAdministradora = rol === "administradora";
+  const esAdmin = rol.includes("administrador");
+  const esCoord = rol.includes("coordinador");
+
+  if (!esAdministradora && !esAdmin && !esCoord && !tienePermiso("GESTIONAR_COSTOS")) {
+    return false;
+  }
+
+  let areaTicket = normalizarArea(t && t.area ? t.area : "");
+  if (!areaTicket && t && t.nroTicket) {
+    const nro = String(t.nroTicket).toUpperCase();
+    if (nro.startsWith("TIC-")) areaTicket = "TIC";
+    else if (nro.startsWith("MTO-")) areaTicket = "MANTENIMIENTO";
+  }
+
+  if (esAdministradora) {
+    return areaTicket === "MANTENIMIENTO";
+  }
+
+  const areaUser = normalizarArea(AppState.currentUser.area);
+  if (!areaUser) return true;
+  if (!areaTicket) return true;
+
+  return areaUser === areaTicket;
+}
+
 window.tienePermiso = tienePermiso;
 window.obtenerPermisosUsuario = obtenerPermisosUsuario;
+window.puedeVerDatosAdministrativosTicket = puedeVerDatosAdministrativosTicket;
+window.puedeGestionarCostosTicket = puedeGestionarCostosTicket;
 
 // ============================================================================
 // 2. AUTENTICACIÓN Y SESIÓN
@@ -1020,8 +1101,11 @@ function renderizarTablaTickets() {
       botonesAccion += ` <button class="btn ${clsBtn} btn-sm" onclick="abrirModalCierre('${t.nroTicket}')">${txtBtn}</button>`;
     }
 
-    // Botón para Administradora o usuarios con permiso GESTIONAR_COSTOS
-    if (tienePermiso("GESTIONAR_COSTOS") || esAdministradora) {
+    const puedeVerAdmin = puedeVerDatosAdministrativosTicket(t);
+    const puedeGestionarAdmin = puedeGestionarCostosTicket(t);
+
+    // Botón para Administradora, Coordinador o Administrador del área correspondiente
+    if (puedeGestionarAdmin) {
       botonesAccion += ` <button class="btn btn-sm" style="background: rgba(217, 119, 6, 0.12); border: 1px solid rgba(217, 119, 6, 0.35); color: #b45309; font-weight: 600;" onclick="abrirModalAdministradora('${t.nroTicket}')">💼 Gestionar</button>`;
     }
 
@@ -1047,12 +1131,13 @@ function renderizarTablaTickets() {
         <td class="col-resp">
           <span class="resp-label" style="display: none;">👤 Responsable: </span>
           ${t.responsable ? `<span>👤 ${t.responsable}</span>` : '<span style="color: var(--text-dim);">👤 Sin Asignar</span>'}
-          ${(esAdministradora || tienePermiso("GESTIONAR_COSTOS")) && t.proveedor ? `<br><small style="color: var(--text-muted); font-size: 0.74rem;">🏭 ${t.proveedor}</small>` : ''}
+          ${puedeVerAdmin && t.proveedor ? `<br><small style="color: var(--text-muted); font-size: 0.74rem;" title="Proveedor">🏭 ${t.proveedor}</small>` : ''}
+          ${puedeVerAdmin && t.consultaAdmin ? `<br><small style="color: var(--text-dim); font-size: 0.72rem;" title="Consulta realizada a">📞 ${t.consultaAdmin}</small>` : ''}
         </td>
         <td class="col-estado">
           <span class="badge-tag ${estadoClass}">${t.estado}</span>
-          ${(esAdministradora || tienePermiso("GESTIONAR_COSTOS")) && t.aprobacion ? `<br><span style="display: inline-block; margin-top: 4px; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-weight: 500;">📋 ${t.aprobacion}</span>` : ''}
-          ${(esAdministradora || tienePermiso("GESTIONAR_COSTOS")) && t.costo ? `<br><span style="display: inline-block; margin-top: 2px; font-size: 0.72rem; padding: 1px 5px; border-radius: 4px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-weight: 600;">💰 ${t.costo}</span>` : ''}
+          ${puedeVerAdmin && t.aprobacion ? `<br><span style="display: inline-block; margin-top: 4px; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-weight: 500;" title="Estado de Aprobación">📋 ${t.aprobacion}</span>` : ''}
+          ${puedeVerAdmin && t.costo ? `<br><span style="display: inline-block; margin-top: 2px; font-size: 0.72rem; padding: 1px 5px; border-radius: 4px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-weight: 600;" title="Costo registrado">💰 ${t.costo}</span>` : ''}
         </td>
         <td class="col-acciones">
           <div class="actions-container">
@@ -1614,6 +1699,26 @@ function abrirModalCierre(nroTicket) {
     elInstruccion.textContent = instruccionCoord ? instruccionCoord : "(Sin observaciones adicionales de la coordinación al asignar)";
   }
 
+  // Mostrar datos de Gestión Administrativa (Aprobación, Costo, Proveedor, Consulta) si existen y tiene permiso
+  const contAdminCierre = document.getElementById("cierreDatosAdminContainer");
+  if (contAdminCierre) {
+    const puedeVer = puedeVerDatosAdministrativosTicket(ticket);
+    const tieneAlgunDato = !!(ticket.aprobacion || ticket.costo || ticket.proveedor || ticket.consultaAdmin);
+    if (puedeVer && tieneAlgunDato) {
+      contAdminCierre.style.display = "block";
+      const elAp = document.getElementById("cierreDetAprobacion");
+      if (elAp) elAp.textContent = ticket.aprobacion || "Sin definir";
+      const elCs = document.getElementById("cierreDetCosto");
+      if (elCs) elCs.textContent = ticket.costo || "Sin costo";
+      const elPr = document.getElementById("cierreDetProveedor");
+      if (elPr) elPr.textContent = ticket.proveedor || "No asignado";
+      const elCn = document.getElementById("cierreDetConsulta");
+      if (elCn) elCn.textContent = ticket.consultaAdmin || "-";
+    } else {
+      contAdminCierre.style.display = "none";
+    }
+  }
+
   // Observación / Razón por la cual queda PENDIENTE
   if (ticket.razonNoFuncionamiento) {
     document.getElementById("cierreRazonNoOperativo").value = ticket.razonNoFuncionamiento;
@@ -1914,14 +2019,13 @@ function verDetalleTicket(nroTicket) {
     }
   }
 
-  // Sección 4: Gestión Administrativa (Administradora / Costos)
+  // Sección 4: Gestión Administrativa (Costos, Aprobación, Proveedor, Consulta)
   const cardAdmin = document.getElementById("detFaseAdminCard");
-  const tieneDatosAdmin = !!(t.costo || t.aprobacion || t.obsAdmin || t.consultaAdmin || t.proveedor);
-  const rolUserActivo = String(AppState.currentUser && AppState.currentUser.tipoUsuario || "").toLowerCase();
-  const puedeGestionarCostos = tienePermiso("GESTIONAR_COSTOS") || rolUserActivo === "administradora" || rolUserActivo.includes("administrador");
+  const puedeVerAdmin = puedeVerDatosAdministrativosTicket(t);
+  const puedeGestionarAdmin = puedeGestionarCostosTicket(t);
 
   if (cardAdmin) {
-    if (tieneDatosAdmin || puedeGestionarCostos) {
+    if (puedeVerAdmin) {
       cardAdmin.style.display = "block";
       const elCosto = document.getElementById("detCosto");
       if (elCosto) elCosto.textContent = t.costo || "Sin costo registrado";
@@ -1940,7 +2044,7 @@ function verDetalleTicket(nroTicket) {
 
   const btnAdminContainer = document.getElementById("detBtnAdminContainer");
   if (btnAdminContainer) {
-    btnAdminContainer.style.display = (tienePermiso("GESTIONAR_COSTOS") || rolUserActivo === "administradora") ? "block" : "none";
+    btnAdminContainer.style.display = puedeGestionarAdmin ? "block" : "none";
   }
 
   // Mostrar acceso al Acta de Entrega Técnica si el ticket está CERRADO
@@ -2598,6 +2702,11 @@ function abrirModalAdministradora(nroTicket) {
   const t = AppState.tickets.find(ticket => ticket.nroTicket === nroTicket);
   if (!t) { mostrarAlerta("Ticket no encontrado.", "danger"); return; }
 
+  if (!puedeGestionarCostosTicket(t)) {
+    mostrarAlerta("No tiene permisos para gestionar administrativamente este ticket.", "warning");
+    return;
+  }
+
   AppState.activeTicket = t;
 
   // Encabezado
@@ -2626,6 +2735,11 @@ function guardarCamposAdministradora(e) {
   e.preventDefault();
   if (!AppState.activeTicket) {
     mostrarAlerta("No hay ticket activo.", "danger");
+    return;
+  }
+
+  if (!puedeGestionarCostosTicket(AppState.activeTicket)) {
+    mostrarAlerta("No tiene permisos para modificar estos campos.", "danger");
     return;
   }
 

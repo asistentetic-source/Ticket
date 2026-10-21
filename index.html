@@ -497,6 +497,19 @@
             </p>
           </div>
 
+          <!-- Datos de Gestión Administrativa (Aprobación, Costo, Proveedor, Consulta) visibles para Técnicos y Coordinadores del área -->
+          <div id="cierreDatosAdminContainer" style="display: none; background: #fffdf5; border: 1px solid #fde68a; border-left: 4px solid #f59e0b; border-radius: 6px; padding: 0.85rem 1rem; margin-bottom: 1.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.4rem; color: #b45309; font-weight: 700; font-size: 0.82rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.03em;">
+              <span>💼 Gestión Administrativa y Aprobación:</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.45rem 0.85rem; font-size: 0.85rem; color: var(--text-main);">
+              <div><strong style="color: #b45309;">✅ Aprobación:</strong> <span id="cierreDetAprobacion" style="font-weight: 600;">-</span></div>
+              <div><strong style="color: #15803d;">💰 Costo:</strong> <span id="cierreDetCosto" style="font-weight: 600;">-</span></div>
+              <div><strong style="color: #b45309;">🏭 Proveedor:</strong> <span id="cierreDetProveedor">-</span></div>
+              <div><strong style="color: #b45309;">📞 Consulta a:</strong> <span id="cierreDetConsulta">-</span></div>
+            </div>
+          </div>
+
           <div class="form-grid">
             <!-- Permitir modificar la placa del equipo (requerimiento expreso) -->
             <div>
@@ -1075,7 +1088,7 @@
   </script>
 
   <!-- Lógica JavaScript del Cliente con Cache Buster -->
-  <script src="js/app.js?v=20261020_04"></script>
+  <script src="js/app.js?v=20261021_01"></script>
   <?!= typeof include !== 'undefined' ? include('js') : '' ?>
 </body>
 </html>
