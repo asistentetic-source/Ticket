@@ -1251,9 +1251,14 @@ function renderizarTablaTickets() {
       botonesAccion += ` <button class="btn btn-primary btn-sm" onclick="abrirModalAsignar('${t.nroTicket}')">Asignar</button>`;
     }
 
-    if (tienePermiso("CERRAR") && esMismaArea && (t.estado.toUpperCase() === "PROCESO" || t.estado.toUpperCase() === "PENDIENTE")) {
+    const esInconforme = String(t.conformidadUsuario || "").toUpperCase() === "NO" || String(t.aprobacion || "").includes("Inconformidad");
+    const esTicketAtendible = t.estado.toUpperCase() === "PROCESO" || 
+                              t.estado.toUpperCase() === "PENDIENTE" || 
+                              (t.estado.toUpperCase() === "ABIERTO" && (t.responsable || t.cedulaResponsable || esInconforme));
+
+    if (tienePermiso("CERRAR") && esMismaArea && esTicketAtendible) {
       const esPend = t.estado.toUpperCase() === "PENDIENTE";
-      const txtBtn = esPend ? "Reanudar / Gestionar" : "Cerrar";
+      const txtBtn = esPend ? "Reanudar / Gestionar" : (esInconforme && t.estado.toUpperCase() === "ABIERTO" ? "Reatender / Cerrar" : "Cerrar");
       const clsBtn = esPend ? "btn-warning" : "btn-success";
       botonesAccion += ` <button class="btn ${clsBtn} btn-sm" onclick="abrirModalCierre('${t.nroTicket}')">${txtBtn}</button>`;
     }
@@ -1304,7 +1309,8 @@ function renderizarTablaTickets() {
         </td>
         <td class="col-estado">
           <span class="badge-tag ${estadoClass}">${t.estado}</span>
-          ${puedeVerAdmin && t.aprobacion ? `<br><span style="display: inline-block; margin-top: 4px; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-weight: 500;" title="Estado de Aprobación">📋 ${t.aprobacion}</span>` : ''}
+          ${esInconforme && t.estado.toUpperCase() !== "CERRADO" ? `<br><span class="badge-tag" style="background: rgba(239, 68, 68, 0.12); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.3); font-size: 0.72rem; margin-top: 3px; font-weight: 700; display: inline-block;" title="${t.motivoInconformidad || 'Reabierto por inconformidad'}">⚠️ Reabierto</span>` : ''}
+          ${puedeVerAdmin && t.aprobacion && (!esInconforme || t.estado.toUpperCase() === "CERRADO") ? `<br><span style="display: inline-block; margin-top: 4px; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-weight: 500;" title="Estado de Aprobación">📋 ${t.aprobacion}</span>` : ''}
           ${puedeVerAdmin && t.costo ? `<br><span style="display: inline-block; margin-top: 2px; font-size: 0.72rem; padding: 1px 5px; border-radius: 4px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-weight: 600;" title="Costo registrado">💰 ${t.costo}</span>` : ''}
         </td>
         <td class="col-acciones">
@@ -1880,6 +1886,19 @@ function abrirModalCierre(nroTicket) {
     elInstruccion.textContent = instruccionCoord ? instruccionCoord : "(Sin observaciones adicionales de la coordinación al asignar)";
   }
 
+  // Mostrar Banner de Inconformidad si el ticket fue reabierto por el solicitante
+  const bannerInc = document.getElementById("cierreBannerInconformidad");
+  const txtInc = document.getElementById("cierreTextoInconformidad");
+  const esInconformeModal = String(ticket.conformidadUsuario || "").toUpperCase() === "NO" || String(ticket.aprobacion || "").includes("Inconformidad");
+  if (bannerInc && txtInc) {
+    if (esInconformeModal) {
+      bannerInc.style.display = "block";
+      txtInc.textContent = ticket.motivoInconformidad || "El solicitante indicó que el problema no quedó resuelto a satisfacción. Por favor revisa y ejecuta la solución técnica definitiva.";
+    } else {
+      bannerInc.style.display = "none";
+    }
+  }
+
   // Mostrar datos de Gestión Administrativa (Aprobación, Costo, Proveedor, Consulta) si existen y tiene permiso
   const contAdminCierre = document.getElementById("cierreDatosAdminContainer");
   if (contAdminCierre) {
@@ -2239,11 +2258,25 @@ function verDetalleTicket(nroTicket) {
     btnVerActaFooter.style.display = esCerrado ? "inline-flex" : "none";
   }
 
+  // Botón directo para que el Técnico o Coordinador pueda atender / cerrar desde el detalle del ticket
+  const btnCerrarFooter = document.getElementById("detBtnCerrarFooter");
+  if (btnCerrarFooter) {
+    const esInconformeDet = String(t.conformidadUsuario || "").toUpperCase() === "NO" || String(t.aprobacion || "").includes("Inconformidad");
+    const esTicketAtendibleDet = t.estado.toUpperCase() === "PROCESO" || 
+                                 t.estado.toUpperCase() === "PENDIENTE" || 
+                                 (t.estado.toUpperCase() === "ABIERTO" && (t.responsable || t.cedulaResponsable || esInconformeDet));
+    const areaTicketNormDet = normalizarArea(t.area);
+    const esMismaAreaDet = !normalizarArea(AppState.currentUser.area) || normalizarArea(AppState.currentUser.area) === areaTicketNormDet;
+    const puedeCerrar = tienePermiso("CERRAR") && esMismaAreaDet && esTicketAtendibleDet;
+    btnCerrarFooter.style.display = puedeCerrar ? "inline-flex" : "none";
+  }
+
   // Banner de Validación de Solución / Conformidad del Solicitante
   const bannerConf = document.getElementById("detConformidadBanner");
   if (bannerConf) {
     const esSolicitante = AppState.currentUser && String(t.cedulaSolicitante).trim() === String(AppState.currentUser.cedula).trim();
     const yaConfirmo = String(t.conformidadUsuario || "").toUpperCase() === "SI";
+    const esInconformeDet = String(t.conformidadUsuario || "").toUpperCase() === "NO" || String(t.aprobacion || "").includes("Inconformidad");
 
     if (esCerrado && esSolicitante && !yaConfirmo) {
       // Solicitante puede validar
@@ -2270,6 +2303,23 @@ function verDetalleTicket(nroTicket) {
       if (confIcon) confIcon.textContent = "✅";
       if (confTitle) { confTitle.textContent = "Solución Aprobada por el Solicitante"; confTitle.style.color = "#15803d"; }
       if (confSub) confSub.textContent = t.fechaConformidad ? "Confirmado el " + formatearFechaHoraCO(t.fechaConformidad) : "Aprobado formalmente.";
+      if (btnValidar) btnValidar.style.display = "none";
+    } else if (esInconformeDet && !esCerrado) {
+      // Ticket devuelto / reabierto por inconformidad
+      bannerConf.style.display = "flex";
+      bannerConf.style.background = "linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(245, 158, 11, 0.08))";
+      bannerConf.style.border = "1.5px solid rgba(239, 68, 68, 0.35)";
+      const confIcon = document.getElementById("detConfIcon");
+      const confTitle = document.getElementById("detConfTitle");
+      const confSub = document.getElementById("detConfSubtitle");
+      const btnValidar = document.getElementById("detBtnValidarSolucion");
+      if (confIcon) confIcon.textContent = "⚠️";
+      if (confTitle) { confTitle.textContent = "Ticket Reabierto por Inconformidad del Solicitante"; confTitle.style.color = "#dc2626"; }
+      if (confSub) {
+        confSub.textContent = t.motivoInconformidad ? "Motivo: " + t.motivoInconformidad : "El solicitante indicó que el problema no quedó resuelto satisfactoriamente.";
+        confSub.style.color = "#991b1b";
+        confSub.style.fontWeight = "600";
+      }
       if (btnValidar) btnValidar.style.display = "none";
     } else {
       bannerConf.style.display = "none";

@@ -786,9 +786,9 @@ function confirmarConformidadUsuario(datos) {
       };
     } else {
       // 2. No solucionado: REAPERTURA DEL TICKET
-      // Si ya tiene un técnico asignado, pasa a PROCESO para que pueda cerrarlo de nuevo.
+      // Si ya tiene un técnico asignado (cédula o nombre), pasa a PROCESO para que pueda cerrarlo de nuevo.
       // Si no tiene técnico, pasa a ABIERTO para que el coordinador lo reasigne.
-      var tecnicoAsignado = String(sheet.getRange(fila, 14).getValue() || "").trim(); // Columna "Responsable"
+      var tecnicoAsignado = String(sheet.getRange(fila, 14).getValue() || sheet.getRange(fila, 15).getValue() || "").trim();
       var estadoReapertura = tecnicoAsignado ? "PROCESO" : "ABIERTO";
       sheet.getRange(fila, 12).setValue(estadoReapertura);
       // Limpiar fechas de cierre para que vuelva a contar como ticket activo
@@ -1454,6 +1454,19 @@ function cerrarTicket(cierreData) {
       sheet.getRange(filaEncontrada, 26).setValue(anioCierre);
       sheet.getRange(filaEncontrada, 27).setValue(mesCierre);
       sheet.getRange(filaEncontrada, 28).setValue(diaCierre);
+
+      // Si el ticket había sido reabierto por inconformidad, resetear para permitir nueva validación del solicitante
+      try {
+        var colConf = obtenerOcrearColumna(sheet, "Conformidad Solicitante");
+        var valConfActual = String(sheet.getRange(filaEncontrada, colConf).getValue() || "").toUpperCase();
+        if (valConfActual === "NO") {
+          sheet.getRange(filaEncontrada, colConf).setValue(""); // Limpiar para que el solicitante pueda validar nuevamente
+          var colAprob = obtenerOcrearColumna(sheet, "Aprobacion");
+          sheet.getRange(filaEncontrada, colAprob).setValue("Pendiente de Validación");
+        }
+      } catch (eConfReset) {
+        Logger.log("Aviso: no se pudo resetear conformidad en cierre: " + eConfReset.message);
+      }
     } else {
       // PENDIENTE: NO SE CIERRA. Dejar columnas de cierre vacías para que no cuente como cerrado
       sheet.getRange(filaEncontrada, 17).setValue("");

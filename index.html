@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <!-- Estilos del Sistema de Diseño DIALI® -->
-  <link rel="stylesheet" href="css/styles.css?v=20261022_03">
+  <link rel="stylesheet" href="css/styles.css?v=20261022_04">
   <style>
     .spinner-btn {
       width: 1.15rem;
@@ -509,6 +509,15 @@
             </p>
           </div>
 
+          <!-- Alerta de Inconformidad del Solicitante si el ticket fue reabierto -->
+          <div id="cierreBannerInconformidad" style="display: none; background: #fff5f5; border: 1.5px solid #fca5a5; border-left: 4px solid #ef4444; border-radius: 6px; padding: 0.85rem 1rem; margin-bottom: 1.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.4rem; color: #dc2626; font-weight: 700; font-size: 0.82rem; margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.03em;">
+              <span>⚠️ Motivo de Inconformidad del Solicitante (Reapertura):</span>
+            </div>
+            <p id="cierreTextoInconformidad" style="margin: 0; color: #991b1b; font-size: 0.92rem; line-height: 1.45; white-space: pre-wrap; font-weight: 600;">
+            </p>
+          </div>
+
           <!-- Datos de Gestión Administrativa (Aprobación, Costo, Proveedor, Consulta) visibles para Técnicos y Coordinadores del área -->
           <div id="cierreDatosAdminContainer" style="display: none; background: #fffdf5; border: 1px solid #fde68a; border-left: 4px solid #f59e0b; border-radius: 6px; padding: 0.85rem 1rem; margin-bottom: 1.25rem;">
             <div style="display: flex; align-items: center; gap: 0.4rem; color: #b45309; font-weight: 700; font-size: 0.82rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.03em;">
@@ -759,6 +768,9 @@
               💼 Gestionar Administrativamente
             </button>
           </div>
+          <button type="button" id="detBtnCerrarFooter" class="btn btn-sm btn-success" style="display: none; padding: 0.45rem 0.9rem;" onclick="cerrarModal('modalDetalleTicket'); if(AppState.activeTicket) abrirModalCierre(AppState.activeTicket.nroTicket);">
+            🔧 Atender / Cerrar Ticket
+          </button>
           <button type="button" id="detBtnVerActaFooter" class="btn btn-sm btn-acta" style="display: none; padding: 0.45rem 0.9rem;" onclick="if(AppState.activeTicket) verActaTicket(AppState.activeTicket.nroTicket);">
             👁️ Ver Acta Técnica (PDF)
           </button>
@@ -1199,7 +1211,7 @@
   </script>
 
   <!-- Lógica JavaScript del Cliente con Cache Buster -->
-  <script src="js/app.js?v=20261022_03"></script>
+  <script src="js/app.js?v=20261022_04"></script>
   <?!= typeof include !== 'undefined' ? include('js') : '' ?>
 </body>
 </html>
