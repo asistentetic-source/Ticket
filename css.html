@@ -450,6 +450,75 @@ button, input, select, textarea, .btn, .date-range-btn, .cal-day, .tab-btn {
   transform: translateY(-1px);
 }
 
+/* ── Botón y Badges de Conformidad / Validación de Solución ── */
+.btn-conformidad {
+  background: linear-gradient(135deg, rgba(234, 88, 12, 0.08), rgba(245, 158, 11, 0.15));
+  border: 1.5px solid rgba(234, 88, 12, 0.45);
+  color: #c2410c;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  transition: var(--transition);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  padding: 0.42rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+.btn-conformidad:hover {
+  background: linear-gradient(135deg, #ea580c, #f59e0b);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.32);
+  transform: translateY(-1px);
+}
+
+.badge-solucion-aprobada {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: rgba(22, 163, 74, 0.12);
+  color: #15803d;
+  border: 1px solid rgba(22, 163, 74, 0.35);
+  white-space: nowrap;
+}
+
+/* Tarjetas interactivas de Sí/No en validación de conformidad */
+.conf-option-card {
+  display: block;
+  padding: 1rem 0.9rem;
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  background: var(--bg-card);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.conf-option-card:hover {
+  border-color: #dcd1da;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.conf-option-card.active-si {
+  border-color: #16a34a !important;
+  background: rgba(22, 163, 74, 0.06) !important;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2);
+}
+
+.conf-option-card.active-no {
+  border-color: #dc2626 !important;
+  background: rgba(220, 38, 38, 0.06) !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+}
+
 /* ── Spinner animado para botones de acción ── */
 .spinner-btn {
   width: 1.15rem;

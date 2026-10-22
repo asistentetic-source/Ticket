@@ -1266,6 +1266,17 @@ function renderizarTablaTickets() {
       botonesAccion += ` <button class="btn btn-sm" style="background: rgba(217, 119, 6, 0.12); border: 1px solid rgba(217, 119, 6, 0.35); color: #b45309; font-weight: 600;" onclick="abrirModalAdministradora('${t.nroTicket}')">💼 Gestionar</button>`;
     }
 
+    // Botón de Validar Solución (solo para el solicitante del ticket y cuando está CERRADO sin conformidad previa)
+    const esSolicitante = AppState.currentUser && String(t.cedulaSolicitante).trim() === String(AppState.currentUser.cedula).trim();
+    const yaConfirmo = String(t.conformidadUsuario || "").toUpperCase() === "SI";
+    if (esCerrado && esSolicitante && !yaConfirmo) {
+      botonesAccion += ` <button class="btn btn-conformidad btn-sm" onclick="abrirModalConformidad('${t.nroTicket}')" title="Validar si la incidencia fue resuelta a satisfacción">⭐ Validar</button>`;
+    }
+    // Badge de solución aprobada si ya validó
+    if (esCerrado && yaConfirmo) {
+      botonesAccion += ` <span class="badge-solucion-aprobada">✅ Aprobado</span>`;
+    }
+
     return `
       <tr class="ticket-row">
         <td class="col-ticket">
@@ -2223,13 +2234,224 @@ function verDetalleTicket(nroTicket) {
   if (bannerActa) {
     bannerActa.style.display = esCerrado ? "flex" : "none";
   }
-  const btnVerActaFooter = document.getElementById("detBtnVerActaFooter");
+   const btnVerActaFooter = document.getElementById("detBtnVerActaFooter");
   if (btnVerActaFooter) {
     btnVerActaFooter.style.display = esCerrado ? "inline-flex" : "none";
   }
 
+  // Banner de Validación de Solución / Conformidad del Solicitante
+  const bannerConf = document.getElementById("detConformidadBanner");
+  if (bannerConf) {
+    const esSolicitante = AppState.currentUser && String(t.cedulaSolicitante).trim() === String(AppState.currentUser.cedula).trim();
+    const yaConfirmo = String(t.conformidadUsuario || "").toUpperCase() === "SI";
+
+    if (esCerrado && esSolicitante && !yaConfirmo) {
+      // Solicitante puede validar
+      bannerConf.style.display = "flex";
+      bannerConf.style.background = "linear-gradient(135deg, rgba(234, 88, 12, 0.06), rgba(245, 158, 11, 0.1))";
+      bannerConf.style.border = "1.5px solid rgba(234, 88, 12, 0.3)";
+      const confIcon = document.getElementById("detConfIcon");
+      const confTitle = document.getElementById("detConfTitle");
+      const confSub = document.getElementById("detConfSubtitle");
+      const btnValidar = document.getElementById("detBtnValidarSolucion");
+      if (confIcon) confIcon.textContent = "⭐";
+      if (confTitle) { confTitle.textContent = "Validación de Solución"; confTitle.style.color = "#c2410c"; }
+      if (confSub) confSub.textContent = "¿Tu requerimiento fue resuelto a entera satisfacción? Haz clic para confirmar.";
+      if (btnValidar) { btnValidar.style.display = ""; btnValidar.textContent = "⭐ Validar Solución"; }
+    } else if (esCerrado && yaConfirmo) {
+      // Ya fue aprobado
+      bannerConf.style.display = "flex";
+      bannerConf.style.background = "linear-gradient(135deg, rgba(22, 163, 74, 0.06), rgba(34, 197, 94, 0.1))";
+      bannerConf.style.border = "1.5px solid rgba(22, 163, 74, 0.35)";
+      const confIcon = document.getElementById("detConfIcon");
+      const confTitle = document.getElementById("detConfTitle");
+      const confSub = document.getElementById("detConfSubtitle");
+      const btnValidar = document.getElementById("detBtnValidarSolucion");
+      if (confIcon) confIcon.textContent = "✅";
+      if (confTitle) { confTitle.textContent = "Solución Aprobada por el Solicitante"; confTitle.style.color = "#15803d"; }
+      if (confSub) confSub.textContent = t.fechaConformidad ? "Confirmado el " + formatearFechaHoraCO(t.fechaConformidad) : "Aprobado formalmente.";
+      if (btnValidar) btnValidar.style.display = "none";
+    } else {
+      bannerConf.style.display = "none";
+    }
+  }
+
   abrirModal("modalDetalleTicket");
 }
+
+// ============================================================================
+// 8.1 VALIDACIÓN DE CONFORMIDAD DEL SOLICITANTE
+// ============================================================================
+
+/**
+ * Abre el modal de validación de solución para que el solicitante
+ * confirme si su incidencia fue resuelta o no.
+ */
+function abrirModalConformidad(nroTicket) {
+  const ticket = AppState.tickets.find(t => t.nroTicket === nroTicket);
+  if (!ticket) {
+    mostrarAlerta("Ticket no encontrado: " + nroTicket, "warning");
+    return;
+  }
+
+  AppState.activeTicket = ticket;
+
+  // Rellenar datos del modal
+  const elNro = document.getElementById("confNroTicket");
+  if (elNro) elNro.textContent = nroTicket;
+  const elPunto = document.getElementById("confPunto");
+  if (elPunto) elPunto.textContent = ticket.puntoServicio || "-";
+  const elEquipo = document.getElementById("confEquipo");
+  if (elEquipo) elEquipo.textContent = ticket.descripcionEquipo || "-";
+  const elTecnico = document.getElementById("confTecnico");
+  if (elTecnico) elTecnico.textContent = ticket.responsable || "Sin asignar";
+  const elTrabajo = document.getElementById("confTrabajoRealizado");
+  if (elTrabajo) elTrabajo.textContent = ticket.respuesta || ticket.observacionesAsignacion || "(Sin detalle registrado)";
+
+  // Reset al estado inicial (Sí seleccionado)
+  seleccionarOpcionConformidad("SI");
+
+  // Limpiar campos
+  const obsSi = document.getElementById("confObservacionSi");
+  if (obsSi) obsSi.value = "";
+  const obsNo = document.getElementById("confObservacionNo");
+  if (obsNo) obsNo.value = "";
+
+  // Reset botón
+  const btnGuardar = document.getElementById("btnGuardarConformidad");
+  if (btnGuardar) {
+    btnGuardar.disabled = false;
+    btnGuardar.innerHTML = "✅ Confirmar y Aprobar Solución";
+  }
+
+  // Cerrar modal de detalle si está abierto
+  cerrarModal("modalDetalleTicket");
+
+  abrirModal("modalConformidadTicket");
+}
+
+/**
+ * Alterna visualmente entre las tarjetas Sí / No
+ */
+function seleccionarOpcionConformidad(opcion) {
+  const cardSi = document.getElementById("confCardSi");
+  const cardNo = document.getElementById("confCardNo");
+  const radioSi = document.getElementById("confRadioSi");
+  const radioNo = document.getElementById("confRadioNo");
+  const panelSi = document.getElementById("confPanelSi");
+  const panelNo = document.getElementById("confPanelNo");
+  const btnGuardar = document.getElementById("btnGuardarConformidad");
+
+  if (opcion === "SI") {
+    if (radioSi) radioSi.checked = true;
+    if (cardSi) { cardSi.classList.add("active-si"); cardSi.classList.remove("active-no"); }
+    if (cardNo) { cardNo.classList.remove("active-no"); cardNo.classList.remove("active-si"); }
+    if (panelSi) panelSi.style.display = "block";
+    if (panelNo) panelNo.style.display = "none";
+    if (btnGuardar) {
+      btnGuardar.innerHTML = "✅ Confirmar y Aprobar Solución";
+      btnGuardar.style.background = "linear-gradient(135deg, #15803d, #16a34a)";
+      btnGuardar.style.borderColor = "#15803d";
+    }
+  } else {
+    if (radioNo) radioNo.checked = true;
+    if (cardNo) { cardNo.classList.add("active-no"); cardNo.classList.remove("active-si"); }
+    if (cardSi) { cardSi.classList.remove("active-si"); cardSi.classList.remove("active-no"); }
+    if (panelSi) panelSi.style.display = "none";
+    if (panelNo) panelNo.style.display = "block";
+    if (btnGuardar) {
+      btnGuardar.innerHTML = "⚠️ Reabrir Ticket por Inconformidad";
+      btnGuardar.style.background = "linear-gradient(135deg, #dc2626, #ef4444)";
+      btnGuardar.style.borderColor = "#dc2626";
+    }
+  }
+}
+
+/**
+ * Envía la conformidad del solicitante al backend
+ */
+function guardarConformidadUsuario(e) {
+  e.preventDefault();
+
+  if (!AppState.activeTicket) {
+    mostrarAlerta("No se ha seleccionado ningún ticket.", "warning");
+    return;
+  }
+
+  const solucionado = document.getElementById("confRadioSi").checked;
+  let observacion = "";
+
+  if (solucionado) {
+    observacion = (document.getElementById("confObservacionSi").value || "").trim();
+  } else {
+    observacion = (document.getElementById("confObservacionNo").value || "").trim();
+    if (!observacion) {
+      mostrarAlerta("Debes indicar la razón de tu inconformidad para que el equipo técnico pueda atenderla.", "warning");
+      return;
+    }
+  }
+
+  const btn = document.getElementById("btnGuardarConformidad");
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-btn"></span> Procesando...`;
+  }
+
+  const conformidadData = {
+    nroTicket: AppState.activeTicket.nroTicket,
+    solucionado: solucionado,
+    observacion: observacion,
+    cedulaSolicitante: AppState.currentUser ? AppState.currentUser.cedula : ""
+  };
+
+  const callback = function (res) {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = solucionado ? "✅ Confirmar y Aprobar Solución" : "⚠️ Reabrir Ticket por Inconformidad";
+    }
+    if (!res) {
+      mostrarAlerta("No se recibió respuesta del servidor.", "danger");
+      return;
+    }
+    if (res.success) {
+      cerrarModal("modalConformidadTicket");
+      if (res.solucionado) {
+        mostrarAlerta("🎉 " + res.message, "success");
+      } else {
+        mostrarAlerta("🔄 " + res.message, "warning");
+      }
+      cargarTickets();
+    } else {
+      mostrarAlerta("Error: " + res.message, "danger");
+    }
+  };
+
+  if (AppState.isGAS) {
+    google.script.run
+      .withSuccessHandler(callback)
+      .withFailureHandler(function (err) {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = solucionado ? "✅ Confirmar y Aprobar Solución" : "⚠️ Reabrir Ticket por Inconformidad";
+        }
+        mostrarAlerta("Error de conexión: " + err, "danger");
+      })
+      .confirmarConformidadUsuario(conformidadData);
+  } else {
+    llamarApiBackend("confirmarConformidad", { conformidadData: conformidadData }).then(callback).catch(function(err) {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = solucionado ? "✅ Confirmar y Aprobar Solución" : "⚠️ Reabrir Ticket por Inconformidad";
+      }
+      mostrarAlerta("Error de conexión con el servidor.", "danger");
+    });
+  }
+}
+
+// Exportar funciones al ámbito global
+window.abrirModalConformidad = abrirModalConformidad;
+window.seleccionarOpcionConformidad = seleccionarOpcionConformidad;
+window.guardarConformidadUsuario = guardarConformidadUsuario;
 
 // ============================================================================
 // 9. UTILIDADES Y MANEJO DE IMÁGENES & GOOGLE DRIVE

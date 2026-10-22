@@ -208,6 +208,10 @@ function responderApi(action, data) {
         resultado = sincronizarPermisosEmpleados();
         break;
 
+      case "confirmarConformidad":
+        resultado = confirmarConformidadUsuario(data.conformidadData || data);
+        break;
+
       default:
         resultado = { success: false, message: "Acción no soportada: " + action };
         break;
@@ -735,6 +739,83 @@ function actualizarCamposAdministradora(datos) {
   }
 }
 
+/**
+ * 3.1 VALIDACIÓN DE CONFORMIDAD DEL USUARIO / SOLICITANTE
+ * Permite al solicitante validar si la incidencia fue resuelta a entera satisfacción:
+ * - Si SI: Marca la conformidad, registra fecha y cierra definitivamente el caso sin opción a reapertura.
+ * - Si NO: Registra la razón de inconformidad y REABRE el ticket a estado "ABIERTO", limpiando fecha de cierre
+ *          para que el equipo técnico vuelva a intervenirlo.
+ */
+function confirmarConformidadUsuario(datos) {
+  try {
+    if (!datos || !datos.nroTicket) {
+      return { success: false, message: "Número de ticket requerido." };
+    }
+    var sheet = getSheetByName(CONFIG.SHEETS.TICKETS);
+    var fila = buscarFilaPorTicket(sheet, datos.nroTicket);
+    if (!fila) {
+      return { success: false, message: "Ticket no encontrado: " + datos.nroTicket };
+    }
+
+    var now = new Date();
+    var timezone = CONFIG.TIMEZONE || "America/Bogota";
+    var fechaStr = Utilities.formatDate(now, timezone, "yyyy-MM-dd HH:mm:ss");
+
+    var solucionado = datos.solucionado === true || String(datos.solucionado).toUpperCase() === "SI" || datos.solucionado === "true";
+    var observacion = String(datos.observacion || "").trim();
+
+    var colConformidad = obtenerOcrearColumna(sheet, "Conformidad Solicitante");
+    var colFechaConf = obtenerOcrearColumna(sheet, "Fecha Conformidad");
+    var colObsConf = obtenerOcrearColumna(sheet, "Motivo Inconformidad");
+    var colAprobacion = obtenerOcrearColumna(sheet, "Aprobacion");
+
+    if (solucionado) {
+      // 1. Queda aprobado definitivamente
+      sheet.getRange(fila, 12).setValue("CERRADO"); // Estado CERRADO
+      sheet.getRange(fila, colConformidad).setValue("SI");
+      sheet.getRange(fila, colFechaConf).setValue(fechaStr);
+      sheet.getRange(fila, colAprobacion).setValue("Aprobado por Solicitante");
+      if (observacion) {
+        sheet.getRange(fila, colObsConf).setValue(observacion);
+      }
+
+      return {
+        success: true,
+        solucionado: true,
+        message: "¡Excelente! Has confirmado la solución del ticket " + datos.nroTicket + ". El caso ha quedado cerrado y aprobado formalmente."
+      };
+    } else {
+      // 2. No solucionado: REAPERTURA DEL TICKET
+      sheet.getRange(fila, 12).setValue("ABIERTO"); // Se abre nuevamente
+      // Limpiar fechas de cierre para que vuelva a contar como ABIERTO
+      sheet.getRange(fila, 17).setValue("");
+      sheet.getRange(fila, 26).setValue("");
+      sheet.getRange(fila, 27).setValue("");
+      sheet.getRange(fila, 28).setValue("");
+
+      sheet.getRange(fila, colConformidad).setValue("NO");
+      sheet.getRange(fila, colFechaConf).setValue(fechaStr);
+      sheet.getRange(fila, colObsConf).setValue(observacion);
+      sheet.getRange(fila, colAprobacion).setValue("Reabierto por Inconformidad");
+
+      // Anexar la inconformidad al historial de trabajo / respuesta (columna 20)
+      var trabajoActual = String(sheet.getRange(fila, 20).getValue() || "").trim();
+      var nuevoHistorial = (trabajoActual ? trabajoActual + "\n\n" : "") +
+        "⚠️ [REAPERTURA POR SOLICITANTE - " + fechaStr + "]:\n" + (observacion || "El solicitante indica que el problema no quedó solucionado.");
+      sheet.getRange(fila, 20).setValue(nuevoHistorial);
+
+      return {
+        success: true,
+        solucionado: false,
+        message: "El ticket " + datos.nroTicket + " ha sido REABIERTO exitosamente. El equipo técnico ha sido notificado para darle nueva atención prioritaria."
+      };
+    }
+  } catch (error) {
+    Logger.log("Error en confirmarConformidadUsuario: " + error.message);
+    return { success: false, message: "Error al procesar conformidad: " + error.message };
+  }
+}
+
 // ============================================================================
 // 4.1 GESTIÓN DE EMPLEADOS Y PUNTOS (RECURSOS HUMANOS / RECLUTADOR)
 // ============================================================================
@@ -1057,7 +1138,11 @@ function obtenerTickets(filtros) {
         aprobacion: String(getCol("aprobacion", "aprobación", "estado aprobacion") || ""),
         obsAdmin: String(getCol("obs admin", "observacion admin", "observación admin", "observaciones admin", "obs_admin") || ""),
         consultaAdmin: String(getCol("consulta admin", "consulta_admin", "consulta") || ""),
-        proveedor: String(getCol("proveedor", "proveedores") || "")
+        proveedor: String(getCol("proveedor", "proveedores") || ""),
+        // Campos de Conformidad y Validación del Usuario
+        conformidadUsuario: String(getCol("conformidad solicitante", "conformidad usuario", "conformidad") || ""),
+        motivoInconformidad: String(getCol("motivo inconformidad", "obs conformidad", "observacion conformidad") || ""),
+        fechaConformidad: formatFecha(getCol("fecha conformidad"))
       };
 
       ticketObj.area = deducirAreaPorServicio(ticketObj.tipoServicio, ticketObj.nroTicket);

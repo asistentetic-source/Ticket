@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <!-- Estilos del Sistema de Diseño DIALI® -->
-  <link rel="stylesheet" href="css/styles.css?v=20261022_02">
+  <link rel="stylesheet" href="css/styles.css?v=20261022_03">
   <style>
     .spinner-btn {
       width: 1.15rem;
@@ -719,6 +719,20 @@
                   👁️ Ver Acta / PDF
                 </button>
               </div>
+
+              <!-- Banner de Validación de Solución / Conformidad para Solicitante -->
+              <div class="detail-item detail-item-full" id="detConformidadBanner" style="display: none; margin-top: 0.85rem; padding: 0.85rem 1rem; border-radius: var(--radius-md); align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                  <span id="detConfIcon" style="font-size: 1.5rem;">⭐</span>
+                  <div>
+                    <strong id="detConfTitle" style="font-size: 0.88rem; display: block;">Validación de Solución</strong>
+                    <small id="detConfSubtitle" style="color: var(--text-muted); font-size: 0.76rem;">¿Tu requerimiento fue resuelto a entera satisfacción?</small>
+                  </div>
+                </div>
+                <button type="button" id="detBtnValidarSolucion" class="btn btn-sm btn-conformidad" onclick="if(AppState.activeTicket) abrirModalConformidad(AppState.activeTicket.nroTicket);" style="padding: 0.45rem 0.95rem; font-weight: 700;">
+                  ⭐ Validar Solución
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1064,6 +1078,91 @@
     </div>
   </div>
 
+  <!-- ==================================================================== -->
+  <!-- MODAL 8: VALIDACIÓN DE SOLUCIÓN Y CONFORMIDAD (SOLICITANTE) -->
+  <!-- ==================================================================== -->
+  <div id="modalConformidadTicket" class="modal-backdrop">
+    <div class="modal-container" style="max-width: 520px;">
+      <div class="modal-header" style="background: linear-gradient(135deg, rgba(131, 0, 101, 0.05), rgba(206, 0, 88, 0.08));">
+        <div class="modal-title">
+          <span>⭐</span> Validación de Solución — <span id="confNroTicket" style="color: var(--diali-pink);"></span>
+        </div>
+        <button class="btn-close" onclick="cerrarModal('modalConformidadTicket')">&times;</button>
+      </div>
+      <form id="formConformidadTicket" onsubmit="guardarConformidadUsuario(event)">
+        <div class="modal-body">
+          <!-- Resumen del Ticket y Trabajo Realizado -->
+          <div style="background: #fbf7fa; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 0.95rem; margin-bottom: 1.25rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; font-size: 0.82rem; margin-bottom: 0.5rem;">
+              <div><strong style="color: var(--diali-purple);">📍 Punto:</strong> <span id="confPunto">-</span></div>
+              <div><strong style="color: var(--diali-purple);">⚙️ Equipo:</strong> <span id="confEquipo">-</span></div>
+              <div style="grid-column: span 2;"><strong style="color: var(--diali-purple);">👤 Técnico asignado:</strong> <span id="confTecnico">-</span></div>
+            </div>
+            <div style="font-size: 0.82rem; border-top: 1px dashed var(--border-subtle); padding-top: 0.5rem; margin-top: 0.4rem;">
+              <strong style="color: var(--text-muted); display: block; font-size: 0.76rem; text-transform: uppercase;">🔧 Trabajo Realizado reportado por el técnico:</strong>
+              <p id="confTrabajoRealizado" style="margin: 0.25rem 0 0; color: var(--text-main); font-weight: 500; font-size: 0.85rem; line-height: 1.35; white-space: pre-wrap;">-</p>
+            </div>
+          </div>
+
+          <!-- Pregunta central de satisfacción -->
+          <div style="text-align: center; margin-bottom: 1.25rem;">
+            <label class="form-label" style="font-size: 1.05rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.85rem; display: block;">
+              ¿Tu requerimiento o falla fue solucionada? <span class="required">*</span>
+            </label>
+
+            <!-- Opciones Interactivas Sí / No -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; text-align: left;">
+              <label id="confCardSi" class="conf-option-card active-si" onclick="seleccionarOpcionConformidad('SI')">
+                <input type="radio" name="confSolucionadoRadio" id="confRadioSi" value="SI" checked style="display: none;">
+                <div style="font-size: 1.6rem; margin-bottom: 0.25rem;">✅</div>
+                <div style="font-weight: 800; font-size: 0.95rem; color: #15803d;">Sí, se solucionó</div>
+                <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 0.2rem; line-height: 1.25;">Quedé conforme con el servicio.</div>
+              </label>
+
+              <label id="confCardNo" class="conf-option-card" onclick="seleccionarOpcionConformidad('NO')">
+                <input type="radio" name="confSolucionadoRadio" id="confRadioNo" value="NO" style="display: none;">
+                <div style="font-size: 1.6rem; margin-bottom: 0.25rem;">❌</div>
+                <div style="font-weight: 800; font-size: 0.95rem; color: #dc2626;">No se solucionó</div>
+                <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 0.2rem; line-height: 1.25;">La falla persiste o no quedó bien.</div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Mensaje para cuando selecciona SÍ -->
+          <div id="confPanelSi" style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-md); padding: 0.85rem 1rem; margin-bottom: 1rem;">
+            <p style="margin: 0; font-size: 0.84rem; color: #166534; line-height: 1.4;">
+              🔒 <strong>Aprobación definitiva:</strong> Al confirmar que el caso quedó resuelto, se marcará formalmente como <strong>APROBADO</strong> y <strong>no se podrá volver a abrir</strong>.
+            </p>
+            <div style="margin-top: 0.65rem;">
+              <label class="form-label" for="confObservacionSi" style="font-size: 0.78rem; color: #166534;">Comentario adicional (opcional):</label>
+              <input type="text" id="confObservacionSi" class="form-control" placeholder="Ej: Excelente servicio, muchas gracias..." style="font-size: 0.85rem;">
+            </div>
+          </div>
+
+          <!-- Mensaje y Campo obligatorio para cuando selecciona NO -->
+          <div id="confPanelNo" style="display: none; background: #fff5f5; border: 1px solid #fecaca; border-radius: var(--radius-md); padding: 0.85rem 1rem; margin-bottom: 1rem;">
+            <p style="margin: 0 0 0.65rem 0; font-size: 0.84rem; color: #991b1b; line-height: 1.4;">
+              ⚠️ <strong>Reapertura del caso:</strong> Al indicar que no quedó solucionado, el ticket <strong>se reabrirá automáticamente</strong> en estado <strong>ABIERTO</strong> para que el área técnica lo atienda de nuevo hasta solucionar la incidencia.
+            </p>
+            <div>
+              <label class="form-label" for="confObservacionNo" style="color: #991b1b; font-weight: 700;">
+                ¿Por qué no quedó satisfecho o qué falla continúa? <span class="required">*</span>
+              </label>
+              <textarea id="confObservacionNo" class="form-control" rows="3" placeholder="Explique qué problema persiste para que el técnico lo corrija en su nueva visita..."></textarea>
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalConformidadTicket')">Cancelar</button>
+          <button type="submit" id="btnGuardarConformidad" class="btn btn-primary" style="background: linear-gradient(135deg, #15803d, #16a34a); border-color: #15803d; font-weight: 700;">
+            ✅ Confirmar y Aprobar Solución
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Script de navegación inmediata y cache fallback -->
   <script>
     function volverALoginCedula() {
@@ -1100,7 +1199,7 @@
   </script>
 
   <!-- Lógica JavaScript del Cliente con Cache Buster -->
-  <script src="js/app.js?v=20261022_02"></script>
+  <script src="js/app.js?v=20261022_03"></script>
   <?!= typeof include !== 'undefined' ? include('js') : '' ?>
 </body>
 </html>
