@@ -206,6 +206,15 @@
             <option value="CERRADO">Cerrado</option>
           </select>
 
+          <!-- Filtros de Tipo de Servicio y Tipo de Falla -->
+          <select id="filtroTipoServicio" class="select-custom" onchange="onFiltroChange()" title="Filtrar por Tipo de Servicio">
+            <option value="TODOS">Todos los Servicios</option>
+          </select>
+
+          <select id="filtroTipoFalla" class="select-custom" onchange="onFiltroChange()" title="Filtrar por Tipo de Falla">
+            <option value="TODOS">Todas las Fallas</option>
+          </select>
+
           <!-- Filtros exclusivos para Administradores y Técnicos -->
           <select id="filtroPunto" class="select-custom" onchange="onFiltroChange()" style="display: none;" title="Filtrar por Punto de Servicio">
             <option value="TODOS">Todos los Puntos</option>
@@ -1088,7 +1097,7 @@
   </script>
 
   <!-- Lógica JavaScript del Cliente con Cache Buster -->
-  <script src="js/app.js?v=20261021_01"></script>
+  <script src="js/app.js?v=20261022_01"></script>
   <?!= typeof include !== 'undefined' ? include('js') : '' ?>
 </body>
 </html>

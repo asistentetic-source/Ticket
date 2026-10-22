@@ -44,7 +44,10 @@ const AppState = {
   filtros: {
     area: "TODAS",
     estado: "TODOS",
-    busqueda: ""
+    busqueda: "",
+    punto: "TODOS",
+    tipoServicio: "TODOS",
+    tipoFalla: "TODOS"
   },
   isGAS: typeof google !== 'undefined' && google.script && google.script.run
 };
@@ -127,6 +130,9 @@ function poblarSelectsCatalogos() {
       selFiltroPunto.innerHTML += `<option value="${p.nombre}">${p.label}</option>`;
     });
   }
+
+  // Poblar filtros desplegables de Tipo de Servicio y Tipo de Falla
+  poblarFiltrosServicioYFalla();
 
   // 2. Tipos de Falla (Modal de cierre - se inicializa limpio y se puebla según el área del ticket)
   const selFalla = document.getElementById("cierreTipoFalla");
@@ -331,6 +337,138 @@ function onAreaSolicitudChange() {
     selServicio.innerHTML += `<option value="${nombre}">${nombre}</option>`;
   });
 }
+
+/**
+ * Puebla dinámicamente los filtros de Tipo de Servicio y Tipo de Falla en la barra superior.
+ * Incluye opciones de catálogos maestros y tickets cargados, respetando el área activa.
+ */
+function poblarFiltrosServicioYFalla() {
+  const selServicio = document.getElementById("filtroTipoServicio");
+  const selFalla = document.getElementById("filtroTipoFalla");
+  if (!selServicio && !selFalla) return;
+
+  const areaFiltro = normalizarArea(AppState.filtros.area || "");
+  const valorActualServicio = selServicio ? selServicio.value : "TODOS";
+  const valorActualFalla = selFalla ? selFalla.value : "TODOS";
+
+  // 1. Tipos de Servicio
+  if (selServicio) {
+    const serviciosSet = new Set();
+
+    if (AppState.catalogos && Array.isArray(AppState.catalogos.tiposServicio)) {
+      AppState.catalogos.tiposServicio.forEach(s => {
+        let nombre = typeof s === "string" ? s : (s.nombre || s.DESCRIPCION || s["DESCRIPCION CATEGORIA"] || s.descripcion || "");
+        nombre = String(nombre || "").trim();
+        if (!nombre || nombre === "undefined") return;
+
+        if (areaFiltro && areaFiltro !== "TODAS") {
+          const a = normalizarArea(s.area || s.AREA || "");
+          if (a && a !== areaFiltro && !String(s.area || "").includes("Mantenimiento / TIC")) {
+            return;
+          }
+        }
+        serviciosSet.add(nombre);
+      });
+    }
+
+    if (Array.isArray(AppState.tickets)) {
+      AppState.tickets.forEach(t => {
+        if (!t.tipoServicio) return;
+        const nombre = String(t.tipoServicio).trim();
+        if (!nombre || nombre === "undefined") return;
+        if (areaFiltro && areaFiltro !== "TODAS") {
+          const a = normalizarArea(t.area || "");
+          if (a && a !== areaFiltro) return;
+        }
+        serviciosSet.add(nombre);
+      });
+    }
+
+    const listaServicios = Array.from(serviciosSet).sort();
+    let htmlServicios = '<option value="TODOS">Todos los Servicios</option>';
+    listaServicios.forEach(srv => {
+      htmlServicios += `<option value="${srv}">${srv}</option>`;
+    });
+    selServicio.innerHTML = htmlServicios;
+
+    if (serviciosSet.has(valorActualServicio)) {
+      selServicio.value = valorActualServicio;
+    } else {
+      selServicio.value = "TODOS";
+      AppState.filtros.tipoServicio = "TODOS";
+    }
+  }
+
+  // 2. Tipos de Falla
+  if (selFalla) {
+    const fallasSet = new Set();
+
+    if (AppState.catalogos && Array.isArray(AppState.catalogos.tiposFalla)) {
+      AppState.catalogos.tiposFalla.forEach(f => {
+        let nombre = typeof f === "string" ? f : (f.nombre || f["Nombre del tipo"] || f["DESCRIPCION CATEGORIA"] || f["DESCRIPCIÓN CATEGORIA"] || f.descripcion || "");
+        nombre = String(nombre || "").trim();
+        if (!nombre || nombre === "undefined" || !isNaN(Number(nombre))) return;
+
+        if (areaFiltro && areaFiltro !== "TODAS") {
+          const a = clasificarAreaFalla(f);
+          if (a && a !== areaFiltro) return;
+        }
+        fallasSet.add(nombre);
+      });
+    }
+
+    if (Array.isArray(AppState.tickets)) {
+      AppState.tickets.forEach(t => {
+        if (!t.tipoFalla) return;
+        const nombre = String(t.tipoFalla).trim();
+        if (!nombre || nombre === "undefined" || nombre.toLowerCase() === "ninguno") return;
+        if (areaFiltro && areaFiltro !== "TODAS") {
+          const a = normalizarArea(t.area || "");
+          if (a && a !== areaFiltro) return;
+        }
+        fallasSet.add(nombre);
+      });
+    }
+
+    // Respaldo por defecto si no hay fallas cargadas aún
+    if (fallasSet.size === 0) {
+      const catalogoTIC = [
+        "HARDWARE", "SOFTWARE", "RED / CONECTIVIDAD", "INTERNET", "TELEFONÍA",
+        "IMPRESORAS", "SISTEMAS / APLICACIONES", "CORREO ELECTRÓNICO",
+        "CUENTAS Y ACCESOS", "CONTRASEÑAS", "SERVIDORES", "ALMACENAMIENTO",
+        "SEGURIDAD INFORMÁTICA", "PUNTOS DE VENTA (POS)", "PERIFÉRICOS",
+        "CABLEADO / PUNTOS DE RED", "EQUIPOS DE COMUNICACIÓN", "OTROS"
+      ];
+      const catalogoMTO = [
+        "HIDRÁULICO", "ELÉCTRICO", "CARPINTERÍA", "PLOMERÍA", "CERRAJERÍA",
+        "PINTURA", "OBRA CIVIL", "AIRE ACONDICIONADO / CLIMATIZACIÓN",
+        "MOBILIARIO", "VIDRIERÍA", "ILUMINACIÓN", "EQUIPOS Y ELECTRODOMÉSTICOS",
+        "PISOS Y PAREDES", "TECHOS / CUBIERTAS", "SEÑALIZACIÓN", "OTROS"
+      ];
+      let fallbackLista = [];
+      if (areaFiltro === "TIC") fallbackLista = catalogoTIC;
+      else if (areaFiltro === "MANTENIMIENTO") fallbackLista = catalogoMTO;
+      else fallbackLista = [...catalogoMTO, ...catalogoTIC];
+      fallbackLista.forEach(n => fallasSet.add(n));
+    }
+
+    const listaFallas = Array.from(fallasSet).sort();
+    let htmlFallas = '<option value="TODOS">Todas las Fallas</option>';
+    listaFallas.forEach(fla => {
+      htmlFallas += `<option value="${fla}">${fla}</option>`;
+    });
+    selFalla.innerHTML = htmlFallas;
+
+    if (fallasSet.has(valorActualFalla)) {
+      selFalla.value = valorActualFalla;
+    } else {
+      selFalla.value = "TODOS";
+      AppState.filtros.tipoFalla = "TODOS";
+    }
+  }
+}
+
+window.poblarFiltrosServicioYFalla = poblarFiltrosServicioYFalla;
 
 // ============================================================================
 // SISTEMA GRANULAR DE PERMISOS (Columna G: PERMISOS en Google Sheets)
@@ -661,6 +799,8 @@ function cerrarSesion() {
   AppState.filtros.estado = "TODOS";
   AppState.filtros.busqueda = "";
   AppState.filtros.punto = "TODOS";
+  AppState.filtros.tipoServicio = "TODOS";
+  AppState.filtros.tipoFalla = "TODOS";
   delete AppState.filtros.fechaInicio;
   delete AppState.filtros.fechaFin;
   const selArea = document.getElementById("filtroArea");
@@ -673,6 +813,10 @@ function cerrarSesion() {
   }
   const elFiltroPuntoReset = document.getElementById("filtroPunto");
   if (elFiltroPuntoReset) { elFiltroPuntoReset.value = "TODOS"; elFiltroPuntoReset.style.display = "none"; }
+  const elFiltroServicioReset = document.getElementById("filtroTipoServicio");
+  if (elFiltroServicioReset) elFiltroServicioReset.value = "TODOS";
+  const elFiltroFallaReset = document.getElementById("filtroTipoFalla");
+  if (elFiltroFallaReset) elFiltroFallaReset.value = "TODOS";
   const elDateRangeReset = document.getElementById("dateRangeWrapper");
   if (elDateRangeReset) elDateRangeReset.style.display = "none";
   if (typeof toggleDatePicker === 'function') toggleDatePicker(false);
@@ -979,6 +1123,7 @@ function cargarTickets(esSilencioso = false, onComplete = null) {
         AppState.tickets = res.tickets || [];
       }
 
+      poblarFiltrosServicioYFalla();
       renderizarKPIs();
       renderizarTablaTickets();
     } else {
@@ -1054,6 +1199,18 @@ function renderizarTablaTickets() {
     if (areaFiltro !== "TODAS" && t.area !== areaFiltro) return false;
     // Filtro por punto de servicio
     if (filtroPuntoVal !== "TODOS" && (t.puntoServicio || "") !== filtroPuntoVal) return false;
+    // Filtro por Tipo de Servicio
+    const filtroServicioVal = (AppState.filtros.tipoServicio || "TODOS");
+    if (filtroServicioVal !== "TODOS") {
+      const sNorm = String(t.tipoServicio || "").trim().toUpperCase();
+      if (sNorm !== String(filtroServicioVal).trim().toUpperCase()) return false;
+    }
+    // Filtro por Tipo de Falla
+    const filtroFallaVal = (AppState.filtros.tipoFalla || "TODOS");
+    if (filtroFallaVal !== "TODOS") {
+      const fNorm = String(t.tipoFalla || "").trim().toUpperCase();
+      if (fNorm !== String(filtroFallaVal).trim().toUpperCase()) return false;
+    }
     // Filtro por rango de fechas
     if (filtroFecIni || filtroFecFin) {
       const fechaTkt = (t.fechaIngreso || "").substring(0, 10);
@@ -1063,7 +1220,8 @@ function renderizarTablaTickets() {
     // Filtro de búsqueda por texto
     if (filtroBusq) {
       const haystack = [
-        t.nroTicket, t.placa, t.descripcionEquipo, t.puntoServicio, t.descripcionSolicitud
+        t.nroTicket, t.placa, t.descripcionEquipo, t.puntoServicio, t.descripcionSolicitud,
+        t.tipoServicio, t.tipoFalla, t.responsable
       ].join(" ").toLowerCase();
       if (!haystack.includes(filtroBusq)) return false;
     }
@@ -1155,6 +1313,7 @@ function onFiltroChange() {
   const esAdministradora = rol === "administradora";
   const puedeVerTodos = tienePermiso("VER_TODOS");
   const areaUser = normalizarArea(AppState.currentUser && AppState.currentUser.area);
+  const prevArea = AppState.filtros.area;
 
   if (esAdministradora) {
     AppState.filtros.area = "Mantenimiento";
@@ -1166,15 +1325,27 @@ function onFiltroChange() {
   AppState.filtros.estado = document.getElementById("filtroEstado").value;
   AppState.filtros.busqueda = document.getElementById("buscarInput").value;
 
-  // Filtros extra: Punto y Rango de Fechas (solo visibles para admins/técnicos)
+  // Filtros: Punto, Tipo de Servicio, Tipo de Falla y Rango de Fechas
   const elPunto = document.getElementById("filtroPunto");
+  const elServicio = document.getElementById("filtroTipoServicio");
+  const elFalla = document.getElementById("filtroTipoFalla");
   const elFecIni = document.getElementById("filtroFechaInicio");
   const elFecFin = document.getElementById("filtroFechaFin");
+
   if (elPunto) AppState.filtros.punto = elPunto.value || "TODOS";
+  if (elServicio) AppState.filtros.tipoServicio = elServicio.value || "TODOS";
+  if (elFalla) AppState.filtros.tipoFalla = elFalla.value || "TODOS";
   if (elFecIni) AppState.filtros.fechaInicio = elFecIni.value || "";
   if (elFecFin) AppState.filtros.fechaFin = elFecFin.value || "";
 
-  cargarTickets();
+  // Si cambió el área, recargar tickets y actualizar catálogos de servicio y falla
+  if (prevArea !== AppState.filtros.area) {
+    poblarFiltrosServicioYFalla();
+    cargarTickets();
+  } else {
+    // Si solo cambió un filtro de estado, servicio, falla, punto o búsqueda, renderizar de inmediato en memoria
+    renderizarTablaTickets();
+  }
 }
 
 // ============================================================================
