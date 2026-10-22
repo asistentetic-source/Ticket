@@ -786,8 +786,12 @@ function confirmarConformidadUsuario(datos) {
       };
     } else {
       // 2. No solucionado: REAPERTURA DEL TICKET
-      sheet.getRange(fila, 12).setValue("ABIERTO"); // Se abre nuevamente
-      // Limpiar fechas de cierre para que vuelva a contar como ABIERTO
+      // Si ya tiene un técnico asignado, pasa a PROCESO para que pueda cerrarlo de nuevo.
+      // Si no tiene técnico, pasa a ABIERTO para que el coordinador lo reasigne.
+      var tecnicoAsignado = String(sheet.getRange(fila, 14).getValue() || "").trim(); // Columna "Responsable"
+      var estadoReapertura = tecnicoAsignado ? "PROCESO" : "ABIERTO";
+      sheet.getRange(fila, 12).setValue(estadoReapertura);
+      // Limpiar fechas de cierre para que vuelva a contar como ticket activo
       sheet.getRange(fila, 17).setValue("");
       sheet.getRange(fila, 26).setValue("");
       sheet.getRange(fila, 27).setValue("");
@@ -807,7 +811,7 @@ function confirmarConformidadUsuario(datos) {
       return {
         success: true,
         solucionado: false,
-        message: "El ticket " + datos.nroTicket + " ha sido REABIERTO exitosamente. El equipo técnico ha sido notificado para darle nueva atención prioritaria."
+        message: "El ticket " + datos.nroTicket + " ha sido devuelto a estado " + estadoReapertura + ". " + (tecnicoAsignado ? "El técnico asignado podrá atenderlo nuevamente." : "El coordinador deberá reasignarlo.")
       };
     }
   } catch (error) {
